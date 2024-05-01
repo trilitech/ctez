@@ -1,6 +1,6 @@
 #include "oven_types.mligo"
 
-let create_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storage) = Tezos.create_contract
+let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storage) = Tezos.create_contract
         (* Contract code for an oven *)
 	(fun (p , s : oven_parameter * oven_storage) -> (
 	    (* error codes *)
@@ -30,8 +30,8 @@ let create_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storag
 			| Whitelist depositors -> Set.mem (Tezos.get_sender ()) depositors
 		) then
 		    let register = (
-			match (Tezos.get_entrypoint_opt "%register_deposit" s.admin : (register_deposit contract) option) with
-			| None -> (failwith error_CANNOT_FIND_REGISTER_DEPOSIT_ENTRYPOINT : register_deposit contract)
+			match (Tezos.get_entrypoint_opt "%register_deposit" s.admin : (register_oven_deposit contract) option) with
+			| None -> (failwith error_CANNOT_FIND_REGISTER_DEPOSIT_ENTRYPOINT : register_oven_deposit contract)
 			| Some register -> register) in
 		    (([ Tezos.transaction {amount = Tezos.get_amount () ; handle = s.handle} 0mutez register] : operation list), s)
 		else

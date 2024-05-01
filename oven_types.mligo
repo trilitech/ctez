@@ -16,7 +16,7 @@ type depositors =
   | Whitelist of address set
 
 type oven_handle = [@layout:comb] {id : nat ; owner : address}
-type register_deposit = [@layout:comb] { handle : oven_handle ; amount : tez }
+type register_oven_deposit = [@layout:comb] { handle : oven_handle ; amount : tez }
 
 
 type oven_storage = {
