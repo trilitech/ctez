@@ -56,3 +56,10 @@ The drift is a mechanism that automatically discovers a competitive rate at whic
 ## Why it's useful
 
 ctez can be used directly in smart-contracts that would normally pool tez together without the thorny question of "who's baking".Given that there's almost no real movement in this pair, it doesn't need a whole lot of liquidity to function effectively, just a tad enough that the rate read from the contract isn't too noisy, hence the lack of baking shouldn't be a huge hindrance.
+
+## Commands
+
+### Build
+```
+make compile
+```

@@ -1,3 +1,5 @@
+module Tezos = Tezos.Next
+
 type transfer =
   [@layout:comb]
   { [@annot:from] address_from : address;
@@ -136,32 +138,32 @@ let getAllowance (param : getAllowance) (storage : storage) : operation list =
     match Big_map.find_opt param.request storage.allowances with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback]
+  [Tezos.Operation.transaction value 0mutez param.callback]
 
 let getBalance (param : getBalance) (storage : storage) : operation list =
   let value =
     match Big_map.find_opt param.owner storage.tokens with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback]
+  [Tezos.Operation.transaction value 0mutez param.callback]
 
 let getTotalSupply (param : getTotalSupply) (storage : storage) : operation list =
   let total = storage.total_supply in
-  [Tezos.transaction total 0mutez param.callback]
+  [Tezos.Operation.transaction total 0mutez param.callback]
 
 
-[@view] let viewBalanceOption (owner, s : address * storage) : nat option =
+[@view] let viewBalanceOption (owner : address) (s : storage) : nat option =
   Big_map.find_opt owner s.tokens
 
-[@view] let viewBalance (owner, s : address * storage) : nat  =
+[@view] let viewBalance (owner : address) (s : storage) : nat  =
     match Big_map.find_opt owner s.tokens with
     | Some value -> value
     | None -> 0n
 
-[@view] let viewTotalSupply ((),s : unit * storage) : nat =
+[@view] let viewTotalSupply (() : unit) (s : storage) : nat =
   s.total_supply
 
-let main (param, storage : parameter * storage) : result =
+[@entry] let main (param : parameter) (storage : storage) : result =
   begin
     if Tezos.get_amount () <> 0mutez
     then failwith "DontSendTez"
