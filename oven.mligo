@@ -1,8 +1,8 @@
 #include "oven_types.mligo"
 
-let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storage) = Tezos.create_contract
+let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storage) = Tezos.Next.Operation.create_contract
         (* Contract code for an oven *)
-	(fun (p , s : oven_parameter * oven_storage) -> (
+	(fun (p : oven_parameter) (s : oven_storage) -> (
 	    (* error codes *)
 	    let error_WITHDRAW_CAN_ONLY_BE_CALLED_FROM_MAIN_CONTRACT = 1001n in
 	    let error_ONLY_OWNER_CAN_DELEGATE = 1002n in
@@ -16,12 +16,12 @@ let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_sto
 		if Tezos.get_sender () <> s.admin then
 		(failwith error_WITHDRAW_CAN_ONLY_BE_CALLED_FROM_MAIN_CONTRACT : oven_result)
 		else
-		([Tezos.transaction unit x.0 x.1], s)
+		([Tezos.Next.Operation.transaction unit x.0 x.1], s)
 	    (* Change delegation *)
 	    | Oven_delegate ko ->
 		if Tezos.get_sender () <> s.handle.owner then
 		(failwith error_ONLY_OWNER_CAN_DELEGATE : oven_result)
-		else ([Tezos.set_delegate ko], s)
+		else ([Tezos.Next.Operation.set_delegate ko], s)
 	    (* Make a deposit. If authorized, this will notify the main contract. *)
 	    | Oven_deposit ->
 		if Tezos.get_sender () = s.handle.owner or (
@@ -33,7 +33,7 @@ let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_sto
 			match (Tezos.get_entrypoint_opt "%register_deposit" s.admin : (register_oven_deposit contract) option) with
 			| None -> (failwith error_CANNOT_FIND_REGISTER_DEPOSIT_ENTRYPOINT : register_oven_deposit contract)
 			| Some register -> register) in
-		    (([ Tezos.transaction {amount = Tezos.get_amount () ; handle = s.handle} 0mutez register] : operation list), s)
+		    (([ Tezos.Next.Operation.transaction {amount = Tezos.get_amount () ; handle = s.handle} 0mutez register] : operation list), s)
 		else
 		    (failwith error_UNAUTHORIZED_DEPOSITOR : oven_result)
 	    (* Edit the set of authorized depositors. Insert tz1authorizeAnyoneToDeposit3AC7qy8Qf to authorize anyone. *)

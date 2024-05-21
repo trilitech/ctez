@@ -1,4 +1,3 @@
-module Tezos = Tezos.Next
 
 type transfer =
   [@layout:comb]
@@ -138,18 +137,18 @@ let getAllowance (param : getAllowance) (storage : storage) : operation list =
     match Big_map.find_opt param.request storage.allowances with
     | Some value -> value
     | None -> 0n in
-  [Tezos.Operation.transaction value 0mutez param.callback]
+  [Tezos.Next.Operation.transaction value 0mutez param.callback]
 
 let getBalance (param : getBalance) (storage : storage) : operation list =
   let value =
     match Big_map.find_opt param.owner storage.tokens with
     | Some value -> value
     | None -> 0n in
-  [Tezos.Operation.transaction value 0mutez param.callback]
+  [Tezos.Next.Operation.transaction value 0mutez param.callback]
 
 let getTotalSupply (param : getTotalSupply) (storage : storage) : operation list =
   let total = storage.total_supply in
-  [Tezos.Operation.transaction total 0mutez param.callback]
+  [Tezos.Next.Operation.transaction total 0mutez param.callback]
 
 
 [@view] let viewBalanceOption (owner : address) (s : storage) : nat option =

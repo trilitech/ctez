@@ -1,5 +1,5 @@
 #include "stdctez.mligo"
-#import "context.mligo" Context
+#import "context.mligo" "Context"
 
 (** A half dex is defined by:
       - An ordered liquidity share [(tau_0, tau_1)]

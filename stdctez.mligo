@@ -15,7 +15,7 @@ let min (x : nat) (y : nat) : nat = if x < y then x else y
 let ceildiv (numerator : nat) (denominator : nat) : nat = abs ((- numerator) / (int denominator))
 
 module Float48 = struct
-  type t = int
+  type t = nat (* TODO: check type *)
 
   // TODO
 end
