@@ -63,3 +63,9 @@ ctez can be used directly in smart-contracts that would normally pool tez togeth
 ```
 make compile
 ```
+
+### Test
+The testing stack for the contracts is based on Python and requires [poetry](https://python-poetry.org/), [pytezos](https://pytezos.org/), and [pytest](https://docs.pytest.org/en/7.4.x/) to be installed.
+```
+poetry run pytest
+```
