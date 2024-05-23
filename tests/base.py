@@ -3,8 +3,8 @@ from pytezos.sandbox.node import SandboxedNodeTestCase
 from typing import Optional
 from pytezos.rpc import RpcError
 from contextlib import contextmanager
+from tests.helpers.addressable import Addressable
 from tests.helpers.contracts.fa12 import Fa12
-from tests.helpers.utility import pkh
 from pytezos.contract.result import ContractCallResult
 from pytezos.operation.group import OperationGroup
 
@@ -13,39 +13,33 @@ class BaseTestCase(SandboxedNodeTestCase):
     
     def setUp(self) -> None:
         self.accounts = []
-        self.manager = self.bootstrap_baker()
+        self.manager = self.bootstrap_account()
 
     def get_current_level(self) -> int:
         return self.client.shell.head.header()['level']
 
-    def bootstrap_baker(self, n: Optional[int] = None) -> PyTezosClient:
-        """Creates baker with given number"""
 
-        accounts_count = n or len(self.accounts)
-        bootstrap: PyTezosClient = self.client.using(key=f'bootstrap{accounts_count + 1}')
+    def bootstrap_account(self, n: Optional[int] = None) -> PyTezosClient:
+        account_count = n or len(self.accounts)
+        bootstrap: PyTezosClient = self.client.using(key=f'bootstrap{account_count + 1}')
         bootstrap.reveal()
         self.accounts.append(bootstrap)
         return bootstrap
-    
-    def bootstrap_no_baker(self) -> PyTezosClient:
-        """Creates no baker account"""
 
-        no_baker = self.client.using(key='alice')
-        if no_baker.balance() == 0:
-            donor = self.manager
-            donor.transaction(destination=pkh(no_baker), amount=100000000000).autofill().sign().inject()
-            self.bake_block()
-            no_baker.reveal().autofill().sign().inject()
-        return no_baker
-
-    def deploy_fa12(self) -> Fa12:
-        opg = Fa12.originate(self.manager).send()
+    def deploy_fa12(
+        self,
+        admin: Addressable,
+        balances: dict[Addressable, int], 
+        allowances: Optional[list[tuple[Addressable, Addressable, int]]] = None
+    ) -> Fa12:
+        if allowances is None:
+            allowances = []
+        opg = Fa12.originate(self.manager, admin, balances, allowances).send()
         self.bake_block()
         return Fa12.from_opg(self.manager, opg)
 
     @contextmanager
     def raisesMichelsonError(self, error_message):
-        """Asserts that instruction fails in smart contract with the specified error"""
         with self.assertRaises(RpcError) as r:
             yield r
 

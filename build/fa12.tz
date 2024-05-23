@@ -142,9 +142,7 @@
                      IF_NONE { PUSH nat 0 } {} ;
                      ADD ;
                      ISNAT ;
-                     IF_NONE
-                       { PUSH string "Cannot burn more than the target's balance." ; FAILWITH }
-                       {} ;
+                     IF_NONE { PUSH string "CannotBurnMoreThanTheTargetsBalance" ; FAILWITH } {} ;
                      DUP 2 ;
                      CAR ;
                      DUP 4 ;

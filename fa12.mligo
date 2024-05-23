@@ -125,7 +125,7 @@ let mintOrBurn (param : mintOrBurn) (storage : storage) : result =
       | Some bal -> bal in
     let new_balance =
       match is_nat (old_balance + param.quantity) with
-      | None -> (failwith "Cannot burn more than the target's balance." : nat)
+      | None -> (failwith "CannotBurnMoreThanTheTargetsBalance" : nat)
       | Some bal -> bal in
     let tokens = Big_map.update param.target (maybe new_balance) storage.tokens in
     let total_supply = abs (storage.total_supply + param.quantity) in
@@ -150,10 +150,11 @@ let getTotalSupply (param : getTotalSupply) (storage : storage) : operation list
   let total = storage.total_supply in
   [Tezos.Next.Operation.transaction total 0mutez param.callback]
 
-
+(* TODO: do we need this view? *)
 [@view] let viewBalanceOption (owner : address) (s : storage) : nat option =
   Big_map.find_opt owner s.tokens
 
+(* TODO: do we need this view? *)
 [@view] let viewBalance (owner : address) (s : storage) : nat  =
     match Big_map.find_opt owner s.tokens with
     | Some value -> value
