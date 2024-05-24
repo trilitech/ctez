@@ -4,9 +4,12 @@ from typing import Optional
 from pytezos.rpc import RpcError
 from contextlib import contextmanager
 from tests.helpers.addressable import Addressable
-from tests.helpers.contracts.fa12 import Fa12
+from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.contract.result import ContractCallResult
 from pytezos.operation.group import OperationGroup
+from pytezos.operation.result import OperationResult
+
+from tests.helpers.contracts.fa12.fa12_tester import Fa12Tester
 
 class BaseTestCase(SandboxedNodeTestCase):
     accounts: list = []
@@ -17,7 +20,6 @@ class BaseTestCase(SandboxedNodeTestCase):
 
     def get_current_level(self) -> int:
         return self.client.shell.head.header()['level']
-
 
     def bootstrap_account(self, n: Optional[int] = None) -> PyTezosClient:
         account_count = n or len(self.accounts)
@@ -38,8 +40,17 @@ class BaseTestCase(SandboxedNodeTestCase):
         self.bake_block()
         return Fa12.from_opg(self.manager, opg)
 
+    def deploy_fa12_tester(
+        self,
+        fa12_address: Addressable,
+        send_tez: bool = False
+    ) -> Fa12Tester:
+        opg = Fa12Tester.originate(self.manager, fa12_address, send_tez).send()
+        self.bake_block()
+        return Fa12Tester.from_opg(self.manager, opg)
+
     @contextmanager
-    def raisesMichelsonError(self, error_message):
+    def raises_michelson_error(self, error_message):
         with self.assertRaises(RpcError) as r:
             yield r
 
@@ -57,3 +68,8 @@ class BaseTestCase(SandboxedNodeTestCase):
     def bake_blocks(self, count: int):
         for _ in range(count):
             self.bake_block()
+
+    def find_call_result(self, opg: OperationGroup, idx: int = 0) -> OperationResult:
+        blocks = self.manager.shell.blocks['head':]
+        operation = blocks.find_operation(opg.hash())
+        return ContractCallResult.from_operation_group(operation)[idx]

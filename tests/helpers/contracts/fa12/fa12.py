@@ -3,7 +3,6 @@ from pytezos.contract.call import ContractCall
 from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.contract import ContractHelper
 from tests.helpers.utility import (
-    DEFAULT_ADDRESS,
     get_build_dir,
     originate_from_file,
 )
@@ -64,24 +63,15 @@ class Fa12(ContractHelper):
             'quantity': quantity,
             'target': get_address(target),
         })
+
+    def view_allowance(self, owner: Addressable, spender: Addressable) -> int:
+        return self.contract.viewAllowance({
+            'owner': get_address(owner),
+            'spender': get_address(spender)
+        }).run_view()
     
+    def view_balance(self, owner: Addressable) -> int:
+        return self.contract.viewBalance(get_address(owner)).run_view()
+        
     def view_total_supply(self) -> int:
         return self.contract.viewTotalSupply().run_view()
-    
-    def get_balance(self, owner: Addressable) -> int:
-        address = get_address(owner)
-        try:
-            balance = self.contract.storage['tokens'][address]()
-            assert isinstance(balance, int)
-        except Exception as e:
-            balance = 0
-        return balance
-    
-    def get_allowance(self, owner: Addressable, spender: Addressable) -> int:
-        key = (get_address(owner), get_address(spender))
-        try:
-            allowance = self.contract.storage['allowances'][key]()
-            assert isinstance(allowance, int)
-        except Exception as e:
-            allowance = 0
-        return allowance

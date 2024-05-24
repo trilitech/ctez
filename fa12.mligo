@@ -150,13 +150,13 @@ let getTotalSupply (param : getTotalSupply) (storage : storage) : operation list
   let total = storage.total_supply in
   [Tezos.Next.Operation.transaction total 0mutez param.callback]
 
-(* TODO: do we need this view? *)
-[@view] let viewBalanceOption (owner : address) (s : storage) : nat option =
-  Big_map.find_opt owner s.tokens
+[@view] let viewAllowance (key : allowance_key) (s : storage) : nat =
+  match Big_map.find_opt key s.allowances with
+    | Some value -> value
+    | None -> 0n
 
-(* TODO: do we need this view? *)
 [@view] let viewBalance (owner : address) (s : storage) : nat  =
-    match Big_map.find_opt owner s.tokens with
+  match Big_map.find_opt owner s.tokens with
     | Some value -> value
     | None -> 0n
 

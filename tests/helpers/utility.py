@@ -104,7 +104,10 @@ def pack(object: Any, type_expression: str) -> bytes:
 
 
 def originate_from_file(
-    filename: str, client: PyTezosClient, storage: Any
+    filename: str, 
+    client: PyTezosClient, 
+    storage: Any,
+    balance: int = 0,
 ) -> OperationGroup:
     """Deploys contract from filename with given storage
     using given client and returns OperationGroup"""
@@ -112,4 +115,4 @@ def originate_from_file(
     print(f'deploying contract from filename {filename}')
     raw_contract = ContractInterface.from_file(filename)
     contract = raw_contract.using(key=client.key, shell=client.shell)
-    return contract.originate(initial_storage=storage)
+    return contract.originate(initial_storage=storage, balance=balance)

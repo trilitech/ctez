@@ -1,7 +1,7 @@
 from typing import Callable, Optional
 from tests.base import BaseTestCase
 from tests.helpers.addressable import Addressable
-from tests.helpers.contracts.fa12 import Fa12
+from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.client import PyTezosClient
 
 from tests.helpers.utility import DEFAULT_ADDRESS

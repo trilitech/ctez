@@ -200,10 +200,10 @@
                              TRANSFER_TOKENS } } ;
                      CONS } } } ;
          PAIR } ;
-  view "viewBalanceOption"
-       address
-       (option nat)
-       { UNPAIR ; SWAP ; CAR ; SWAP ; GET } ;
+  view "viewAllowance"
+       (pair (address %owner) (address %spender))
+       nat
+       { UNPAIR ; SWAP ; GET 3 ; SWAP ; GET ; IF_NONE { PUSH nat 0 } {} } ;
   view "viewBalance"
        address
        nat
