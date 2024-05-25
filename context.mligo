@@ -8,10 +8,9 @@ type t =
   ; ctez_fa12_address : address
   }
 
-let transfer_xtz (to_ : address) (amount : nat) :  operation =
-  let contract = (Tezos.get_entrypoint "%default" to_ : unit contract) in
-  Tezos.transaction () (amount * 1mutez) contract
-
+let transfer_xtz (to_ : address) (amount : nat) : operation =
+  let contract = (Tezos.get_contract to_ : unit contract) in
+  Tezos.Next.Operation.transaction () (amount * 1mutez) contract
 
 type fa12_transfer =
   { [@annot:from] from_ : address
@@ -19,6 +18,6 @@ type fa12_transfer =
   ; value : nat 
   }
 
-let transfer_ctez (t : t) (from_ : address) (to_ : address) (value : nat) :  operation =
+let transfer_ctez (t : t) (from_ : address) (to_ : address) (value : nat) : operation =
   let contract = (Tezos.get_entrypoint "%transfer" t.ctez_fa12_address : fa12_transfer contract) in
-  Tezos.transaction { from_; to_; value } 0mutez contract
+  Tezos.Next.Operation.transaction { from_; to_; value } 0mutez contract

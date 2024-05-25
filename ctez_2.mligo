@@ -3,33 +3,58 @@
 #import "half_dex.mligo" "Half_dex"
 #import "context.mligo" "Context"
 
-// TODO: Hook up half dex here
+type add_tez_liquidity = { 
+  owner : address;
+  min_liquidity : nat;
+  deadline : timestamp;
+}
 
-type liquidate = 
-  { handle : oven_handle 
-  ; quantity : nat 
-  ; [@annot:to] to_ : unit contract 
-  }
+type add_ctez_liquidity = { 
+  owner : address;
+  amount_deposited : nat;
+  min_liquidity : nat;
+  deadline : timestamp;
+}
 
-type mint_or_burn = 
-  { id : nat 
-  ; quantity : int
-  }
+type create_oven = {
+  id : nat; 
+  delegate : key_hash option; 
+  depositors : depositors;
+}
 
-type oven = 
-  { tez_balance : tez 
-  ; ctez_outstanding : nat 
-  ; address : address 
-  ; fee_index : nat (* TODO: check type *)
-  }
+type liquidate = { 
+  handle : oven_handle; 
+  quantity : nat; 
+  [@annot:to]
+  to_ : unit contract;
+}
 
-type storage = 
-  { ovens : (oven_handle, oven) big_map 
-  ; last_update : timestamp 
-  ; sell_ctez : Half_dex.t 
-  ; sell_tez  : Half_dex.t
-  ; context : Context.t
-  }
+type mint_or_burn = { 
+  id : nat; 
+  quantity : int;
+}
+
+type oven = { 
+  tez_balance : tez;
+  ctez_outstanding : nat;
+  address : address;
+  fee_index : nat (* TODO: check type *)
+}
+
+type withdraw = { 
+  id : nat; 
+  amount : tez; 
+  [@annot:to] 
+  to_ : unit contract 
+}
+
+type storage = { 
+  ovens : (oven_handle, oven) big_map;
+  last_update : timestamp;
+  sell_ctez : Half_dex.t;
+  sell_tez  : Half_dex.t;
+  context : Context.t;
+}
 
 type result = storage with_operations
 
@@ -52,10 +77,20 @@ type result = storage with_operations
 [@inline] let error_INVALID_CTEZ_TARGET_ENTRYPOINT = 14n
 [@inline] let error_IMPOSSIBLE = 999n (* an error that should never happen *)
 
+module Errors = struct 
+  [@inline] let tez_in_transaction_disallowed = "TEZ_IN_TRANSACTION_DISALLOWED"
+end
 
 #include "oven.mligo"
 
 (* Functions *)
+
+let assert_no_tez_in_transaction
+    (_ : unit)
+    : unit =
+  Assert.Error.assert (Tezos.get_amount () = 0mutez) Errors.tez_in_transaction_disallowed 
+
+let mutez_to_natural (a: tez) : nat = a / 1mutez
 
 let get_oven (handle : oven_handle) (s : storage) : oven =
   match Big_map.find_opt handle s.ovens with
@@ -84,8 +119,18 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
   | None -> (failwith error_CTEZ_FA12_CONTRACT_MISSING_MINT_OR_BURN_ENTRYPOINT : (int * address) contract)
   | Some c -> c
 
+(* Environments *)
+let sell_tez_env : Half_dex.environment = {
+  transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
+  transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
+  target_self_reserves = fun (_) -> (failwith error_IMPOSSIBLE : nat);
+}
 
-type create_oven = {id : nat ; delegate : key_hash option ; depositors : depositors }
+let sell_ctez_env : Half_dex.environment = {
+  transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
+  transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
+  target_self_reserves = fun (_) -> (failwith error_IMPOSSIBLE : nat);
+}
 
 (* Entrypoint Functions *)
 [@entry]
@@ -100,15 +145,13 @@ let create_oven ({ id; delegate; depositors }: create_oven) (s : storage) : resu
     let ovens = Big_map.update handle (Some oven) s.ovens in
     ([origination_op], {s with ovens = ovens})
 
-// called on initialization to set the ctez_fa12_address
+(* called on initialization to set the ctez_fa12_address *)
 [@entry]
 let set_ctez_fa12_address (ctez_fa12_address : address) (s : storage)  : result =
   if s.context.ctez_fa12_address <> ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) then
     (failwith error_CTEZ_FA12_ADDRESS_ALREADY_SET : result)
   else
     (([] : operation list), {s with context = {s.context with ctez_fa12_address = ctez_fa12_address }})
-
-type withdraw = { id : nat ; amount : tez ;  [@annot:to] to_ : unit contract }
 
 [@entry]
 let withdraw_from_oven (p : withdraw) (s : storage) : result =
@@ -181,6 +224,26 @@ let mint_or_burn (p : mint_or_burn)  (s : storage) : result =
   else
     let ctez_mint_or_burn = get_ctez_mint_or_burn s.context.ctez_fa12_address in
     ([Tezos.Next.Operation.transaction (p.quantity, Tezos.get_sender ()) 0mutez ctez_mint_or_burn], s)
+
+[@entry]
+let add_tez_liquidity 
+    ({ owner; min_liquidity; deadline } : add_tez_liquidity) 
+    (s : storage) 
+    : result =
+  let p : Half_dex.deposit = { owner = owner; amount_deposited = mutez_to_natural (Tezos.get_amount ()); min_liquidity = min_liquidity; deadline = deadline } in
+  let sell_tez = Half_dex.deposit s.sell_tez p in
+  ([] : operation list), { s with sell_tez = sell_tez }
+
+[@entry]
+let add_ctez_liquidity 
+    ({ owner; amount_deposited; min_liquidity; deadline } : add_ctez_liquidity) 
+    (s : storage) 
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let p : Half_dex.deposit = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
+  let sell_ctez = Half_dex.deposit s.sell_ctez p in
+  let transfer_ctez_op = Context.transfer_ctez s.context owner (Tezos.get_self_address ()) amount_deposited in
+  [transfer_ctez_op], { s with sell_ctez = sell_ctez }
 
 (* Views *)
 

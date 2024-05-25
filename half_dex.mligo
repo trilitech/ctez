@@ -137,21 +137,18 @@ let redeem_amount_inverted (lqt : nat) (reserve: nat) (total: nat) : nat =
     
 let deposit
     (t : t)
-    (ctxt : Context.t)
-    (env : environment)
     ({ owner; amount_deposited; min_liquidity; deadline } : deposit)
-    ()
-    : t with_operations
+    : t
   =
   let d_liquidity =
     redeem_amount_inverted amount_deposited t.self_reserves t.total_liquidity_shares
   in
   let () =
-    assert_with_error
+    Assert.Error.assert
       (d_liquidity >= min_liquidity)
       "transaction would create insufficient liquidity"
   in
-  let () = assert_with_error (Tezos.get_now () <= deadline) "deadline has passed" in
+  let () = Assert.Error.assert (Tezos.get_now () <= deadline) "deadline has passed" in
   let d_proceeds =
     redeem_amount d_liquidity t.proceeds_reserves t.total_liquidity_shares
   in
@@ -172,11 +169,7 @@ let deposit
     ; self_reserves = t.self_reserves + amount_deposited
     }
   in
-  let receive_self =
-    env.transfer_self ctxt owner (Tezos.get_self_address ()) amount_deposited
-  in
-  [ receive_self ], t
-
+  t
 
 type redeem = 
   { to_: address (** the address to receive the tokens *)
