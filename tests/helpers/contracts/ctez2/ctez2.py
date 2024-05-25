@@ -14,6 +14,9 @@ from os.path import join
 class Ctez2(ContractHelper):
     class Errors:
         TEZ_IN_TRANSACTION_DISALLOWED = 'TEZ_IN_TRANSACTION_DISALLOWED'
+        DEADLINE_HAS_PASSED = 'DEADLINE_HAS_PASSED'
+        INSUFFICIENT_LIQUIDITY_CREATED = 'INSUFFICIENT_LIQUIDITY_CREATED'
+        CTEZ_FA12_ADDRESS_ALREADY_SET = 'CTEZ_FA12_ADDRESS_ALREADY_SET'
 
     @classmethod
     def originate(
@@ -51,3 +54,18 @@ class Ctez2(ContractHelper):
 
     def get_ctez_fa12_address(self) -> str:
         return self.contract.storage()['context']['ctez_fa12_address']
+
+    def add_ctez_liquidity(self, owner : Addressable, amount_deposited : int, min_liquidity : int, deadline : int ) -> ContractCall:
+        return self.contract.add_ctez_liquidity({ 
+            'owner': get_address(owner),
+            'amount_deposited': amount_deposited, 
+            'min_liquidity': min_liquidity, 
+            'deadline': deadline 
+        })
+
+    def add_tez_liquidity(self, owner : Addressable, min_liquidity : int, deadline : int ) -> ContractCall:
+        return self.contract.add_tez_liquidity({ 
+            'owner': get_address(owner),
+            'min_liquidity': min_liquidity, 
+            'deadline': deadline 
+        })

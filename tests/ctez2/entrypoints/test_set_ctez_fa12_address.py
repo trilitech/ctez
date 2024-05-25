@@ -5,15 +5,19 @@ from tests.helpers.utility import DEFAULT_ADDRESS
 
 class Ctez2SetCtezFa12AddressTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
-        ctez2, fa12 = self.default_setup()
+        ctez2, ctez_token, *_ = self.default_setup(skip_setting_token_address=True)
 
         with self.raises_michelson_error(Ctez2.Errors.TEZ_IN_TRANSACTION_DISALLOWED):
-            ctez2.set_ctez_fa12_address(fa12).with_amount(1).send()
+            ctez2.set_ctez_fa12_address(ctez_token).with_amount(1).send()
 
     def test_should_set_ctez_fa12_address_correctly(self) -> None:
-        ctez2, fa12 = self.default_setup()
+        ctez2, ctez_token, *_ = self.default_setup(skip_setting_token_address=True)
         assert ctez2.get_ctez_fa12_address() == DEFAULT_ADDRESS
 
-        ctez2.set_ctez_fa12_address(fa12).send()
+        ctez2.set_ctez_fa12_address(ctez_token).send()
         self.bake_block()
-        assert ctez2.get_ctez_fa12_address() == get_address(fa12)
+        assert ctez2.get_ctez_fa12_address() == get_address(ctez_token)
+
+        # then it should prevent any other attempts of changing ctez token address
+        with self.raises_michelson_error(Ctez2.Errors.CTEZ_FA12_ADDRESS_ALREADY_SET):
+            ctez2.set_ctez_fa12_address(DEFAULT_ADDRESS).send()

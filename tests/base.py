@@ -81,3 +81,9 @@ class BaseTestCase(SandboxedNodeTestCase):
         blocks = self.manager.shell.blocks['head':]
         operation = blocks.find_operation(opg.hash())
         return ContractCallResult.from_operation_group(operation)[idx]
+
+    def get_future_timestamp(self) -> int:
+        return self.manager.now() + 1000
+
+    def get_passed_timestamp(self) -> int:
+        return self.manager.now() - 1000

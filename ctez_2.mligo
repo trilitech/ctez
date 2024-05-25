@@ -2,6 +2,7 @@
 #include "stdctez.mligo"
 #import "half_dex.mligo" "Half_dex"
 #import "context.mligo" "Context"
+#import "errors.mligo" "Errors"
 
 type add_tez_liquidity = { 
   owner : address;
@@ -77,10 +78,6 @@ type result = storage with_operations
 [@inline] let error_INVALID_CTEZ_TARGET_ENTRYPOINT = 14n
 [@inline] let error_IMPOSSIBLE = 999n (* an error that should never happen *)
 
-module Errors = struct 
-  [@inline] let tez_in_transaction_disallowed = "TEZ_IN_TRANSACTION_DISALLOWED"
-end
-
 #include "oven.mligo"
 
 (* Functions *)
@@ -150,7 +147,7 @@ let create_oven ({ id; delegate; depositors }: create_oven) (s : storage) : resu
 let set_ctez_fa12_address (ctez_fa12_address : address) (s : storage) : result =
   let () = assert_no_tez_in_transaction () in
   if s.context.ctez_fa12_address <> ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) then
-    (failwith error_CTEZ_FA12_ADDRESS_ALREADY_SET : result)
+    (failwith Errors.ctez_fa12_address_already_set : result)
   else
     (([] : operation list), { s with context = { s.context with ctez_fa12_address = ctez_fa12_address }})
 
@@ -243,7 +240,7 @@ let add_ctez_liquidity
   let () = assert_no_tez_in_transaction () in
   let p : Half_dex.deposit = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
   let sell_ctez = Half_dex.deposit s.sell_ctez p in
-  let transfer_ctez_op = Context.transfer_ctez s.context owner (Tezos.get_self_address ()) amount_deposited in
+  let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
   [transfer_ctez_op], { s with sell_ctez = sell_ctez }
 
 (* Views *)

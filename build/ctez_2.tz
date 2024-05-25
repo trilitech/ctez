@@ -77,9 +77,8 @@
              DUP 2 ;
              COMPARE ;
              GE ;
-             IF {}
-                { PUSH string "transaction would create insufficient liquidity" ; FAILWITH } ;
-             PUSH string "deadline has passed" ;
+             IF {} { PUSH string "INSUFFICIENT_LIQUIDITY_CREATED" ; FAILWITH } ;
+             PUSH string "DEADLINE_HAS_PASSED" ;
              DIG 4 ;
              NOW ;
              COMPARE ;
@@ -243,17 +242,17 @@
              DIG 3 ;
              DIG 3 ;
              DUP 4 ;
-             DUP 4 ;
+             DIG 3 ;
              PAIR 4 ;
-             DUP 4 ;
+             DUP 3 ;
              GET 5 ;
              PAIR ;
-             DIG 4 ;
+             DIG 3 ;
              SWAP ;
              EXEC ;
-             DIG 2 ;
+             SWAP ;
              SELF_ADDRESS ;
-             DIG 3 ;
+             SENDER ;
              DUP 5 ;
              GET 8 ;
              GET 6 ;
@@ -554,7 +553,7 @@
                                      GET 6 ;
                                      COMPARE ;
                                      NEQ ;
-                                     IF { DROP 2 ; PUSH nat 2 ; FAILWITH }
+                                     IF { DROP 2 ; PUSH string "CTEZ_FA12_ADDRESS_ALREADY_SET" ; FAILWITH }
                                         { DUP 2 ;
                                           DIG 2 ;
                                           GET 8 ;

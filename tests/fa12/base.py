@@ -10,7 +10,7 @@ class Fa12BaseTestCase(BaseTestCase):
     def default_setup(
         self,
         get_admin: Optional[Callable[[PyTezosClient, PyTezosClient], Addressable]] = None, 
-        get_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None, 
+        get_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
         get_allowances: Optional[Callable[[PyTezosClient, PyTezosClient], list[tuple[Addressable, Addressable, int]]]] = None
     ) -> tuple[PyTezosClient, PyTezosClient, Fa12]:
         account1 = self.bootstrap_account()

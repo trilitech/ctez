@@ -1,6 +1,6 @@
 from typing import Callable, Optional
 from tests.base import BaseTestCase
-from tests.helpers.addressable import Addressable
+from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.client import PyTezosClient
@@ -10,11 +10,20 @@ from tests.helpers.utility import DEFAULT_ADDRESS
 class Ctez2BaseTestCase(BaseTestCase):
     def default_setup(
         self,
+        get_ctez_token_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
+        skip_setting_token_address : bool = False
     ) -> tuple[Ctez2, Fa12]:
+        account1 = self.bootstrap_account()
+        account2 = self.bootstrap_account()
+        balances = get_ctez_token_balances(account1, account2) if get_ctez_token_balances is not None else {}
+        balances[DEFAULT_ADDRESS] = 1
+    
         ctez2 = self.deploy_ctez2()
-        balances = {
-            DEFAULT_ADDRESS : 1
-        }
+
         fa12 = self.deploy_fa12(ctez2, balances)
+
+        if not skip_setting_token_address:
+            ctez2.set_ctez_fa12_address(fa12).send()
+            self.bake_block()
         
-        return ctez2, fa12
+        return ctez2, fa12, account1, account2

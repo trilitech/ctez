@@ -1,5 +1,6 @@
 #include "stdctez.mligo"
 #import "context.mligo" "Context"
+#import "errors.mligo" "Errors"
 
 (** A half dex is defined by:
       - An ordered liquidity share [(tau_0, tau_1)]
@@ -138,38 +139,23 @@ let redeem_amount_inverted (lqt : nat) (reserve: nat) (total: nat) : nat =
 let deposit
     (t : t)
     ({ owner; amount_deposited; min_liquidity; deadline } : deposit)
-    : t
-  =
-  let d_liquidity =
-    redeem_amount_inverted amount_deposited t.self_reserves t.total_liquidity_shares
-  in
-  let () =
-    Assert.Error.assert
-      (d_liquidity >= min_liquidity)
-      "transaction would create insufficient liquidity"
-  in
-  let () = Assert.Error.assert (Tezos.get_now () <= deadline) "deadline has passed" in
-  let d_proceeds =
-    redeem_amount d_liquidity t.proceeds_reserves t.total_liquidity_shares
-  in
-  let d_subsidy =
-    redeem_amount d_liquidity t.subsidy_reserves t.total_liquidity_shares
-  in
-  let t =
-    update_liquidity_owner t owner (fun liquidity_owner ->
-        { liquidity_owner with
-          liquidity_shares = liquidity_owner.liquidity_shares + d_liquidity
-        ; proceeds_owed = liquidity_owner.proceeds_owed + d_proceeds
-        ; subsidy_owed = liquidity_owner.subsidy_owed + d_subsidy
-        })
-  in
-  let t =
-    { t with
-      total_liquidity_shares = t.total_liquidity_shares + d_liquidity
-    ; self_reserves = t.self_reserves + amount_deposited
-    }
-  in
-  t
+    : t =
+  let d_liquidity = redeem_amount_inverted amount_deposited t.self_reserves t.total_liquidity_shares in
+  let () = Assert.Error.assert (d_liquidity >= min_liquidity) Errors.insufficient_liquidity_created in
+  let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
+  let d_proceeds = redeem_amount d_liquidity t.proceeds_reserves t.total_liquidity_shares in
+  let d_subsidy = redeem_amount d_liquidity t.subsidy_reserves t.total_liquidity_shares in
+  let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
+    liquidity_owner with
+    liquidity_shares = liquidity_owner.liquidity_shares + d_liquidity;
+    proceeds_owed = liquidity_owner.proceeds_owed + d_proceeds;
+    subsidy_owed = liquidity_owner.subsidy_owed + d_subsidy;
+  }) in
+  { 
+    t with
+    total_liquidity_shares = t.total_liquidity_shares + d_liquidity;
+    self_reserves = t.self_reserves + amount_deposited;
+  }
 
 type redeem = 
   { to_: address (** the address to receive the tokens *)
@@ -199,7 +185,7 @@ let redeem
       redeem)
     : t with_operations
   =
-  let () = assert_with_error (Tezos.get_now () <= deadline) "deadline has passed" in
+  let () = assert_with_error (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
   let owner = Tezos.get_sender () in
   let liquidity_owner = find_liquidity_owner t owner in
   let () =
@@ -274,7 +260,7 @@ let swap
     ({ to_; proceeds_amount; min_self; deadline } : swap)
     : t with_operations
   =
-  let () = assert_with_error (Tezos.get_now () <= deadline) "deadline has passed" in
+  let () = assert_with_error (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
   let self_to_sell = Curve.swap_amount proceeds_amount t.self_reserves (env.target_self_reserves ctxt) in
   let () =
     assert_with_error (self_to_sell >= min_self) "insufficient 'self' would be bought"
