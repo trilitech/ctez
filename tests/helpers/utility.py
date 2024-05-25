@@ -8,7 +8,7 @@ from pytezos.michelson.types.base import MichelsonType
 from typing import Any
 
 
-DEFAULT_ADDRESS = 'tz1burnburnburnburnburnburnburjAYjjX'
+DEFAULT_ADDRESS = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
 TEST_ADDRESSES_SET = [
     'tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP',
     'tz1Xf8zdT3DbAX9cHw3c3CXh79rc4nK4gCe8',

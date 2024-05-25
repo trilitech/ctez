@@ -4,6 +4,7 @@ from typing import Optional
 from pytezos.rpc import RpcError
 from contextlib import contextmanager
 from tests.helpers.addressable import Addressable
+from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.contract.result import ContractCallResult
 from pytezos.operation.group import OperationGroup
@@ -27,6 +28,13 @@ class BaseTestCase(SandboxedNodeTestCase):
         bootstrap.reveal()
         self.accounts.append(bootstrap)
         return bootstrap
+
+    def deploy_ctez2(
+        self,
+    ) -> Ctez2:
+        opg = Ctez2.originate(self.manager).send()
+        self.bake_block()
+        return Ctez2.from_opg(self.manager, opg)
 
     def deploy_fa12(
         self,

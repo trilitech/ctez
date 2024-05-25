@@ -152,6 +152,16 @@
              ADD ;
              UPDATE 5 } ;
          LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { DROP ; UNIT } { FAILWITH } } ;
+         LAMBDA
            (pair (pair nat address)
                  (big_map (pair nat address) (pair mutez nat address nat))
                  timestamp
@@ -216,7 +226,7 @@
            (contract (pair int address))
            { CONTRACT %mintOrBurn (pair int address) ;
              IF_NONE { PUSH nat 9 ; FAILWITH } {} } ;
-         DIG 5 ;
+         DIG 6 ;
          UNPAIR ;
          IF_LEFT
            { DIG 2 ;
@@ -225,12 +235,11 @@
              DIG 5 ;
              DROP 4 ;
              UNPAIR 4 ;
-             PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
-             PUSH mutez 0 ;
-             AMOUNT ;
-             COMPARE ;
-             EQ ;
-             IF { DROP } { FAILWITH } ;
+             UNIT ;
+             DIG 6 ;
+             SWAP ;
+             EXEC ;
+             DROP ;
              DIG 3 ;
              DIG 3 ;
              DUP 4 ;
@@ -267,7 +276,8 @@
                  DIG 3 ;
                  DIG 4 ;
                  DIG 5 ;
-                 DROP 4 ;
+                 DIG 6 ;
+                 DROP 5 ;
                  UNPAIR 3 ;
                  DUG 2 ;
                  AMOUNT ;
@@ -287,11 +297,12 @@
                  UPDATE 7 ;
                  NIL operation ;
                  PAIR }
-               { DIG 6 ;
+               { DIG 7 ;
                  DROP ;
                  IF_LEFT
                    { DIG 3 ;
-                     DROP ;
+                     DIG 6 ;
+                     DROP 2 ;
                      SENDER ;
                      DUP 2 ;
                      CAR ;
@@ -345,7 +356,9 @@
                           CONS ;
                           PAIR } }
                    { IF_LEFT
-                       { DUP 2 ;
+                       { DIG 6 ;
+                         DROP ;
+                         DUP 2 ;
                          DUP 2 ;
                          CAR ;
                          PAIR ;
@@ -437,7 +450,8 @@
                          IF_LEFT
                            { DIG 2 ;
                              DIG 3 ;
-                             DROP 2 ;
+                             DIG 5 ;
+                             DROP 3 ;
                              DUP 2 ;
                              DUP 2 ;
                              CAR ;
@@ -470,7 +484,9 @@
                                   NIL operation ;
                                   PAIR } }
                            { IF_LEFT
-                               { SENDER ;
+                               { DIG 5 ;
+                                 DROP ;
+                                 SENDER ;
                                  DUP 2 ;
                                  CAR ;
                                  PAIR ;
@@ -527,7 +543,12 @@
                                  DIG 4 ;
                                  DROP 3 ;
                                  IF_LEFT
-                                   { PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
+                                   { UNIT ;
+                                     DIG 3 ;
+                                     SWAP ;
+                                     EXEC ;
+                                     DROP ;
+                                     PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
                                      DUP 3 ;
                                      GET 8 ;
                                      GET 6 ;
@@ -542,7 +563,9 @@
                                           UPDATE 8 ;
                                           NIL operation ;
                                           PAIR } }
-                                   { UNPAIR 3 ;
+                                   { DIG 2 ;
+                                     DROP ;
+                                     UNPAIR 3 ;
                                      SENDER ;
                                      SWAP ;
                                      PAIR ;

@@ -47,6 +47,5 @@ class Fa12Tester(ContractHelper):
         return self.contract.call_get_total_supply()
     
     def get_last_callback(self) -> tuple[str, int]:
-        print(self.contract.storage())
         return self.contract.storage()['last_callback']
     

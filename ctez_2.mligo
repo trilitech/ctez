@@ -147,11 +147,12 @@ let create_oven ({ id; delegate; depositors }: create_oven) (s : storage) : resu
 
 (* called on initialization to set the ctez_fa12_address *)
 [@entry]
-let set_ctez_fa12_address (ctez_fa12_address : address) (s : storage)  : result =
+let set_ctez_fa12_address (ctez_fa12_address : address) (s : storage) : result =
+  let () = assert_no_tez_in_transaction () in
   if s.context.ctez_fa12_address <> ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) then
     (failwith error_CTEZ_FA12_ADDRESS_ALREADY_SET : result)
   else
-    (([] : operation list), {s with context = {s.context with ctez_fa12_address = ctez_fa12_address }})
+    (([] : operation list), { s with context = { s.context with ctez_fa12_address = ctez_fa12_address }})
 
 [@entry]
 let withdraw_from_oven (p : withdraw) (s : storage) : result =
