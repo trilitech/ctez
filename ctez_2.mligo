@@ -17,6 +17,19 @@ type add_ctez_liquidity = {
   deadline : timestamp;
 }
 
+type tez_to_ctez = { 
+  to_: address; 
+  min_ctez_bought : nat;
+  deadline : timestamp
+}
+
+type ctez_to_tez = { 
+  to_: address; 
+  ctez_sold : nat;
+  min_tez_bought : nat;
+  deadline : timestamp
+}
+
 type create_oven = {
   id : nat; 
   delegate : key_hash option; 
@@ -87,7 +100,7 @@ let assert_no_tez_in_transaction
     : unit =
   Assert.Error.assert (Tezos.get_amount () = 0mutez) Errors.tez_in_transaction_disallowed 
 
-let mutez_to_natural (a: tez) : nat = a / 1mutez
+let tez_to_nat (a: tez) : nat = a / 1mutez
 
 let get_oven (handle : oven_handle) (s : storage) : oven =
   match Big_map.find_opt handle s.ovens with
@@ -120,13 +133,13 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
-  target_self_reserves = fun (_) -> (failwith error_IMPOSSIBLE : nat);
+  target_self_reserves = fun (c) -> Bitwise.shift_right (c._Q * c.target) 48n;
 }
 
 let sell_ctez_env : Half_dex.environment = {
   transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
-  target_self_reserves = fun (_) -> (failwith error_IMPOSSIBLE : nat);
+  target_self_reserves = fun (c) -> c._Q;
 }
 
 (* Entrypoint Functions *)
@@ -228,7 +241,7 @@ let add_tez_liquidity
     ({ owner; min_liquidity; deadline } : add_tez_liquidity) 
     (s : storage) 
     : result =
-  let p : Half_dex.deposit = { owner = owner; amount_deposited = mutez_to_natural (Tezos.get_amount ()); min_liquidity = min_liquidity; deadline = deadline } in
+  let p : Half_dex.deposit = { owner = owner; amount_deposited = tez_to_nat (Tezos.get_amount ()); min_liquidity = min_liquidity; deadline = deadline } in
   let sell_tez = Half_dex.deposit s.sell_tez p in
   ([] : operation list), { s with sell_tez = sell_tez }
 
@@ -242,6 +255,26 @@ let add_ctez_liquidity
   let sell_ctez = Half_dex.deposit s.sell_ctez p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
   [transfer_ctez_op], { s with sell_ctez = sell_ctez }
+
+[@entry]
+let tez_to_ctez
+    ({to_; min_ctez_bought; deadline} : tez_to_ctez)
+    (s : storage)
+    : result =
+  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = tez_to_nat (Tezos.get_amount ()); min_self = min_ctez_bought } in
+  let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
+  ops, { s with sell_ctez = sell_ctez }
+
+[@entry]
+let ctez_to_tez
+    ({to_; ctez_sold; min_tez_bought; deadline} : ctez_to_tez)
+    (s : storage)
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
+  let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
+  let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
+  transfer_ctez_op :: ops, { s with sell_tez = sell_tez }
 
 (* Views *)
 

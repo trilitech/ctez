@@ -91,7 +91,7 @@ type liquidity_owner =
   ; subsidy_owed : nat  (** the amount of ctez subsidy owed to the dex by the account. *)
   }
 
-let default_liqudity_owner = 
+let default_liquidity_owner = 
   { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }
 
 type t = 
@@ -104,7 +104,7 @@ type t =
   }
 
 let find_liquidity_owner  (t : t) (owner : address) : liquidity_owner = 
-  Option.value default_liqudity_owner (Big_map.find_opt owner t.liquidity_owners)
+  Option.value default_liquidity_owner (Big_map.find_opt owner t.liquidity_owners)
 
 let set_liquidity_owner  (t : t) (owner : address) (liquidity_owner : liquidity_owner) : t = 
   { t with liquidity_owners = Big_map.update owner (Some liquidity_owner) t.liquidity_owners }
@@ -246,34 +246,28 @@ let redeem
   in
   [ receive_self; receive_proceeds; receive_subsidy ], t
 
-type swap = 
-  { to_: address (** address that will own the 'self' tokens in the swap *)
-  ; deadline : timestamp (** deadline for the transaction *)
-  ; proceeds_amount : nat (** the amount of the 'proceed' token used to buy the 'self' token *)    
-  ; min_self : nat (** the minimum amount of 'self' tokens to receive *)
-  }
+type swap = { 
+  to_: address; (** address that will own the 'self' tokens in the swap *)
+  proceeds_amount : nat; (** the amount of the 'proceed' token used to buy the 'self' token *)    
+  min_self : nat; (** the minimum amount of 'self' tokens to receive *)
+  deadline : timestamp; (** deadline for the transaction *)
+}
 
 let swap 
     (t : t) 
     (ctxt : Context.t) 
     (env : environment) 
     ({ to_; proceeds_amount; min_self; deadline } : swap)
-    : t with_operations
-  =
-  let () = assert_with_error (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
+    : t with_operations =
+  let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
   let self_to_sell = Curve.swap_amount proceeds_amount t.self_reserves (env.target_self_reserves ctxt) in
-  let () =
-    assert_with_error (self_to_sell >= min_self) "insufficient 'self' would be bought"
-  in
-  let () =
-    assert_with_error (self_to_sell <= t.self_reserves) "insufficient 'self' in the dex"
-  in
-  let t =
-    { t with
-      self_reserves = abs (t.self_reserves - self_to_sell)
-    ; proceeds_reserves = t.proceeds_reserves + proceeds_amount
-    }
-  in
+  let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
+  let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
+  let t = { 
+    t with
+    self_reserves = abs (t.self_reserves - self_to_sell); 
+    proceeds_reserves = t.proceeds_reserves + proceeds_amount
+  } in
   let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_to_sell in
   [ receive_self ], t
 

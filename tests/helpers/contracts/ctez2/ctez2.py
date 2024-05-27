@@ -17,6 +17,8 @@ class Ctez2(ContractHelper):
         DEADLINE_HAS_PASSED = 'DEADLINE_HAS_PASSED'
         INSUFFICIENT_LIQUIDITY_CREATED = 'INSUFFICIENT_LIQUIDITY_CREATED'
         CTEZ_FA12_ADDRESS_ALREADY_SET = 'CTEZ_FA12_ADDRESS_ALREADY_SET'
+        INSUFFICIENT_TOKENS_BOUGHT = 'INSUFFICIENT_TOKENS_BOUGHT'
+        INSUFFICIENT_TOKENS_LIQUIDITY = 'INSUFFICIENT_TOKENS_LIQUIDITY'
 
     @classmethod
     def originate(
@@ -38,9 +40,9 @@ class Ctez2(ContractHelper):
             'sell_tez' : half_dex_storage,
             'sell_ctez' : half_dex_storage,
             'context': {
-                'target' : 1, 
+                'target' : 2**48, 
                 'drift' : 0, 
-                '_Q' : 0,
+                '_Q' : 1,
                 'ctez_fa12_address' : DEFAULT_ADDRESS,
             }
         }
@@ -67,5 +69,20 @@ class Ctez2(ContractHelper):
         return self.contract.add_tez_liquidity({ 
             'owner': get_address(owner),
             'min_liquidity': min_liquidity, 
+            'deadline': deadline 
+        })
+
+    def tez_to_ctez(self, to : Addressable, min_ctez_bought : int, deadline : int ) -> ContractCall:
+        return self.contract.tez_to_ctez({ 
+            'to_': get_address(to),
+            'min_ctez_bought': min_ctez_bought, 
+            'deadline': deadline 
+        })
+
+    def ctez_to_tez(self, to : Addressable, ctez_sold : int, min_tez_bought : int, deadline : int ) -> ContractCall:
+        return self.contract.ctez_to_tez({ 
+            'to_': get_address(to),
+            'ctez_sold': ctez_sold,
+            'min_tez_bought': min_tez_bought, 
             'deadline': deadline 
         })
