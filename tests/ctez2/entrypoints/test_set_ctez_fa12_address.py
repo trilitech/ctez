@@ -5,13 +5,15 @@ from tests.helpers.utility import DEFAULT_ADDRESS
 
 class Ctez2SetCtezFa12AddressTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
-        ctez2, ctez_token, *_ = self.default_setup(skip_setting_token_address=True)
+        ctez2 = self.deploy_ctez2()
+        ctez_token = self.deploy_fa12(ctez2, {})
 
         with self.raises_michelson_error(Ctez2.Errors.TEZ_IN_TRANSACTION_DISALLOWED):
             ctez2.set_ctez_fa12_address(ctez_token).with_amount(1).send()
 
     def test_should_set_ctez_fa12_address_correctly(self) -> None:
-        ctez2, ctez_token, *_ = self.default_setup(skip_setting_token_address=True)
+        ctez2 = self.deploy_ctez2()
+        ctez_token = self.deploy_fa12(ctez2, {})
         assert ctez2.get_ctez_fa12_address() == DEFAULT_ADDRESS
 
         ctez2.set_ctez_fa12_address(ctez_token).send()

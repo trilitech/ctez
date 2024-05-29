@@ -31,7 +31,7 @@ class Ctez2(ContractHelper):
             'self_reserves' : 1,
             'proceeds_reserves' : 0,
             'subsidy_reserves' : 0,
-            'fee_index' : 0,
+            'fee_index' : 2**48,
         }
 
         storage = {

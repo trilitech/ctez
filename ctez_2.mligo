@@ -236,6 +236,10 @@ let mint_or_burn (p : mint_or_burn)  (s : storage) : result =
     let ctez_mint_or_burn = get_ctez_mint_or_burn s.context.ctez_fa12_address in
     ([Tezos.Next.Operation.transaction (p.quantity, Tezos.get_sender ()) 0mutez ctez_mint_or_burn], s)
 
+let get_housekeeping_op () : operation =
+  let contract = (Tezos.get_entrypoint "%housekeeping" (Tezos.get_self_address ()) : unit contract) in
+  Tezos.Next.Operation.transaction unit 0mutez contract
+
 [@entry]
 let add_tez_liquidity 
     ({ owner; min_liquidity; deadline } : add_tez_liquidity) 
@@ -254,7 +258,7 @@ let add_ctez_liquidity
   let p : Half_dex.deposit = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
   let sell_ctez = Half_dex.deposit s.sell_ctez p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
-  [transfer_ctez_op], { s with sell_ctez = sell_ctez }
+  [transfer_ctez_op; get_housekeeping_op ()], { s with sell_ctez = sell_ctez }
 
 [@entry]
 let tez_to_ctez
@@ -289,8 +293,8 @@ let min (a : nat) b = if a < b then a else b
 [@inline]
 let drift_adjustment (storage : storage) : int =
   let target = storage.context.target in 
-  let qc = min storage.sell_ctez.total_liquidity_shares storage.context._Q in
-  let qt = min storage.sell_tez.total_liquidity_shares (storage.context._Q * target) in
+  let qc = min storage.sell_ctez.self_reserves storage.context._Q in
+  let qt = min storage.sell_tez.self_reserves (storage.context._Q * target) in
   let tqc_m_qt = target * qc - qt in
   let tQ = target * storage.context._Q in
   tqc_m_qt * tqc_m_qt * tqc_m_qt / (tQ * tQ * tQ)
@@ -307,7 +311,7 @@ let clamp_nat (x : int) : nat =
     | Some x -> x
 
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
-  let rate = fee_rate _Q dex.total_liquidity_shares in
+  let rate = fee_rate _Q dex.self_reserves in
   (* rate is given as a multiple of 2^(-48)... note that 2^(-32) Np / s ~ 0.73 cNp / year, so roughly a max of 0.73% / year *)
   let new_fee_index = dex.fee_index + Bitwise.shift_right (delta * dex.fee_index * rate) 48n in
   (* Compute how many ctez have implicitly been minted since the last update *)
@@ -320,7 +324,7 @@ let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : na
 
   {dex with fee_index = new_fee_index; subsidy_reserves = clamp_nat (dex.subsidy_reserves + minted) }, clamp_nat (outstanding + minted), op_mint_ctez
 
-
+[@entry]
 let housekeeping () (storage : storage) : result =
   let curr_timestamp = Tezos.get_now () in
   if storage.last_update <> curr_timestamp then
