@@ -13,7 +13,7 @@ class Ctez2BaseTestCase(BaseTestCase):
         tez_liquidity = 0,
         ctez_liquidity = 0,
         get_ctez_token_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
-    ) -> tuple[Ctez2, Fa12]:
+    ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient]:
         account1 = self.bootstrap_account()
         account2 = self.bootstrap_account()
         donor = self.bootstrap_account()
