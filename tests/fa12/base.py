@@ -4,7 +4,7 @@ from tests.helpers.addressable import Addressable
 from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.client import PyTezosClient
 
-from tests.helpers.utility import DEFAULT_ADDRESS
+from tests.helpers.utility import NULL_ADDRESS
 
 class Fa12BaseTestCase(BaseTestCase):
     def default_setup(
@@ -15,7 +15,7 @@ class Fa12BaseTestCase(BaseTestCase):
     ) -> tuple[PyTezosClient, PyTezosClient, Fa12]:
         account1 = self.bootstrap_account()
         account2 = self.bootstrap_account()
-        admin = get_admin(account1, account2) if get_admin is not None else DEFAULT_ADDRESS
+        admin = get_admin(account1, account2) if get_admin is not None else NULL_ADDRESS
         balances = get_balances(account1, account2) if get_balances is not None else {}
         allowances = get_allowances(account1, account2) if get_allowances is not None else []
         fa12 = self.deploy_fa12(admin, balances, allowances)

@@ -3,7 +3,7 @@ from pytezos.contract.call import ContractCall
 from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.contract import ContractHelper
 from tests.helpers.utility import (
-    DEFAULT_ADDRESS,
+    NULL_ADDRESS,
     get_build_dir,
     originate_from_file,
 )
@@ -25,8 +25,15 @@ class Ctez2(ContractHelper):
         self,
         client: PyTezosClient
     ) -> OperationGroup:
+        # we need to set initial liquidity as 1 which will never be withdrawn 
         half_dex_storage = {
-            'liquidity_owners' : {},
+            'liquidity_owners' : {
+                NULL_ADDRESS: {
+                    'liquidity_shares': 1,
+                    'proceeds_owed': 0,
+                    'subsidy_owed': 0
+                }
+            },
             'total_liquidity_shares' : 1,
             'self_reserves' : 1,
             'proceeds_reserves' : 0,
@@ -43,7 +50,7 @@ class Ctez2(ContractHelper):
                 'target' : 2**48, 
                 'drift' : 0, 
                 '_Q' : 1,
-                'ctez_fa12_address' : DEFAULT_ADDRESS,
+                'ctez_fa12_address' : NULL_ADDRESS,
             }
         }
         

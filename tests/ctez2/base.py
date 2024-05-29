@@ -5,7 +5,7 @@ from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.client import PyTezosClient
 
-from tests.helpers.utility import DEFAULT_ADDRESS
+from tests.helpers.utility import NULL_ADDRESS
 
 class Ctez2BaseTestCase(BaseTestCase):
     def default_setup(
@@ -18,7 +18,13 @@ class Ctez2BaseTestCase(BaseTestCase):
         account2 = self.bootstrap_account()
         donor = self.bootstrap_account()
         balances = get_ctez_token_balances(account1, account2) if get_ctez_token_balances is not None else {}
-        balances[DEFAULT_ADDRESS] = 1
+        # we need to set the minimum supply (20) of ctez token 
+        # to allow _Q always be greater than 1 (since _Q is 5% of total supply)
+        balances[NULL_ADDRESS] = 20
+
+        # because half dexes initially have liquidity equals 1
+        ctez_liquidity = max (ctez_liquidity - 1, 0)
+        tez_liquidity = max (tez_liquidity - 1, 0)
         balances[donor] = ctez_liquidity
     
         ctez2 = self.deploy_ctez2()
@@ -32,5 +38,5 @@ class Ctez2BaseTestCase(BaseTestCase):
             ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
         ).send()
         self.bake_block()
-        
+
         return ctez2, fa12, account1, account2

@@ -85,11 +85,11 @@ module Curve = struct
     | Some x -> x
 end
 
-type liquidity_owner = 
-  { liquidity_shares : nat (** the amount of liquidity shares owned by the account. *)
-  ; proceeds_owed : nat  (** the amount of the proceeds token owed to the dex by the account. *)
-  ; subsidy_owed : nat  (** the amount of ctez subsidy owed to the dex by the account. *)
-  }
+type liquidity_owner = { 
+  liquidity_shares : nat; (** the amount of liquidity shares owned by the account. *)
+  proceeds_owed : nat;  (** the amount of the proceeds token owed to the dex by the account. *)
+  subsidy_owed : nat;  (** the amount of ctez subsidy owed to the dex by the account. *)
+}
 
 let default_liquidity_owner = 
   { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }

@@ -1,5 +1,5 @@
 from tests.fa12.base import Fa12BaseTestCase
-from tests.helpers.utility import DEFAULT_ADDRESS, TEST_ADDRESSES_SET
+from tests.helpers.utility import TEST_ADDRESSES_SET
 
 class Fa12ViewBalanceTestCase(Fa12BaseTestCase):
     def test_view_balance(self) -> None:

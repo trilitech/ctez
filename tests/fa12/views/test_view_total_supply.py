@@ -1,5 +1,5 @@
 from tests.fa12.base import Fa12BaseTestCase
-from tests.helpers.utility import DEFAULT_ADDRESS, TEST_ADDRESSES_SET
+from tests.helpers.utility import NULL_ADDRESS, TEST_ADDRESSES_SET
 
 class Fa12ViewTotalSupplyTestCase(Fa12BaseTestCase):
     def test_view_total_supply(self) -> None:
@@ -14,7 +14,7 @@ class Fa12ViewTotalSupplyTestCase(Fa12BaseTestCase):
 
         _, _, fa12 = self.default_setup(
             get_balances = lambda *_: {
-                DEFAULT_ADDRESS: 123,
+                NULL_ADDRESS: 123,
             }
         )
         assert fa12.view_total_supply() == 123
