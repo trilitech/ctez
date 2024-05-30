@@ -281,6 +281,24 @@ let remove_ctez_liquidity
   List.append ops [get_housekeeping_op ()], { s with sell_ctez = sell_ctez }
 
 [@entry]
+let collect_from_tez_liquidity
+    (p : Half_dex.collect_proceeds_and_subsidy) 
+    (s : storage) 
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let (ops, sell_tez) = Half_dex.collect_proceeds_and_subsidy s.sell_tez s.context sell_tez_env p in
+  ops, { s with sell_tez = sell_tez }
+
+[@entry]
+let collect_from_ctez_liquidity 
+    (p : Half_dex.collect_proceeds_and_subsidy) 
+    (s : storage) 
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let (ops, sell_ctez) = Half_dex.collect_proceeds_and_subsidy s.sell_ctez s.context sell_ctez_env p in
+  ops, { s with sell_ctez = sell_ctez }
+
+[@entry]
 let tez_to_ctez
     ({to_; min_ctez_bought; deadline} : tez_to_ctez)
     (s : storage)
@@ -301,16 +319,6 @@ let ctez_to_tez
   let ops = transfer_ctez_op :: ops in 
   List.append ops [get_housekeeping_op ()], { s with sell_tez = sell_tez }
 
-(* Views *)
-
-[@view]
-let get_target () (storage : storage) : nat = storage.context.target
-
-[@view]
-let get_drift () (storage : storage) : int = storage.context.drift
-
-let min (a : nat) b = if a < b then a else b
-
 [@inline]
 let drift_adjustment (storage : storage) : int =
   let target = storage.context.target in 
@@ -319,7 +327,6 @@ let drift_adjustment (storage : storage) : int =
   let tqc_m_qt = target * qc - qt in
   let tQ = target * storage.context._Q in
   tqc_m_qt * tqc_m_qt * tqc_m_qt / (tQ * tQ * tQ)
-
 
 let fee_rate (_Q : nat) (q : nat) : nat = 
   if 16n * q < _Q then 65536n else if 16n * q > 15n * _Q then 0n else
@@ -379,5 +386,10 @@ let housekeeping () (storage : storage) : result =
   else
     ([], storage)
 
+(* Views *)
 
+[@view]
+let get_target () (storage : storage) : nat = storage.context.target
 
+[@view]
+let get_drift () (storage : storage) : int = storage.context.drift

@@ -119,6 +119,12 @@ class Ctez2(ContractHelper):
             'deadline': deadline 
         })
 
+    def collect_from_tez_liquidity(self, to : Addressable) -> ContractCall:
+        return self.contract.collect_from_tez_liquidity(get_address(to))
+
+    def collect_from_ctez_liquidity(self, to : Addressable) -> ContractCall:
+        return self.contract.collect_from_ctez_liquidity(get_address(to))
+
     def tez_to_ctez(self, to : Addressable, min_ctez_bought : int, deadline : int ) -> ContractCall:
         return self.contract.tez_to_ctez({ 
             'to_': get_address(to),

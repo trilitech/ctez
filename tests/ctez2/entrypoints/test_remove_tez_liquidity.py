@@ -2,7 +2,7 @@ from tests.ctez2.base import Ctez2BaseTestCase
 from tests.helpers.addressable import get_balance_mutez
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 
-class Ctez2RemoveCtezLiquidityTestCase(Ctez2BaseTestCase):
+class Ctez2RemoveTezLiquidityTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
         ctez2, _, sender, receiver = self.default_setup()
 

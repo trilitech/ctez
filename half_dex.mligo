@@ -91,17 +91,16 @@ type liquidity_owner = {
   subsidy_owed : nat;  (** the amount of ctez subsidy owed to the dex by the account. *)
 }
 
-let default_liquidity_owner = 
-  { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }
+type t = { 
+  liquidity_owners : (address, liquidity_owner) big_map; (** map of liquidity owners. *)
+  total_liquidity_shares : nat;  (** total amount of liquidity shares. *)
+  self_reserves : nat;  (** total amount of liquidity. *)
+  proceeds_reserves : nat; (** total amount accumulated from proceeds. *)
+  subsidy_reserves : nat; (** total amount accumulated from subsidy. *)
+  fee_index : Float48.t; (** the fee index. *)
+}
 
-type t = 
-  { liquidity_owners : (address, liquidity_owner) big_map (** map of liquidity owners. *)
-  ; total_liquidity_shares : nat  (** total amount of liquidity shares. *)
-  ; self_reserves : nat  (** total amount of liquidity. *)
-  ; proceeds_reserves : nat (** total amount accumulated from proceeds. *)
-  ; subsidy_reserves : nat (** total amount accumulated from subsidy. *)
-  ; fee_index : Float48.t (** the fee index. *)
-  }
+let default_liquidity_owner = { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }
 
 let find_liquidity_owner  (t : t) (owner : address) : liquidity_owner = 
   Option.value default_liquidity_owner (Big_map.find_opt owner t.liquidity_owners)
@@ -214,9 +213,9 @@ let remove_liquidity
     subsidy_reserves = abs (t.subsidy_reserves - subsidy_redeemed);
   } in
   let ops = [] in
-  let ops = if ( self_redeemed > 0n ) then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops else ops in
-  let ops = if ( proceeds_redeemed > 0n ) then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops else ops in
   let ops = if ( subsidy_redeemed > 0n ) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops else ops in
+  let ops = if ( proceeds_redeemed > 0n ) then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops else ops in
+  let ops = if ( self_redeemed > 0n ) then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops else ops in
   ops, t
 
 type swap = { 
@@ -244,51 +243,37 @@ let swap
   let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_to_sell in
   [ receive_self ], t
 
-type collect_proceeds_and_subsidy = 
-  { to_: address }
+type collect_proceeds_and_subsidy = { to_: address }
 
 let collect_proceeds_and_subsidy
     (t : t)
     (ctxt : Context.t)
     (env : environment)
     ({ to_ } : collect_proceeds_and_subsidy)
-    : t with_operations
-  =
+    : t with_operations =
   let owner = Tezos.get_sender () in
   let liquidity_owner = find_liquidity_owner t owner in
   (* compute withdrawable amount of proceeds *)
-  let share_of_proceeds =
-    redeem_amount
-      liquidity_owner.liquidity_shares
-      t.proceeds_reserves
-      t.total_liquidity_shares
+  let share_of_proceeds = redeem_amount
+    liquidity_owner.liquidity_shares
+    t.proceeds_reserves
+    t.total_liquidity_shares
   in
-  let amount_proceeds_withdrawn =
-    clamp_nat (share_of_proceeds - liquidity_owner.proceeds_owed)
-  in
+  let amount_proceeds_withdrawn = clamp_nat (share_of_proceeds - liquidity_owner.proceeds_owed) in
   (* compute withdrawable amount of subsidy *)
-  let share_of_subsidy =
-    redeem_amount
-      liquidity_owner.liquidity_shares
-      t.subsidy_reserves
-      t.total_liquidity_shares
+  let share_of_subsidy = redeem_amount
+    liquidity_owner.liquidity_shares
+    t.subsidy_reserves
+    t.total_liquidity_shares
   in
-  let amount_subsidy_withdrawn =
-    clamp_nat (share_of_subsidy - liquidity_owner.subsidy_owed)
+  let amount_subsidy_withdrawn = clamp_nat (share_of_subsidy - liquidity_owner.subsidy_owed) in
+  let t = set_liquidity_owner t owner { 
+    liquidity_owner with
+    proceeds_owed = share_of_proceeds;
+    subsidy_owed = share_of_subsidy;
+  }
   in
-  let t =
-    set_liquidity_owner
-      t
-      owner
-      { liquidity_owner with
-        proceeds_owed = share_of_proceeds
-      ; subsidy_owed = share_of_subsidy
-      }
-  in
-  let receive_proceeds =
-    env.transfer_proceeds ctxt to_ amount_proceeds_withdrawn
-  in
-  let receive_subsidy =
-    Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ amount_subsidy_withdrawn
-  in
-  [ receive_proceeds; receive_subsidy ], t
+  let ops = [] in
+  let ops = if (amount_subsidy_withdrawn > 0n) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ amount_subsidy_withdrawn :: ops else ops in
+  let ops = if (amount_proceeds_withdrawn > 0n) then env.transfer_proceeds ctxt to_ amount_proceeds_withdrawn :: ops else ops in
+  ops, t
