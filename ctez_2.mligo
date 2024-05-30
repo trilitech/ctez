@@ -240,14 +240,16 @@ let get_housekeeping_op () : operation =
   let contract = (Tezos.get_entrypoint "%housekeeping" (Tezos.get_self_address ()) : unit contract) in
   Tezos.Next.Operation.transaction unit 0mutez contract
 
+(* dex *)
+
 [@entry]
 let add_tez_liquidity 
     ({ owner; min_liquidity; deadline } : add_tez_liquidity) 
     (s : storage) 
     : result =
-  let p : Half_dex.deposit = { owner = owner; amount_deposited = tez_to_nat (Tezos.get_amount ()); min_liquidity = min_liquidity; deadline = deadline } in
-  let sell_tez = Half_dex.deposit s.sell_tez p in
-  ([] : operation list), { s with sell_tez = sell_tez }
+  let p : Half_dex.add_liquidity = { owner = owner; amount_deposited = tez_to_nat (Tezos.get_amount ()); min_liquidity = min_liquidity; deadline = deadline } in
+  let sell_tez = Half_dex.add_liquidity s.sell_tez p in
+  [get_housekeeping_op ()], { s with sell_tez = sell_tez }
 
 [@entry]
 let add_ctez_liquidity 
@@ -255,10 +257,28 @@ let add_ctez_liquidity
     (s : storage) 
     : result =
   let () = assert_no_tez_in_transaction () in
-  let p : Half_dex.deposit = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
-  let sell_ctez = Half_dex.deposit s.sell_ctez p in
+  let p : Half_dex.add_liquidity = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
+  let sell_ctez = Half_dex.add_liquidity s.sell_ctez p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
   [transfer_ctez_op; get_housekeeping_op ()], { s with sell_ctez = sell_ctez }
+
+[@entry]
+let remove_tez_liquidity 
+    (p : Half_dex.remove_liquidity) 
+    (s : storage) 
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let (ops, sell_tez) = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
+  List.append ops [get_housekeeping_op ()], { s with sell_tez = sell_tez }
+
+[@entry]
+let remove_ctez_liquidity 
+    (p : Half_dex.remove_liquidity) 
+    (s : storage) 
+    : result =
+  let () = assert_no_tez_in_transaction () in
+  let (ops, sell_ctez) = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
+  List.append ops [get_housekeeping_op ()], { s with sell_ctez = sell_ctez }
 
 [@entry]
 let tez_to_ctez
@@ -267,7 +287,7 @@ let tez_to_ctez
     : result =
   let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = tez_to_nat (Tezos.get_amount ()); min_self = min_ctez_bought } in
   let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
-  ops, { s with sell_ctez = sell_ctez }
+  List.append ops [get_housekeeping_op ()] , { s with sell_ctez = sell_ctez }
 
 [@entry]
 let ctez_to_tez
@@ -278,7 +298,8 @@ let ctez_to_tez
   let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
   let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
-  transfer_ctez_op :: ops, { s with sell_tez = sell_tez }
+  let ops = transfer_ctez_op :: ops in 
+  List.append ops [get_housekeeping_op ()], { s with sell_tez = sell_tez }
 
 (* Views *)
 

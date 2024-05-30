@@ -4,3 +4,7 @@
 [@inline] let ctez_fa12_address_already_set = "CTEZ_FA12_ADDRESS_ALREADY_SET"
 [@inline] let insufficient_tokens_bought = "INSUFFICIENT_TOKENS_BOUGHT"
 [@inline] let insufficient_tokens_liquidity = "INSUFFICIENT_TOKENS_LIQUIDITY"
+[@inline] let insufficient_liquidity = "INSUFFICIENT_LIQUIDITY"
+[@inline] let insufficient_self_received = "INSUFFICIENT_SELF_RECEIVED"
+[@inline] let insufficient_proceeds_received = "INSUFFICIENT_PROCEEDS_RECEIVED"
+[@inline] let insufficient_subsidy_received = "INSUFFICIENT_SUBSIDY_RECEIVED"

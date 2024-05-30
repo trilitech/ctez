@@ -19,6 +19,10 @@ class Ctez2(ContractHelper):
         CTEZ_FA12_ADDRESS_ALREADY_SET = 'CTEZ_FA12_ADDRESS_ALREADY_SET'
         INSUFFICIENT_TOKENS_BOUGHT = 'INSUFFICIENT_TOKENS_BOUGHT'
         INSUFFICIENT_TOKENS_LIQUIDITY = 'INSUFFICIENT_TOKENS_LIQUIDITY'
+        INSUFFICIENT_LIQUIDITY = 'INSUFFICIENT_LIQUIDITY'
+        INSUFFICIENT_SELF_RECEIVED = 'INSUFFICIENT_SELF_RECEIVED'
+        INSUFFICIENT_PROCEEDS_RECEIVED = 'INSUFFICIENT_PROCEEDS_RECEIVED'
+        INSUFFICIENT_SUBSIDY_RECEIVED = 'INSUFFICIENT_SUBSIDY_RECEIVED'
 
     @classmethod
     def originate(
@@ -76,6 +80,42 @@ class Ctez2(ContractHelper):
         return self.contract.add_tez_liquidity({ 
             'owner': get_address(owner),
             'min_liquidity': min_liquidity, 
+            'deadline': deadline 
+        })
+
+    def remove_ctez_liquidity(
+            self, 
+            to : Addressable, 
+            liquidity_redeemed : int, 
+            min_self_received : int, 
+            min_proceeds_received : int, 
+            min_subsidy_received : int, 
+            deadline : int 
+            ) -> ContractCall:
+        return self.contract.remove_ctez_liquidity({ 
+            'to_': get_address(to),
+            'liquidity_redeemed': liquidity_redeemed, 
+            'min_self_received': min_self_received, 
+            'min_proceeds_received': min_proceeds_received, 
+            'min_subsidy_received': min_subsidy_received, 
+            'deadline': deadline 
+        })
+
+    def remove_tez_liquidity(
+            self, 
+            to : Addressable, 
+            liquidity_redeemed : int, 
+            min_self_received : int, 
+            min_proceeds_received : int, 
+            min_subsidy_received : int, 
+            deadline : int 
+            ) -> ContractCall:
+        return self.contract.remove_tez_liquidity({ 
+            'to_': get_address(to),
+            'liquidity_redeemed': liquidity_redeemed, 
+            'min_self_received': min_self_received, 
+            'min_proceeds_received': min_proceeds_received, 
+            'min_subsidy_received': min_subsidy_received, 
             'deadline': deadline 
         })
 
