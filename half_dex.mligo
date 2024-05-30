@@ -213,10 +213,11 @@ let remove_liquidity
     proceeds_reserves = abs (t.proceeds_reserves - proceeds_redeemed);
     subsidy_reserves = abs (t.subsidy_reserves - subsidy_redeemed);
   } in
-  let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed in
-  let receive_proceeds = env.transfer_proceeds ctxt to_ proceeds_redeemed in
-  let receive_subsidy = Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed in
-  [ receive_self; receive_proceeds; receive_subsidy ], t
+  let ops = [] in
+  let ops = if ( self_redeemed > 0n ) then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops else ops in
+  let ops = if ( proceeds_redeemed > 0n ) then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops else ops in
+  let ops = if ( subsidy_redeemed > 0n ) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops else ops in
+  ops, t
 
 type swap = { 
   to_: address; (** address that will own the 'self' tokens in the swap *)
