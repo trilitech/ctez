@@ -39,6 +39,16 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_TOKENS_BOUGHT):
             ctez2.using(sender).ctez_to_tez(receiver, sent_ctez, 1_000_000, self.get_future_timestamp()).send()
 
+    def test_should_not_allow_to_remove_all_liquidity(self) -> None:
+        all_liquidity = 8
+        ctez2, _, sender, receiver = self.default_setup(
+            tez_liquidity = all_liquidity
+        )
+
+        sent_tez = 10
+        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_TOKENS_LIQUIDITY):
+            ctez2.using(sender).ctez_to_tez(receiver, sent_tez, all_liquidity, self.get_future_timestamp()).send()
+
     def test_should_transfer_tokens_correctly(self) -> None:
         sent_ctez = 10_000_000
         ctez2, ctez_token, sender, receiver = self.default_setup(

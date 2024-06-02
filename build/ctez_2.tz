@@ -673,7 +673,7 @@
              GET 5 ;
              DUP 2 ;
              COMPARE ;
-             LE ;
+             LT ;
              IF {} { PUSH string "INSUFFICIENT_TOKENS_LIQUIDITY" ; FAILWITH } ;
              DUP 4 ;
              DUP 2 ;

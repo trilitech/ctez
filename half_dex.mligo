@@ -234,7 +234,7 @@ let swap
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
   let self_to_sell = Curve.swap_amount proceeds_amount t.self_reserves (env.target_self_reserves ctxt) in
   let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
-  let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
+  let () = Assert.Error.assert (self_to_sell < t.self_reserves) Errors.insufficient_tokens_liquidity in
   let t = { 
     t with
     self_reserves = abs (t.self_reserves - self_to_sell); 
