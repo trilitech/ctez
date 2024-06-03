@@ -3,6 +3,7 @@ from tests.helpers.addressable import get_balance_mutez
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from parameterized import parameterized
 from test_cases import swap_tez_to_ctez_cases
+from tests.helpers.utility import NULL_ADDRESS
 
 class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_deadline_has_passed(self) -> None:
@@ -50,13 +51,13 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
             ctez2.using(sender).tez_to_ctez(receiver, all_liquidity, self.get_future_timestamp()).with_amount(sent_tez).send()
 
     @parameterized.expand(swap_tez_to_ctez_cases)
-    def test_should_swap_tokens_correctly(self, _, ctez_liquidity, target_liquidity, sent_tez, ctez_bought, target_price) -> None:
+    def test_should_swap_tez_to_ctez_tokens_correctly(self, _, ctez_liquidity, target_liquidity, sent_tez, ctez_bought, target_price) -> None:
         total_supply = target_liquidity * 20 # target_liquidity is 5% of total supply
         ctez2, ctez_token, sender, receiver = self.default_setup(
             ctez_liquidity = ctez_liquidity,
             target_ctez_price = target_price,
-            get_ctez_token_balances = lambda sender, *_: {
-                sender : total_supply - ctez_liquidity
+            get_ctez_token_balances = lambda *_: {
+                NULL_ADDRESS : total_supply - ctez_liquidity
             }
         )
 
