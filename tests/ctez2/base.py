@@ -12,6 +12,7 @@ class Ctez2BaseTestCase(BaseTestCase):
         self,
         tez_liquidity = 0,
         ctez_liquidity = 0,
+        target_ctez_price = 1.0,
         get_ctez_token_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
     ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient]:
         account1 = self.bootstrap_account()
@@ -27,7 +28,7 @@ class Ctez2BaseTestCase(BaseTestCase):
         tez_liquidity = max (tez_liquidity - 1, 0)
         balances[donor] = ctez_liquidity
     
-        ctez2 = self.deploy_ctez2()
+        ctez2 = self.deploy_ctez2(target_ctez_price)
         fa12 = self.deploy_fa12(ctez2, balances)
         ctez2.set_ctez_fa12_address(fa12).send()
         self.bake_block()

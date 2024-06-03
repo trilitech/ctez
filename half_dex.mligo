@@ -81,7 +81,7 @@ module Curve = struct
     let y = clamp_nat (newton_step x y q _Q) in
     let result = y - y / 1_000_000_000 - 1 in
     match is_nat result with
-    | None -> failwith "trade size too small"
+    | None -> failwith Errors.small_sell_amount
     | Some x -> x
 end
 

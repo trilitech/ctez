@@ -31,8 +31,9 @@ class BaseTestCase(SandboxedNodeTestCase):
 
     def deploy_ctez2(
         self,
+        target_ctez_price = 1.0
     ) -> Ctez2:
-        opg = Ctez2.originate(self.manager).send()
+        opg = Ctez2.originate(self.manager, target_ctez_price).send()
         self.bake_block()
         return Ctez2.from_opg(self.manager, opg)
 

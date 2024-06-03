@@ -9,7 +9,7 @@ from tests.helpers.utility import (
 )
 from pytezos.operation.group import OperationGroup
 from os.path import join
-
+from math import floor
 
 class Ctez2(ContractHelper):
     class Errors:
@@ -23,11 +23,13 @@ class Ctez2(ContractHelper):
         INSUFFICIENT_SELF_RECEIVED = 'INSUFFICIENT_SELF_RECEIVED'
         INSUFFICIENT_PROCEEDS_RECEIVED = 'INSUFFICIENT_PROCEEDS_RECEIVED'
         INSUFFICIENT_SUBSIDY_RECEIVED = 'INSUFFICIENT_SUBSIDY_RECEIVED'
+        SMALL_SELL_AMOUNT = 'SMALL_SELL_AMOUNT'
 
     @classmethod
     def originate(
         self,
-        client: PyTezosClient
+        client: PyTezosClient,
+        target_ctez_price = 1.0
     ) -> OperationGroup:
         # we need to set initial liquidity as 1 which will never be withdrawn 
         half_dex_storage = {
@@ -51,7 +53,7 @@ class Ctez2(ContractHelper):
             'sell_tez' : half_dex_storage,
             'sell_ctez' : half_dex_storage,
             'context': {
-                'target' : 2**48, 
+                'target': floor(target_ctez_price * 2**48), 
                 'drift' : 0, 
                 '_Q' : 1,
                 'ctez_fa12_address' : NULL_ADDRESS,
