@@ -1390,9 +1390,16 @@
                  SWAP ;
                  EXEC ;
                  DROP ;
-                 DIG 3 ;
-                 DIG 3 ;
+                 PUSH nat 48 ;
+                 DUP 6 ;
+                 GET 8 ;
+                 CAR ;
                  DUP 4 ;
+                 MUL ;
+                 LSR ;
+                 DIG 4 ;
+                 DIG 4 ;
+                 DIG 2 ;
                  DIG 3 ;
                  PAIR 4 ;
                  DIG 4 ;

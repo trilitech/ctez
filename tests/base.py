@@ -3,7 +3,8 @@ from pytezos.sandbox.node import SandboxedNodeTestCase
 from typing import Optional
 from pytezos.rpc import RpcError
 from contextlib import contextmanager
-from tests.helpers.addressable import Addressable
+from tests.helpers.addressable import Addressable, get_address
+from tests.helpers.contracts.contract import ContractHelper
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.contract.result import ContractCallResult
@@ -11,6 +12,7 @@ from pytezos.operation.group import OperationGroup
 from pytezos.operation.result import OperationResult
 
 from tests.helpers.contracts.fa12.fa12_tester import Fa12Tester
+from tests.helpers.utility import pkh
 
 class BaseTestCase(SandboxedNodeTestCase):
     accounts: list = []
@@ -88,3 +90,7 @@ class BaseTestCase(SandboxedNodeTestCase):
 
     def get_passed_timestamp(self) -> int:
         return self.manager.now() - 1000
+
+    def get_balance_mutez(self, client_or_contract: Addressable) -> int:
+        address = get_address(client_or_contract)
+        return int(self.manager.account(address)['balance'])

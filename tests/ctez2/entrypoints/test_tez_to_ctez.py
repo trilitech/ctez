@@ -1,5 +1,4 @@
 from tests.ctez2.base import Ctez2BaseTestCase
-from tests.helpers.addressable import get_balance_mutez
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from parameterized import parameterized
 from test_cases import swap_tez_to_ctez_cases
@@ -62,7 +61,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         )
 
         prev_receiver_ctez_balance = ctez_token.view_balance(receiver)
-        prev_ctez2_tez_balance = get_balance_mutez(ctez2)
+        prev_ctez2_tez_balance = self.get_balance_mutez(ctez2)
 
         assert ctez2.contract.storage()['context']['_Q'] == target_liquidity
 
@@ -70,4 +69,4 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         self.bake_block()
 
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + ctez_bought
-        assert get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez
+        assert self.get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez

@@ -1,5 +1,4 @@
 from tests.ctez2.base import Ctez2BaseTestCase
-from tests.helpers.addressable import get_balance_mutez
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 
 class Ctez2RemoveTezLiquidityTestCase(Ctez2BaseTestCase):
@@ -35,14 +34,14 @@ class Ctez2RemoveTezLiquidityTestCase(Ctez2BaseTestCase):
         ctez2.using(owner).add_tez_liquidity(owner, 0, self.get_future_timestamp()).with_amount(deposit_amount).send()
         self.bake_block()
 
-        pre_receiver_tez_balance = get_balance_mutez(receiver)
-        pre_ctez2_tez_balance = get_balance_mutez(ctez2)
+        pre_receiver_tez_balance = self.get_balance_mutez(receiver)
+        pre_ctez2_tez_balance = self.get_balance_mutez(ctez2)
 
         ctez2.using(owner).remove_tez_liquidity(receiver, deposit_amount, 0, 0, 0, self.get_future_timestamp()).send()
         self.bake_block()
 
-        assert get_balance_mutez(receiver) == pre_receiver_tez_balance + deposit_amount
-        assert get_balance_mutez(ctez2) == pre_ctez2_tez_balance - deposit_amount
+        assert self.get_balance_mutez(receiver) == pre_receiver_tez_balance + deposit_amount
+        assert self.get_balance_mutez(ctez2) == pre_ctez2_tez_balance - deposit_amount
 
 # TODO: add tests for liquidity_shares, proceeds_owed, subsidy_owed
 #       when swap and subsidies are implemented

@@ -303,7 +303,7 @@ let tez_to_ctez
     ({to_; min_ctez_bought; deadline} : tez_to_ctez)
     (s : storage)
     : result =
-  let proceeds_amount = Bitwise.shift_left (tez_to_nat (Tezos.get_amount ())) 48n / s.context.target in 
+  let proceeds_amount = Bitwise.shift_left (tez_to_nat (Tezos.get_amount ())) 48n / s.context.target in // TODO: do inside
   let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = proceeds_amount; min_self = min_ctez_bought } in
   let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
   List.append ops [get_housekeeping_op ()] , { s with sell_ctez = sell_ctez }
@@ -314,7 +314,8 @@ let ctez_to_tez
     (s : storage)
     : result =
   let () = assert_no_tez_in_transaction () in
-  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
+  let proceeds_amount = Bitwise.shift_right (ctez_sold * s.context.target) 48n in // TODO: do inside
+  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = proceeds_amount; min_self = min_tez_bought } in
   let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
   let ops = transfer_ctez_op :: ops in 
