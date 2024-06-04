@@ -10,6 +10,7 @@ from tests.helpers.utility import (
 from pytezos.operation.group import OperationGroup
 from os.path import join
 from math import floor
+from typing import NamedTuple
 
 class Ctez2(ContractHelper):
     class Errors:
@@ -24,6 +25,14 @@ class Ctez2(ContractHelper):
         INSUFFICIENT_PROCEEDS_RECEIVED = 'INSUFFICIENT_PROCEEDS_RECEIVED'
         INSUFFICIENT_SUBSIDY_RECEIVED = 'INSUFFICIENT_SUBSIDY_RECEIVED'
         SMALL_SELL_AMOUNT = 'SMALL_SELL_AMOUNT'
+
+    class HalfDex(NamedTuple):
+        liquidity_owners: int
+        total_liquidity_shares: int
+        self_reserves: int
+        proceeds_reserves: int
+        subsidy_reserves: int
+        fee_index: int
 
     @classmethod
     def originate(
@@ -69,6 +78,12 @@ class Ctez2(ContractHelper):
 
     def get_ctez_fa12_address(self) -> str:
         return self.contract.storage()['context']['ctez_fa12_address']
+    
+    def get_sell_ctez_dex(self) -> HalfDex:
+        return Ctez2.HalfDex(**self.contract.storage()['sell_ctez']) 
+    
+    def get_sell_tez_dex(self) -> HalfDex:
+        return Ctez2.HalfDex(**self.contract.storage()['sell_tez']) 
 
     def add_ctez_liquidity(self, owner : Addressable, amount_deposited : int, min_liquidity : int, deadline : int ) -> ContractCall:
         return self.contract.add_ctez_liquidity({ 

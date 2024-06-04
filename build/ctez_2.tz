@@ -366,7 +366,8 @@
                                 (pair nat int nat address)
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
-                             (lambda (pair nat int nat address) nat))
+                             (lambda (pair nat int nat address) nat)
+                             (lambda (pair nat int nat address) (lambda nat nat)))
                        address
                        nat
                        nat
@@ -594,7 +595,8 @@
                                 (pair nat int nat address)
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
-                             (lambda (pair nat int nat address) nat))
+                             (lambda (pair nat int nat address) nat)
+                             (lambda (pair nat int nat address) (lambda nat nat)))
                        address
                        nat
                        nat
@@ -611,14 +613,22 @@
              COMPARE ;
              LE ;
              IF { DROP } { FAILWITH } ;
-             DUP 5 ;
-             DUP 7 ;
-             GET 4 ;
+             DUP 2 ;
+             DUP 6 ;
+             DUP 8 ;
+             GET 6 ;
              SWAP ;
              EXEC ;
-             DUP 5 ;
+             SWAP ;
+             EXEC ;
+             DUP 6 ;
+             DUP 8 ;
              GET 5 ;
-             DUP 4 ;
+             SWAP ;
+             EXEC ;
+             DUP 6 ;
+             GET 5 ;
+             DIG 2 ;
              DUP 3 ;
              DUP 3 ;
              COMPARE ;
@@ -728,7 +738,8 @@
                                 (pair nat int nat address)
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
-                             (lambda (pair nat int nat address) nat))
+                             (lambda (pair nat int nat address) nat)
+                             (lambda (pair nat int nat address) (lambda nat nat)))
                        address))
            (pair (list operation) (big_map address (pair nat nat nat)) nat nat nat nat nat)
            { UNPAIR ;
@@ -922,6 +933,17 @@
              IF_NONE { PUSH nat 9 ; FAILWITH } {} } ;
          LAMBDA
            (pair nat int nat address)
+           (lambda nat nat)
+           { LAMBDA
+               (pair (pair nat int nat address) nat)
+               nat
+               { UNPAIR ; SWAP ; PUSH nat 48 ; DIG 2 ; CAR ; DIG 2 ; MUL ; LSR } ;
+             DUP 2 ;
+             APPLY ;
+             SWAP ;
+             DROP } ;
+         LAMBDA
+           (pair nat int nat address)
            nat
            { PUSH nat 48 ; DUP 2 ; CAR ; DIG 2 ; GET 5 ; MUL ; LSR } ;
          LAMBDA
@@ -961,7 +983,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 13 ;
+         DUP 14 ;
          APPLY ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -995,9 +1017,27 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 15 ;
+         DUP 16 ;
          APPLY ;
-         PAIR 3 ;
+         PAIR 4 ;
+         LAMBDA
+           (pair nat int nat address)
+           (lambda nat nat)
+           { LAMBDA
+               (pair (pair nat int nat address) nat)
+               nat
+               { UNPAIR ;
+                 CAR ;
+                 PUSH nat 48 ;
+                 DIG 2 ;
+                 LSL ;
+                 EDIV ;
+                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                 CAR } ;
+             DUP 2 ;
+             APPLY ;
+             SWAP ;
+             DROP } ;
          LAMBDA (pair nat int nat address) nat { GET 5 } ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -1023,9 +1063,9 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 15 ;
+         DUP 16 ;
          APPLY ;
-         DIG 14 ;
+         DIG 15 ;
          DROP ;
          LAMBDA
            (pair (lambda (pair (pair nat int nat address) address address nat) operation)
@@ -1085,9 +1125,9 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 15 ;
+         DUP 16 ;
          APPLY ;
-         PAIR 3 ;
+         PAIR 4 ;
          LAMBDA
            unit
            operation
@@ -1390,16 +1430,9 @@
                  SWAP ;
                  EXEC ;
                  DROP ;
-                 PUSH nat 48 ;
-                 DUP 6 ;
-                 GET 8 ;
-                 CAR ;
+                 DIG 3 ;
+                 DIG 3 ;
                  DUP 4 ;
-                 MUL ;
-                 LSR ;
-                 DIG 4 ;
-                 DIG 4 ;
-                 DIG 2 ;
                  DIG 3 ;
                  PAIR 4 ;
                  DIG 4 ;
@@ -1451,21 +1484,11 @@
                      DIG 15 ;
                      DROP 10 ;
                      UNPAIR 3 ;
-                     DUP 4 ;
-                     GET 8 ;
-                     CAR ;
-                     PUSH nat 48 ;
+                     DUG 2 ;
                      AMOUNT ;
-                     DIG 9 ;
+                     DIG 7 ;
                      SWAP ;
                      EXEC ;
-                     LSL ;
-                     EDIV ;
-                     IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
-                     CAR ;
-                     DIG 3 ;
-                     DIG 3 ;
-                     DIG 2 ;
                      DIG 3 ;
                      PAIR 4 ;
                      DIG 3 ;

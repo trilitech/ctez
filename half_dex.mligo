@@ -10,17 +10,19 @@
       - A fee index [f : nat]
     Each account may own some shares in the dex. 
 
-    The dex is parameterised by a capability context for:
+    The dex is parameterized by a capability context for:
       - transferring the self token
       - transferring the proceeds token
       - computing the target quantity of the 'self' token in the half dex
+      - applying the target price to swap amount
 *)
 
-type environment = 
-  { transfer_self : Context.t -> address -> address -> nat -> operation
-  ; transfer_proceeds : Context.t -> address -> nat -> operation
-  ; target_self_reserves : Context.t -> nat
-  }
+type environment = { 
+  transfer_self : Context.t -> address -> address -> nat -> operation; 
+  transfer_proceeds : Context.t -> address -> nat -> operation; 
+  get_target_self_reserves : Context.t -> nat;
+  apply_target_price : Context.t -> nat -> nat;
+}
 
 module Curve = struct
   (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the 
@@ -232,7 +234,8 @@ let swap
     ({ to_; proceeds_amount; min_self; deadline } : swap)
     : t with_operations =
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let self_to_sell = Curve.swap_amount proceeds_amount t.self_reserves (env.target_self_reserves ctxt) in
+  let trade_amount = env.apply_target_price ctxt proceeds_amount in
+  let self_to_sell = Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt) in
   let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
   let () = Assert.Error.assert (self_to_sell < t.self_reserves) Errors.insufficient_tokens_liquidity in
   let t = { 

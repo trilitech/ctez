@@ -133,13 +133,15 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
-  target_self_reserves = fun (c) -> Bitwise.shift_right (c._Q * c.target) 48n;
+  get_target_self_reserves = fun (c) -> Bitwise.shift_right (c._Q * c.target) 48n;
+  apply_target_price = fun (c) (amt) -> Bitwise.shift_right (amt * c.target) 48n;
 }
 
 let sell_ctez_env : Half_dex.environment = {
   transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
-  target_self_reserves = fun (c) -> c._Q;
+  get_target_self_reserves = fun (c) -> c._Q;
+  apply_target_price = fun (c) (amt) -> Bitwise.shift_left (amt) 48n / c.target;
 }
 
 (* Entrypoint Functions *)
@@ -303,8 +305,7 @@ let tez_to_ctez
     ({to_; min_ctez_bought; deadline} : tez_to_ctez)
     (s : storage)
     : result =
-  let proceeds_amount = Bitwise.shift_left (tez_to_nat (Tezos.get_amount ())) 48n / s.context.target in // TODO: do inside
-  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = proceeds_amount; min_self = min_ctez_bought } in
+  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = tez_to_nat (Tezos.get_amount ()); min_self = min_ctez_bought } in
   let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
   List.append ops [get_housekeeping_op ()] , { s with sell_ctez = sell_ctez }
 
@@ -314,8 +315,7 @@ let ctez_to_tez
     (s : storage)
     : result =
   let () = assert_no_tez_in_transaction () in
-  let proceeds_amount = Bitwise.shift_right (ctez_sold * s.context.target) 48n in // TODO: do inside
-  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = proceeds_amount; min_self = min_tez_bought } in
+  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
   let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
   let ops = transfer_ctez_op :: ops in 

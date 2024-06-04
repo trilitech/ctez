@@ -62,6 +62,8 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
 
         prev_receiver_ctez_balance = ctez_token.view_balance(receiver)
         prev_ctez2_tez_balance = self.get_balance_mutez(ctez2)
+        prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_sell_tez_dex = ctez2.get_sell_tez_dex()
 
         assert ctez2.contract.storage()['context']['_Q'] == target_liquidity
 
@@ -70,3 +72,9 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
 
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + ctez_bought
         assert self.get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez
+        
+        assert ctez2.get_sell_tez_dex().self_reserves == prev_sell_tez_dex.self_reserves
+        assert ctez2.get_sell_tez_dex().proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
+
+        assert ctez2.get_sell_ctez_dex().self_reserves == prev_sell_ctez_dex.self_reserves - ctez_bought
+        assert ctez2.get_sell_ctez_dex().proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves + sent_tez

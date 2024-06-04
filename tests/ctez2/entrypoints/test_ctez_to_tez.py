@@ -68,7 +68,8 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         prev_receiver_tez_balance = self.get_balance_mutez(receiver)
         prev_ctez2_ctez_balance = ctez_token.view_balance(ctez2)
         prev_sender_ctez_balance = ctez_token.view_balance(sender)
-
+        prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_sell_tez_dex = ctez2.get_sell_tez_dex()
 
         print('tez_liquidity', tez_liquidity)
         print('tez_bought', tez_bought)
@@ -77,7 +78,6 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         print('total_supply', total_supply)
         print('sent_ctez', sent_ctez)
         print('ctez_supply', ctez_token.view_total_supply())
-        print('_Q', ctez2.contract.storage()['context']['_Q'])
         print('storage', ctez2.contract.storage())
 
         Q_ctez = ctez2.contract.storage()['context']['_Q']
@@ -95,4 +95,9 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance + tez_bought
         assert ctez_token.view_balance(sender) == prev_sender_ctez_balance - sent_ctez
         assert ctez_token.view_balance(ctez2) >= prev_ctez2_ctez_balance + sent_ctez # + subsidies
-        #TODO: check proceeds amount
+        
+        assert ctez2.get_sell_ctez_dex().self_reserves == prev_sell_ctez_dex.self_reserves
+        assert ctez2.get_sell_ctez_dex().proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves
+
+        assert ctez2.get_sell_tez_dex().self_reserves == prev_sell_tez_dex.self_reserves - tez_bought
+        assert ctez2.get_sell_tez_dex().proceeds_reserves == prev_sell_tez_dex.proceeds_reserves + sent_ctez
