@@ -1,11 +1,12 @@
 from pytezos.client import PyTezosClient
 from pytezos.contract.interface import ContractInterface
 from pytezos.operation.group import OperationGroup
+from pytezos.operation.result import OperationResult
 from os.path import dirname
 from os.path import join
 from pytezos.michelson.parse import michelson_to_micheline
 from pytezos.michelson.types.base import MichelsonType
-from typing import Any
+from typing import Any, Iterator
 
 
 NULL_ADDRESS = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
@@ -116,3 +117,21 @@ def originate_from_file(
     raw_contract = ContractInterface.from_file(filename)
     contract = raw_contract.using(key=client.key, shell=client.shell)
     return contract.originate(initial_storage=storage, balance=balance)
+
+    
+def iter_balance_updates(op_result: dict[str, any]) -> Iterator[list[dict[str, any]]]:
+    for content in OperationResult.iter_contents(op_result):
+        if content.get('metadata') and content.get('metadata', {}).get('balance_updates'):
+            yield content['metadata']['balance_updates']
+            if content['metadata'].get('operation_result', {}).get('balance_updates'):
+                yield content['metadata']['operation_result']['balance_updates']
+
+
+def get_consumed_mutez(client: PyTezosClient, opg: OperationGroup) -> int:
+    fee = 0
+    op_result = find_op_by_hash(client, opg)
+    for updates in iter_balance_updates(op_result):
+        for update in updates:
+            if update.get('category') == 'block fees' or update.get('category') == 'storage fees':
+                fee += int(update['change'])
+    return fee

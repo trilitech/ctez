@@ -51,7 +51,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
 
     @parameterized.expand(swap_tez_to_ctez_cases)
     def test_should_swap_tez_to_ctez_tokens_correctly(self, _, ctez_liquidity, target_liquidity, sent_tez, ctez_bought, target_price) -> None:
-        total_supply = target_liquidity * 20 # target_liquidity is 5% of total supply
+        total_supply = target_liquidity * 20 # ctez_target_liquidity(Q) is 5% of total supply
         ctez2, ctez_token, sender, receiver = self.default_setup(
             ctez_liquidity = ctez_liquidity,
             target_ctez_price = target_price,
@@ -73,8 +73,9 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + ctez_bought
         assert self.get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez
         
-        assert ctez2.get_sell_tez_dex().self_reserves == prev_sell_tez_dex.self_reserves
-        assert ctez2.get_sell_tez_dex().proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
-
-        assert ctez2.get_sell_ctez_dex().self_reserves == prev_sell_ctez_dex.self_reserves - ctez_bought
-        assert ctez2.get_sell_ctez_dex().proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves + sent_tez
+        current_sell_tez_dex = ctez2.get_sell_tez_dex()
+        current_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
+        assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves - ctez_bought
+        assert current_sell_ctez_dex.proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves + sent_tez

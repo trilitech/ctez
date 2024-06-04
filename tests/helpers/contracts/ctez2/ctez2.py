@@ -34,6 +34,11 @@ class Ctez2(ContractHelper):
         subsidy_reserves: int
         fee_index: int
 
+    class LiquidityOwner(NamedTuple):
+        liquidity_shares: int
+        proceeds_owed: int
+        subsidy_owed: int
+
     @classmethod
     def originate(
         self,
@@ -84,6 +89,14 @@ class Ctez2(ContractHelper):
     
     def get_sell_tez_dex(self) -> HalfDex:
         return Ctez2.HalfDex(**self.contract.storage()['sell_tez']) 
+    
+    def get_ctez_liquidity_owner(self, owner: Addressable) -> LiquidityOwner:
+        owner_address = get_address(owner)
+        return Ctez2.LiquidityOwner(**self.contract.storage['sell_ctez']['liquidity_owners'][owner_address]())
+    
+    def get_tez_liquidity_owner(self, owner: Addressable) -> LiquidityOwner:
+        owner_address = get_address(owner)
+        return Ctez2.LiquidityOwner(**self.contract.storage['sell_tez']['liquidity_owners'][owner_address]())
 
     def add_ctez_liquidity(self, owner : Addressable, amount_deposited : int, min_liquidity : int, deadline : int ) -> ContractCall:
         return self.contract.add_ctez_liquidity({ 

@@ -23,7 +23,7 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_LIQUIDITY_CREATED):
             ctez2.using(sender).add_ctez_liquidity(owner, deposit_amount, 100_000, self.get_future_timestamp()).send()
 
-    def test_receives_self_token_correctly(self) -> None:
+    def test_should_transfer_ctez_token_correctly(self) -> None:
         deposit_amount = 123
         ctez2, ctez_token, sender, owner = self.default_setup(
             get_ctez_token_balances = lambda sender, *_: {
@@ -42,6 +42,34 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
 
         assert ctez_token.view_balance(sender) == prev_sender_balance - deposit_amount
         assert ctez_token.view_balance(ctez2) == prev_ctez2_balance + deposit_amount
+
+    def test_should_update_deposit_correctly(self) -> None:
+        deposit_amount = 123
+        ctez2, ctez_token, sender, owner = self.default_setup(
+            get_ctez_token_balances = lambda sender, *_: {
+                sender : deposit_amount
+            }
+        )
+
+        prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_sell_tez_dex = ctez2.get_sell_tez_dex()
+
+        sender.bulk(
+            ctez_token.approve(ctez2, deposit_amount),
+            ctez2.add_ctez_liquidity(owner, deposit_amount, deposit_amount, self.get_future_timestamp())
+        ).send()
+        self.bake_block()
+
+        current_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        current_sell_tez_dex = ctez2.get_sell_tez_dex()
+        current_liquidity_owner = ctez2.get_ctez_liquidity_owner(owner)
+
+        assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves 
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves 
+        assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount 
+        assert current_sell_ctez_dex.proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves
+        assert current_liquidity_owner.liquidity_shares == deposit_amount
+        assert current_liquidity_owner.proceeds_owed == 0
 
 # TODO: add tests for liquidity_shares, proceeds_owed, subsidy_owed
 #       when swap and subsidies are implemented

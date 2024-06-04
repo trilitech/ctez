@@ -54,7 +54,7 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
 
     @parameterized.expand(swap_ctez_to_tez_cases)
     def test_should_swap_ctez_to_tez_tokens_correctly(self, _, tez_liquidity, target_liquidity, sent_ctez, tez_bought, target_price) -> None:
-        total_supply = ceil(target_liquidity * 20 / target_price) # target_liquidity is 5% of total supply
+        total_supply = floor(target_liquidity * 20 / target_price) # ctez_target_liquidity(Q) is 5% of total supply, tez_target liquidity is floor(Q * target)
         ctez2, ctez_token, sender, _ = self.default_setup(
             get_ctez_token_balances = lambda sender, *_: {
                 sender: sent_ctez,
@@ -71,20 +71,10 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
         prev_sell_tez_dex = ctez2.get_sell_tez_dex()
 
-        print('tez_liquidity', tez_liquidity)
-        print('tez_bought', tez_bought)
-        print('target_price', target_price)
-        print('target_liquidity', target_liquidity)
-        print('total_supply', total_supply)
-        print('sent_ctez', sent_ctez)
-        print('ctez_supply', ctez_token.view_total_supply())
-        print('storage', ctez2.contract.storage())
-
         Q_ctez = ctez2.contract.storage()['context']['_Q']
         Q_tez = floor(Q_ctez * target_price)
-        print("Q_ctez", Q_ctez)
-        print("Q_tez", Q_tez)
-        #assert Q_tez == target_liquidity TODO: assert with error rate
+        error_rate = 1.000001
+        assert target_liquidity / error_rate <= Q_tez <= target_liquidity * error_rate
 
         sender.bulk(
             ctez_token.approve(ctez2, sent_ctez),
@@ -96,8 +86,9 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         assert ctez_token.view_balance(sender) == prev_sender_ctez_balance - sent_ctez
         assert ctez_token.view_balance(ctez2) >= prev_ctez2_ctez_balance + sent_ctez # + subsidies
         
-        assert ctez2.get_sell_ctez_dex().self_reserves == prev_sell_ctez_dex.self_reserves
-        assert ctez2.get_sell_ctez_dex().proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves
-
-        assert ctez2.get_sell_tez_dex().self_reserves == prev_sell_tez_dex.self_reserves - tez_bought
-        assert ctez2.get_sell_tez_dex().proceeds_reserves == prev_sell_tez_dex.proceeds_reserves + sent_ctez
+        current_sell_ctez_dex = ctez2.get_sell_ctez_dex()
+        current_sell_tez_dex = ctez2.get_sell_tez_dex()
+        assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves
+        assert current_sell_ctez_dex.proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves
+        assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves - tez_bought
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves + sent_ctez
