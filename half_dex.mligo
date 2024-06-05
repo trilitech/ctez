@@ -127,7 +127,7 @@ let redeem_amount (x : nat) (reserve : nat) (total : nat) : nat =
   (* The redeem rate is defined as 
         RX_i(t_0, t_1) := r_i / total(t_0, t_1)
   *)
-  ceildiv (x * reserve) total
+  ceil_div (x * reserve) total
 
 [@inline]
 let redeem_amount_inverted (lqt : nat) (reserve: nat) (total: nat) : nat = 
@@ -135,7 +135,7 @@ let redeem_amount_inverted (lqt : nat) (reserve: nat) (total: nat) : nat =
     //    lqt = x RX_i(t_0, t_1)
     // Thus
     //    x = (lqt * total(t_0, t_1)) / reserve
-    ceildiv (lqt * total) reserve
+    ceil_div (lqt * total) reserve
     
 let add_liquidity
     (t : t)

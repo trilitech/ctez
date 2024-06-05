@@ -73,7 +73,7 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
 
         Q_ctez = ctez2.contract.storage()['context']['_Q']
         Q_tez = floor(Q_ctez * target_price)
-        error_rate = 1.000001
+        error_rate = 1.000001 # because of subsidies and rounding
         assert target_liquidity / error_rate <= Q_tez <= target_liquidity * error_rate
 
         sender.bulk(

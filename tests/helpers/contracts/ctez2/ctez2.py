@@ -43,6 +43,7 @@ class Ctez2(ContractHelper):
     def originate(
         self,
         client: PyTezosClient,
+        last_update: int,
         target_ctez_price = 1.0
     ) -> OperationGroup:
         # we need to set initial liquidity as 1 which will never be withdrawn 
@@ -63,7 +64,7 @@ class Ctez2(ContractHelper):
 
         storage = {
             'ovens': {},
-            'last_update': 0,
+            'last_update': last_update,
             'sell_tez' : half_dex_storage,
             'sell_ctez' : half_dex_storage,
             'context': {

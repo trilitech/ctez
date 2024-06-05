@@ -70,6 +70,10 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         ctez2.using(sender).tez_to_ctez(receiver, ctez_bought, self.get_future_timestamp()).with_amount(sent_tez).send()
         self.bake_block()
 
+        Q_ctez = ctez2.contract.storage()['context']['_Q']
+        error_rate = 1.000001 # because of subsidies
+        assert target_liquidity / error_rate <= Q_ctez <= target_liquidity * error_rate
+
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + ctez_bought
         assert self.get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez
         
