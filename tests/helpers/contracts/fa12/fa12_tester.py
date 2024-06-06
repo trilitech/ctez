@@ -48,4 +48,3 @@ class Fa12Tester(ContractHelper):
     
     def get_last_callback(self) -> tuple[str, int]:
         return self.contract.storage()['last_callback']
-    

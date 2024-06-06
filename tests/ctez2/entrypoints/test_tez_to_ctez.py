@@ -1,7 +1,7 @@
 from tests.ctez2.base import Ctez2BaseTestCase
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from parameterized import parameterized
-from test_cases import swap_tez_to_ctez_cases
+from tests.ctez2.test_cases import swap_tez_to_ctez_cases
 from tests.helpers.utility import NULL_ADDRESS
 
 class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):

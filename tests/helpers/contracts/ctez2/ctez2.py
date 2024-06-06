@@ -10,7 +10,7 @@ from tests.helpers.utility import (
 from pytezos.operation.group import OperationGroup
 from os.path import join
 from math import floor
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 class Ctez2(ContractHelper):
     class Errors:
@@ -98,6 +98,19 @@ class Ctez2(ContractHelper):
     def get_tez_liquidity_owner(self, owner: Addressable) -> LiquidityOwner:
         owner_address = get_address(owner)
         return Ctez2.LiquidityOwner(**self.contract.storage['sell_tez']['liquidity_owners'][owner_address]())
+
+    def create_oven(self, id: int, delegate: Optional[Addressable], depositors: Optional[list]) -> ContractCall:
+        return self.contract.create_oven({ 
+            'id': id,
+            'delegate': get_address(delegate) if delegate is not None else None, 
+            'depositors': {'any': None} if depositors is None else {'whitelist': depositors}
+        })
+    
+    def mint_or_burn(self, id: int, quantity: int) -> ContractCall:
+        return self.contract.mint_or_burn({
+            'id': id,
+            'quantity': quantity
+        })
 
     def add_ctez_liquidity(self, owner : Addressable, amount_deposited : int, min_liquidity : int, deadline : int ) -> ContractCall:
         return self.contract.add_ctez_liquidity({ 

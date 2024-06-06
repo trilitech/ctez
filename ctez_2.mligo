@@ -154,7 +154,7 @@ let fee_rate (q : nat) (_Q : nat) : Float48.t =
     then 65536n (* 0.73% / year *)
   else if 16n * q > 15n * _Q (* if q > 93.75% of _Q*)
     then 0n (* 0% / year *)
-    else abs (15 - 14 * q / _Q) * 65536n / 14n (* [0.74%, 0.10%] / year *)
+    else abs (15 - 14 * q / _Q) * 65536n / 14n (* [~0.79%, 0.10%] / year *)
 
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
   let rate = fee_rate dex.self_reserves _Q in
@@ -198,7 +198,7 @@ let do_housekeeping (storage : storage) : result =
     let sell_ctez, outstanding, op_mint_ctez1 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_ctez_env.get_target_self_reserves storage.context) storage.sell_ctez in
     let sell_tez, _outstanding, op_mint_ctez2 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_tez_env.get_target_self_reserves storage.context) storage.sell_tez in
     let storage = { storage with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
-
+    (* TODO: we can combine two mint ops into one *)
     ([op_mint_ctez1 ; op_mint_ctez2], {storage with last_update = curr_timestamp ; context = {storage.context with drift = new_drift ; target = new_target }})
   else
     ([], storage)

@@ -1,7 +1,7 @@
 from tests.ctez2.base import Ctez2BaseTestCase
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from parameterized import parameterized
-from test_cases import swap_ctez_to_tez_cases
+from tests.ctez2.test_cases import swap_ctez_to_tez_cases
 from tests.helpers.utility import NULL_ADDRESS, TEST_ADDRESSES_SET
 from math import floor, ceil
 

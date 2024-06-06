@@ -18,15 +18,15 @@ class Ctez2BaseTestCase(BaseTestCase):
         account1 = self.bootstrap_account()
         account2 = self.bootstrap_account()
         donor = self.bootstrap_account()
-        ctez2 = self.deploy_ctez2(target_ctez_price)
+        ctez2 = self.deploy_ctez2(target_ctez_price=target_ctez_price)
         # we need to set the minimum supply (20) of ctez token 
         # to allow _Q always be greater than 1 (since _Q is 5% of total supply)
         balances = get_ctez_token_balances(account1, account2) if get_ctez_token_balances is not None else { NULL_ADDRESS : 20 }
 
         # because half dexes initially have liquidity equals 1
         balances[ctez2.contract.address] = 1
-        ctez_liquidity = max (ctez_liquidity - 1, 0)
-        tez_liquidity = max (tez_liquidity - 1, 0)
+        ctez_liquidity = max(ctez_liquidity - 1, 0)
+        tez_liquidity = max(tez_liquidity - 1, 0)
         balances[donor] = ctez_liquidity
     
         fa12 = self.deploy_fa12(ctez2, balances)
