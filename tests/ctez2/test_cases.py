@@ -80,9 +80,8 @@ ctez_dex_subsidies = [
     ('liquidity_is_90',          90_000_000_000,        100_000_000_000,        1.0,          99.0),  # interest_rate = 0.1562% / year
     ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          266.0), # interest_rate = 0.4197% / year
     ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
-    ('liquidity_is_6.25%',        6_250_000_000,        100_000_000_000,        1.0,          498.0), # interest_rate = 0.7858% / year
 
-    ('liquidity_lt_6.25%',        6_249_999_999,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year, starting from this, fixed rate is applied
+    ('liquidity_lt_10%',          9_999_999_999,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year, starting from this, fixed rate is applied
     ('liquidity_is_5%',           5_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
     ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
     ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
@@ -106,9 +105,8 @@ tez_dex_subsidies = [
     ('liquidity_is_90',          90_000_000_000,        100_000_000_000,        1.0,          99.0),  # interest_rate = 0.1562% / year
     ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          266.0), # interest_rate = 0.4197% / year
     ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
-    ('liquidity_is_6.25%',        6_250_000_000,        100_000_000_000,        1.0,          498.0), # interest_rate = 0.7858% / year
 
-    ('liquidity_lt_6.25%',        6_249_999_999,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year, starting from this, fixed rate is applied
+    ('liquidity_lt_10%',          9_999_999_999,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year, starting from this, fixed rate is applied
     ('liquidity_is_5%',           5_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
     ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
     ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year

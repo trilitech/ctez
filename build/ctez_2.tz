@@ -1123,7 +1123,7 @@
              GET 5 ;
              DUP 5 ;
              DUP 2 ;
-             PUSH nat 16 ;
+             PUSH nat 10 ;
              MUL ;
              COMPARE ;
              LT ;

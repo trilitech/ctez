@@ -150,11 +150,11 @@ let drift_adjustment (storage : storage) : int =
   tqc_m_qt * tqc_m_qt * tqc_m_qt / (tQ * tQ * tQ)
 
 let fee_rate (q : nat) (_Q : nat) : Float48.t =
-  if 16n * q < _Q (* if q < 6.25% of _Q *)
+  if 10n * q < _Q (* if q < 10% of _Q *)
     then 65536n (* 0.73% / year *)
   else if 16n * q > 15n * _Q (* if q > 93.75% of _Q*)
     then 0n (* 0% / year *)
-    else abs (15 - 14 * q / _Q) * 65536n / 14n (* [~0.79%, 0.10%] / year *)
+    else abs (15 - 14 * q / _Q) * 65536n / 14n (* [~0.73%, 0.10%] / year *)
 
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
   let rate = fee_rate dex.self_reserves _Q in
