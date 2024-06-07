@@ -8,50 +8,6 @@ from parameterized import parameterized
 from pytezos.client import PyTezosClient
 
 class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
-    def default_setup(
-        self,
-        tez_liquidity,
-        ctez_liquidity,
-        ctez_total_supply,
-        target_ctez_price = 1.0,
-        reload_node = False
-    ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient]:
-        if reload_node:
-            self.tearDownClass()
-            self.setUpClass()
-        account1 = self.bootstrap_account()
-        account2 = self.bootstrap_account()
-        donor = self.bootstrap_account()
-        ctez2 = self.deploy_ctez2(target_ctez_price=target_ctez_price)
-
-        ctez_total_supply = max(ctez_total_supply - 21, 21)
-        ctez_liquidity = max(ctez_liquidity - 1, 0)
-        tez_liquidity = max(tez_liquidity - 1, 0)
-        balances = {
-            # we need to set the minimum supply (20) of ctez token 
-            # to allow _Q always be greater than 0 (since _Q is 5% of total supply)
-            NULL_ADDRESS : 20,
-            # because half dexes initially have liquidity equals 1
-            ctez2.contract.address : 1,
-        }
-
-        fa12 = self.deploy_fa12(ctez2, balances)
-        ctez2.set_ctez_fa12_address(fa12).send()
-        self.bake_block()
-
-        tez_deposit = ceil(ctez_total_supply * target_ctez_price * 16/15) # ctez_outstanding = tez*target_price*16/16 not to get under_collateralized
-
-        donor.bulk(
-            ctez2.create_oven(0, None, None).with_amount(tez_deposit),
-            ctez2.mint_or_burn(0, ctez_total_supply),
-            fa12.approve(ctez2, ctez_liquidity),
-            ctez2.add_ctez_liquidity(donor, ctez_liquidity, 0, self.get_future_timestamp()),
-            ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
-        ).send()
-        self.bake_block()
-
-        return ctez2, fa12, account1, account2
-
     @parameterized.expand(ctez_dex_subsidies)
     def test_should_mint_subsidies_for_ctez_dex_correctly(
         self, 

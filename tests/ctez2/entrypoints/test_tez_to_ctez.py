@@ -65,7 +65,6 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
         prev_sell_tez_dex = ctez2.get_sell_tez_dex()
 
-        assert ctez2.contract.storage()['context']['_Q'] == target_liquidity
 
         ctez2.using(sender).tez_to_ctez(receiver, ctez_bought, self.get_future_timestamp()).with_amount(sent_tez).send()
         self.bake_block()

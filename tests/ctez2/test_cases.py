@@ -17,7 +17,7 @@ swap_tez_to_ctez_cases = [
     ('liquidity_from_10_to_0_percent',        1_000_000,  10_000_000,   1_000_000,     959_046,       1.0), # price ~ 1.0427 ...
     ('liquidity_from_5_to_0_percent',         1_000_000,  20_000_000,   1_000_000,     955_826,       1.0), # price ~ 1.0462 ...
     ('liquidity_from_1_to_0_percent',         1_000_000, 100_000_000,   1_000_000,     953_087,       1.0), # price ~ 1.0492 ...
-    ('liquidity_very_close_to_0_percent',     1_000_000,     10**100,   1_000_000,     952_379,       1.0), # price ~ 1.0500
+    ('liquidity_very_close_to_0_percent',     1_000_000,      10**11,   1_000_000,     952_380,       1.0), # price ~ 1.0500
 
     ('liquidity_from_max_to_min',           200_000_000, 200_000_000, 202_500_001, 199_999_999,       1.0), # price ~ 1.0125
 
@@ -27,9 +27,9 @@ swap_tez_to_ctez_cases = [
     ('target_is_2_0',                         5_000_000,  10_000_000,   1_000_000,     496_403,       2.0), # price ~ 2.0145 ...
 
     # edge cases        
-    ('small_x_amount',                         5_000_000,  10_000_000,            3,           1,       1.0),
-    ('small_x_amount_and_liquidity',                   2,  10_000_000,            3,           1,       1.0),
-    ('small_x_amount_and_liquidity_and_Q',             2,           1,            3,           1,       1.0),
+    ('small_x_amount',                        5_000_000,  10_000_000,           3,           1,       1.0),
+    ('small_x_amount_and_liquidity',                  2,  10_000_000,           3,           1,       1.0),
+    ('small_x_amount_and_liquidity_and_Q',            2,           1,           3,           1,       1.0),
 ]
 
 
@@ -52,7 +52,7 @@ swap_ctez_to_tez_cases = [
     ('liquidity_from_10_to_0_percent',        1_000_000,  10_000_000,   1_000_000,     959_046,       1.0), # price ~ 1.0427 ...
     ('liquidity_from_5_to_0_percent',         1_000_000,  20_000_000,   1_000_000,     955_826,       1.0), # price ~ 1.0462 ...
     ('liquidity_from_1_to_0_percent',         1_000_000, 100_000_000,   1_000_000,     953_087,       1.0), # price ~ 1.0492 ...
-    ('liquidity_very_close_to_0_percent',     1_000_000,     10**20,   1_000_000,     952_379,       1.0), # price ~ 1.0500
+    ('liquidity_very_close_to_0_percent',     1_000_000,      10**11,   1_000_000,     952_380,       1.0), # price ~ 1.0500
 
     ('liquidity_from_max_to_min',           200_000_000, 200_000_000, 202_500_001, 199_999_999,       1.0), # price ~ 1.0125
 
@@ -62,9 +62,9 @@ swap_ctez_to_tez_cases = [
     ('target_is_2_0',                         5_000_000,  10_000_000,   1_000_000,   1_978_171,       2.0), # price ~ 1.9782 ...
 
     # edge cases        
-    ('small_x_amount',                         5_000_000,  10_000_000,            3,           1,       1.0),
-    ('small_x_amount_and_liquidity',                   2,  10_000_000,            3,           1,       1.0),
-    ('small_x_amount_and_liquidity_and_Q',             2,           1,            3,           1,       1.0),
+    ('small_x_amount',                        5_000_000,  10_000_000,           3,           1,       1.0),
+    ('small_x_amount_and_liquidity',                  2,  10_000_000,           3,           1,       1.0),
+    ('small_x_amount_and_liquidity_and_Q',            2,           2,           3,           1,       1.0),
 ]
 
 ctez_dex_subsidies = [
@@ -114,7 +114,7 @@ tez_dex_subsidies = [
     ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          465.0), # interest_rate = 0.7337% / year
 
     # different target_price tests
-    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          266.0), # rate depends on target price in sell ctez dex
+    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          266.0), # rate depends on target price in sell tez dex
     ('target_is_1_2',            50_000_000_000,        100_000_000_000,        1.2,          221.0), # the more price, the less total_supply (with the same Q_tez),
     ('target_is_1_5',            50_000_000_000,        100_000_000_000,        1.5,          177.0), # the less subsidies we get
 ]

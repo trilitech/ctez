@@ -58,8 +58,8 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         ctez2, ctez_token, sender, _ = self.default_setup(
             get_ctez_token_balances = lambda sender, *_: {
                 sender: sent_ctez,
-                NULL_ADDRESS: total_supply - sent_ctez
             },
+            ctez_total_supply = total_supply,
             tez_liquidity = tez_liquidity,
             target_ctez_price = target_price
         )
@@ -71,17 +71,16 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
         prev_sell_tez_dex = ctez2.get_sell_tez_dex()
 
-        Q_ctez = ctez2.contract.storage()['context']['_Q']
-        Q_tez = floor(Q_ctez * target_price)
-        error_rate = 1.000001 # because of subsidies and rounding
-        assert target_liquidity / error_rate <= Q_tez <= target_liquidity * error_rate
-
         sender.bulk(
             ctez_token.approve(ctez2, sent_ctez),
             ctez2.ctez_to_tez(receiver, sent_ctez, tez_bought, self.get_future_timestamp())
         ).send()
         self.bake_block()
-
+        
+        Q_ctez = ctez2.contract.storage()['context']['_Q']
+        Q_tez = floor(Q_ctez * target_price)
+        error_rate = 1.000001 # because of subsidies and rounding
+        assert target_liquidity / error_rate <= Q_tez <= target_liquidity * error_rate
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance + tez_bought
         assert ctez_token.view_balance(sender) == prev_sender_ctez_balance - sent_ctez
         assert ctez_token.view_balance(ctez2) >= prev_ctez2_ctez_balance + sent_ctez # + subsidies
