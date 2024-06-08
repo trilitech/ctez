@@ -150,15 +150,15 @@ let drift_adjustment (storage : storage) : int =
   tqc_m_qt * tqc_m_qt * tqc_m_qt / (tQ * tQ * tQ)
 
 let fee_rate (q : nat) (_Q : nat) : Float48.t =
-  if 10n * q < _Q (* if q < 10% of _Q *)
-    then 65536n (* 0.73% / year *)
-  else if 16n * q > 15n * _Q (* if q > 93.75% of _Q*)
+  if 100n * q < 18n * _Q  (* if q < 20% of (90% of _Q) *)
+    then 89195n (* ~1% / year *)
+  else if 10n * q > 9n * _Q (* if q > 90% of _Q*) 
     then 0n (* 0% / year *)
-    else abs (15 - 14 * q / _Q) * 65536n / 14n (* [~0.73%, 0.10%] / year *)
+    else abs(445975n * (9n * _Q - 10n * q)) / (36n * _Q) (* [0%, ~1%] / year *)
 
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
   let rate = fee_rate dex.self_reserves _Q in
-  (* rate is given as a multiple of 2^(-48)... note that 2^(-32) Np / s ~ 0.73 cNp / year, so roughly a max of 0.73% / year *)
+  (* rate is given as a multiple of 2^(-48), roughly [0%, 1%] / year *)
   let new_fee_index = dex.fee_index + Bitwise.shift_right (delta * dex.fee_index * rate) 48n in
   (* Compute how many ctez have implicitly been minted since the last update *)
   (* We round this down while we round the ctez owed up. This leads, over time, to slightly overestimating the outstanding ctez, which is conservative. *)
