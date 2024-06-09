@@ -5,14 +5,14 @@ from pytezos.operation.result import OperationResult
 
 class Ctez2AddTezLiquidityTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_deadline_has_passed(self) -> None:
-        ctez2, _, sender, owner = self.default_setup()
+        ctez2, _, sender, owner, *_ = self.default_setup()
 
         deposit_amount = 10
         with self.raises_michelson_error(Ctez2.Errors.DEADLINE_HAS_PASSED):
             ctez2.using(sender).add_tez_liquidity(owner, 10, self.get_passed_timestamp()).with_amount(deposit_amount).send()
 
     def test_should_fail_if_insufficient_liquidity_created(self) -> None:
-        ctez2, _, sender, owner = self.default_setup()
+        ctez2, _, sender, owner, *_ = self.default_setup()
 
         deposit_amount = 10
         with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_LIQUIDITY_CREATED):
@@ -20,7 +20,7 @@ class Ctez2AddTezLiquidityTestCase(Ctez2BaseTestCase):
 
     def test_transfer_tez_token_correctly(self) -> None:
         deposit_amount = 123
-        ctez2, _, sender, owner = self.default_setup()
+        ctez2, _, sender, owner, *_ = self.default_setup()
 
         prev_sender_balance = self.get_balance_mutez(sender)
         prev_ctez2_balance = self.get_balance_mutez(ctez2)
@@ -33,7 +33,7 @@ class Ctez2AddTezLiquidityTestCase(Ctez2BaseTestCase):
 
     def test_deposit_token_correctly(self) -> None:
         deposit_amount = 123
-        ctez2, _, sender, owner = self.default_setup()
+        ctez2, _, sender, owner, *_ = self.default_setup()
 
         prev_ctez2_balance = ctez2.contract.context.get_balance()
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()

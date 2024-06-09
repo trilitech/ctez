@@ -6,14 +6,14 @@ from tests.helpers.utility import NULL_ADDRESS
 
 class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
     def test_should_fail_if_deadline_has_passed(self) -> None:
-        ctez2, _, sender, receiver = self.default_setup()
+        ctez2, _, sender, receiver, *_ = self.default_setup()
 
         sent_tez = 10
         with self.raises_michelson_error(Ctez2.Errors.DEADLINE_HAS_PASSED):
             ctez2.using(sender).tez_to_ctez(receiver, 10, self.get_passed_timestamp()).with_amount(sent_tez).send()
 
     def test_should_fail_if_insufficient_tokens_liquidity(self) -> None:
-        ctez2, _, sender, receiver = self.default_setup(
+        ctez2, _, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = 7
         )
 
@@ -22,7 +22,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
             ctez2.using(sender).tez_to_ctez(receiver, 8, self.get_future_timestamp()).with_amount(sent_tez).send()
 
     def test_should_fail_if_insufficient_tokens_bought(self) -> None:
-        ctez2, _, sender, receiver = self.default_setup(
+        ctez2, _, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = 100
         )
 
@@ -32,7 +32,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
 
     @parameterized.expand(range(0, 2))
     def test_should_fail_if_sell_token_amount_too_small(self, amount) -> None:
-        ctez2, _, sender, receiver = self.default_setup(
+        ctez2, _, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = 100_000_000_000
         )
 
@@ -41,7 +41,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
 
     def test_should_fail_if_all_liquidity_removed(self) -> None:
         all_liquidity = 8
-        ctez2, _, sender, receiver = self.default_setup(
+        ctez2, _, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = all_liquidity
         )
 
@@ -52,7 +52,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
     @parameterized.expand(swap_tez_to_ctez_cases)
     def test_should_swap_tez_to_ctez_tokens_correctly(self, _, ctez_liquidity, target_liquidity, sent_tez, ctez_bought, target_price) -> None:
         total_supply = target_liquidity * 20 # ctez_target_liquidity(Q) is 5% of total supply
-        ctez2, ctez_token, sender, receiver = self.default_setup(
+        ctez2, ctez_token, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = ctez_liquidity,
             target_ctez_price = target_price,
             get_ctez_token_balances = lambda *_: {

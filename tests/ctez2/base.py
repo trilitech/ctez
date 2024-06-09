@@ -17,7 +17,7 @@ class Ctez2BaseTestCase(BaseTestCase):
         ctez_total_supply: Optional[int] = None,
         target_ctez_price: float = 1.0,
         reload_node = False
-    ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient]:
+    ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient, PyTezosClient]:
         if reload_node:
             self.tearDownClass()
             self.setUpClass()
@@ -48,9 +48,13 @@ class Ctez2BaseTestCase(BaseTestCase):
         donor.bulk(
             ctez2.create_oven(0, None, None).with_amount(tez_deposit),
             ctez2.mint_or_burn(0, rest_supply),
-            ctez_token.approve(ctez2, ctez_liquidity),
-            ctez2.add_ctez_liquidity(donor, ctez_liquidity, 0, self.get_future_timestamp()),
-            ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
+            *(
+                ctez_token.approve(ctez2, ctez_liquidity),
+                ctez2.add_ctez_liquidity(donor, ctez_liquidity, 0, self.get_future_timestamp()),
+            ) if ctez_liquidity > 0 else (),
+            *(
+                ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
+            ) if tez_liquidity > 0 else (),
         ).send()
         self.bake_block()
 
@@ -60,4 +64,4 @@ class Ctez2BaseTestCase(BaseTestCase):
             ).send()
             self.bake_block()
 
-        return ctez2, ctez_token, account1, account2
+        return ctez2, ctez_token, account1, account2, donor

@@ -18,7 +18,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
         expected_subsidies_per_sec: int
     ) -> None:
         total_supply = target_ctez_liquidity * 20 # ctez_target_liquidity(Q) is 5% of total supply
-        ctez2, ctez_token, sender, _ = self.default_setup(
+        ctez2, ctez_token, sender, _, *_ = self.default_setup(
             target_ctez_price = target_price,
             ctez_liquidity = ctez_liquidity,
             ctez_total_supply = total_supply,
@@ -63,7 +63,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
     ) -> None:
         target_ctez_liquidity = ceil(target_tez_liquidity / target_price)
         total_supply = target_ctez_liquidity * 20 # ctez_target_liquidity(Q) is 5% of total supply
-        ctez2, ctez_token, sender, _ = self.default_setup(
+        ctez2, ctez_token, sender, _, *_ = self.default_setup(
             target_ctez_price = target_price,
             ctez_liquidity = target_ctez_liquidity,
             ctez_total_supply = total_supply,
@@ -103,7 +103,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
         tez_liquidity = ctez_liquidity
         target_ctez_liquidity = 100_000_000_000 
         total_supply = target_ctez_liquidity * 20 # ctez_target_liquidity(Q) is 5% of total supply
-        ctez2, ctez_token, sender, _ = self.default_setup(
+        ctez2, ctez_token, sender, _, *_ = self.default_setup(
             target_ctez_price = target_price,
             ctez_liquidity = ctez_liquidity,
             ctez_total_supply = total_supply,

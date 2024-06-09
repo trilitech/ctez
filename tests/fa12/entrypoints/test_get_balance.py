@@ -3,14 +3,14 @@ from tests.helpers.contracts.fa12.fa12 import Fa12
 
 class Fa12GetBalanceTestCase(Fa12BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
-        owner, _, fa12 = self.default_setup()
+        owner, _, fa12, *_ = self.default_setup()
         fa12_tester = self.deploy_fa12_tester(fa12, send_tez=True)
 
         with self.raises_michelson_error(Fa12.Errors.DONT_SEND_TEZ):
             fa12_tester.call_get_balance(owner).send()
 
     def test_should_execute_callback_entrypoint_correctly(self) -> None:
-        owner, spender, fa12 = self.default_setup(
+        owner, spender, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 777
             }

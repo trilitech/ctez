@@ -142,10 +142,11 @@ let add_liquidity
     ({ owner; amount_deposited; min_liquidity; deadline } : add_liquidity)
     : t =
   let d_liquidity = redeem_amount_inverted amount_deposited t.self_reserves t.total_liquidity_shares in
+  let total_liquidity_shares = t.total_liquidity_shares + d_liquidity in
   let () = Assert.Error.assert (d_liquidity >= min_liquidity) Errors.insufficient_liquidity_created in
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let d_proceeds = redeem_amount d_liquidity t.proceeds_reserves t.total_liquidity_shares in
-  let d_subsidy = redeem_amount d_liquidity t.subsidy_reserves t.total_liquidity_shares in
+  let d_proceeds = redeem_amount d_liquidity t.proceeds_reserves total_liquidity_shares in
+  let d_subsidy = redeem_amount d_liquidity t.subsidy_reserves total_liquidity_shares in
   let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
     liquidity_owner with
     liquidity_shares = liquidity_owner.liquidity_shares + d_liquidity;
@@ -154,7 +155,7 @@ let add_liquidity
   }) in
   { 
     t with
-    total_liquidity_shares = t.total_liquidity_shares + d_liquidity;
+    total_liquidity_shares = total_liquidity_shares;
     self_reserves = t.self_reserves + amount_deposited;
   }
 

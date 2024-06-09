@@ -3,7 +3,7 @@ from tests.helpers.contracts.fa12.fa12 import Fa12
 
 class Fa12TransferTestCase(Fa12BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             }
@@ -12,7 +12,7 @@ class Fa12TransferTestCase(Fa12BaseTestCase):
             fa12.using(owner).transfer(owner, recipient, 10).with_amount(1).send()
 
     def test_should_fail_if_not_enough_balance(self) -> None:
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             }
@@ -21,7 +21,7 @@ class Fa12TransferTestCase(Fa12BaseTestCase):
             fa12.using(owner).transfer(owner, recipient, 101).send()
 
     def test_should_fail_if_sender_is_not_allowed(self) -> None:
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             }
@@ -30,7 +30,7 @@ class Fa12TransferTestCase(Fa12BaseTestCase):
             fa12.using(recipient).transfer(owner, recipient, 10).send()
 
     def test_should_fail_if_sender_has_not_enough_allowance(self) -> None:
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             },
@@ -42,7 +42,7 @@ class Fa12TransferTestCase(Fa12BaseTestCase):
             fa12.using(recipient).transfer(owner, recipient, 51).send()
 
     def test_should_transfer_correctly_if_sender_is_owner(self) -> None:
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             }
@@ -62,7 +62,7 @@ class Fa12TransferTestCase(Fa12BaseTestCase):
         allowed_amount = 50
         transfer_amount = 30
 
-        owner, recipient, fa12 = self.default_setup(
+        owner, recipient, fa12, *_ = self.default_setup(
             get_balances = lambda owner, *_: {
                 owner: 100,
             },

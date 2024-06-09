@@ -2,6 +2,7 @@ from pytezos.client import PyTezosClient
 from pytezos.contract.call import ContractCall
 from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.contract import ContractHelper
+from tests.helpers.contracts.oven.oven import Oven
 from tests.helpers.utility import (
     NULL_ADDRESS,
     get_build_dir,
@@ -98,6 +99,11 @@ class Ctez2(ContractHelper):
     def get_tez_liquidity_owner(self, owner: Addressable) -> LiquidityOwner:
         owner_address = get_address(owner)
         return Ctez2.LiquidityOwner(**self.contract.storage['sell_tez']['liquidity_owners'][owner_address]())
+    
+    def get_oven_contract(self, client: PyTezosClient, owner: Addressable, oven_id: int) -> Oven:
+        oven_record = self.contract.storage['ovens'][(oven_id, get_address(owner))]()
+        print(oven_record)
+        return Oven.from_address(client, oven_record['address'])
 
     def create_oven(self, id: int, delegate: Optional[Addressable], depositors: Optional[list]) -> ContractCall:
         return self.contract.create_oven({ 

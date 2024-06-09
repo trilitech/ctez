@@ -3,13 +3,13 @@ from tests.helpers.contracts.fa12.fa12 import Fa12
 
 class Fa12MintOrBurnTestCase(Fa12BaseTestCase):
     def test_should_fail_if_tez_in_transaction(self) -> None:
-        admin, target, fa12 = self.default_setup()
+        admin, target, fa12, *_ = self.default_setup()
 
         with self.raises_michelson_error(Fa12.Errors.DONT_SEND_TEZ):
             fa12.using(admin).mintOrBurn(10, target).with_amount(1).send()
 
     def test_should_fail_if_sender_not_admin(self) -> None:
-        _, target, fa12 = self.default_setup(
+        _, target, fa12, *_ = self.default_setup(
             get_admin = lambda admin, *_: admin
         )
 
@@ -17,7 +17,7 @@ class Fa12MintOrBurnTestCase(Fa12BaseTestCase):
             fa12.using(target).mintOrBurn(10, target).send()
 
     def test_should_fail_if_burn_amount_less_then_target_balance(self) -> None:
-        admin, target, fa12 = self.default_setup(
+        admin, target, fa12, *_ = self.default_setup(
             get_balances = lambda _, target: {
                 target: 10
             },
@@ -29,7 +29,7 @@ class Fa12MintOrBurnTestCase(Fa12BaseTestCase):
 
     def test_should_mint_correctly(self) -> None:
         mintAmount = 20
-        admin, target, fa12 = self.default_setup(
+        admin, target, fa12, *_ = self.default_setup(
             get_balances = lambda admin, target: {
                 admin: 123,
                 target: 10
@@ -50,7 +50,7 @@ class Fa12MintOrBurnTestCase(Fa12BaseTestCase):
 
     def test_should_burn_correctly(self) -> None:
         burnAmount = 40
-        admin, target, fa12 = self.default_setup(
+        admin, target, fa12, *_ = self.default_setup(
             get_balances = lambda admin, target: {
                 admin: 123,
                 target: 100
