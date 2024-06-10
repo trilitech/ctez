@@ -73,23 +73,24 @@ ctez_dex_subsidies = [
     # interest range tests
     ('liquidity_is_110%',       110_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, because dex has enough liquidity
     ('liquidity_is_100%',       100_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, ...
-    ('liquidity_gt_90%',         90_000_000_001,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
+    ('liquidity_is_90%',         90_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
+    ('liquidity_gt_87_5%',       87_500_000_001,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
     
-    ('liquidity_is_90%',         90_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, 
-    ('liquidity_is_70',          70_000_000_000,        100_000_000_000,        1.0,          176.0), # interest_rate = 0.2778% / year
-    ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          352.0), # interest_rate = 0.5558% / year
-    ('liquidity_is_30',          30_000_000_000,        100_000_000_000,        1.0,          528.0), # interest_rate = 0.8337% / year
-    ('liquidity_is_18%',         18_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
+    ('liquidity_is_87_5%',       87_500_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, 
+    ('liquidity_is_70',          70_000_000_000,        100_000_000_000,        1.0,          147.0), # interest_rate = 0.2319% / year
+    ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          316.0), # interest_rate = 0.4986% / year
+    ('liquidity_is_30',          30_000_000_000,        100_000_000_000,        1.0,          485.0), # interest_rate = 0.7653% / year
+    ('liquidity_is_12.5%',       12_500_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
     
-    ('liquidity_lt_18',          17_999_999_999,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year, starting from this, fixed rate is applied
-    ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
-    ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
-    ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
+    ('liquidity_lt_12.5',        12_499_999_999,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year, starting from this, fixed rate is applied
+    ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
+    ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
+    ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
 
     # different target_price tests
-    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          352.0), # rate does not depend on target price in sell ctez dex
-    ('target_is_1_2',            50_000_000_000,        100_000_000_000,        1.2,          352.0), # 
-    ('target_is_1_5',            50_000_000_000,        100_000_000_000,        1.5,          352.0), # 
+    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          316.0), # rate does not depend on target price in sell ctez dex
+    ('target_is_1_2',            50_000_000_000,        100_000_000_000,        1.2,          316.0), # 
+    ('target_is_1_5',            50_000_000_000,        100_000_000_000,        1.5,          316.0), # 
 ]
 
 tez_dex_subsidies = [
@@ -98,21 +99,22 @@ tez_dex_subsidies = [
     # interest range tests
     ('liquidity_is_110%',       110_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, because dex has enough liquidity
     ('liquidity_is_100%',       100_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, ...
-    ('liquidity_gt_90%',         90_000_000_001,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
+    ('liquidity_is_90%',         90_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
+    ('liquidity_gt_87_5%',       87_500_000_001,        100_000_000_000,        1.0,          0),     # interest_rate ~ 0% / year
     
-    ('liquidity_is_90%',         90_000_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, 
-    ('liquidity_is_70',          70_000_000_000,        100_000_000_000,        1.0,          176.0), # interest_rate = 0.2778% / year
-    ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          352.0), # interest_rate = 0.5558% / year
-    ('liquidity_is_30',          30_000_000_000,        100_000_000_000,        1.0,          528.0), # interest_rate = 0.8337% / year
-    ('liquidity_is_18%',         18_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
+    ('liquidity_is_87_5%',       87_500_000_000,        100_000_000_000,        1.0,          0),     # interest_rate = 0% / year, 
+    ('liquidity_is_70',          70_000_000_000,        100_000_000_000,        1.0,          147.0), # interest_rate = 0.2319% / year
+    ('liquidity_is_50',          50_000_000_000,        100_000_000_000,        1.0,          316.0), # interest_rate = 0.4986% / year
+    ('liquidity_is_30',          30_000_000_000,        100_000_000_000,        1.0,          485.0), # interest_rate = 0.7653% / year
+    ('liquidity_is_12.5%',       12_500_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
     
-    ('liquidity_lt_18',          17_999_999_999,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year, starting from this, fixed rate is applied
-    ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
-    ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
-    ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9995% / year
+    ('liquidity_lt_12.5',        12_499_999_999,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year, starting from this, fixed rate is applied
+    ('liquidity_is_10%',         10_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
+    ('liquidity_is_1%',           1_000_000_000,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
+    ('liquidity_almost_0%',                   1,        100_000_000_000,        1.0,          633.0), # interest_rate = 0.9988% / year
 
     # different target_price tests
-    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          352.0), # rate depends on target price in sell tez dex
-    ('target_is_1_2',            50_000_000_000,        100_000_000_000,        1.2,          293.0), # the more price, the less total_supply (with the same Q_tez),
-    ('target_is_1_5',            50_000_000_000,        100_000_000_000,        1.5,          234.0), # the less subsidies we get
+    ('target_is_1_0',            50_000_000_000,        100_000_000_000,        1.0,          316.0), # rate depends on target price in sell tez dex
+    ('target_is_1_2',            50_000_000_000,        100_000_000_000,        1.2,          264.0), # the more price, the less total_supply (with the same Q_tez),
+    ('target_is_1_5',            50_000_000_000,        100_000_000_000,        1.5,          211.0), # the less subsidies we get
 ]

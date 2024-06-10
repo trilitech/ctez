@@ -126,7 +126,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
         ctez_dex_subsidies = current_sell_ctez_dex.subsidy_reserves - prev_sell_ctez_dex.subsidy_reserves
         tez_dex_subsidies = current_sell_tez_dex.subsidy_reserves - prev_sell_tez_dex.subsidy_reserves
         
-        assert tez_dex_subsidies == 498
-        assert ctez_dex_subsidies == 352
+        assert tez_dex_subsidies == 457
+        assert ctez_dex_subsidies == 316
         assert ctez_token.view_total_supply() == prev_total_supply + tez_dex_subsidies + ctez_dex_subsidies
         assert ctez_token.view_balance(ctez2) == prev_ctez2_balance + tez_dex_subsidies + ctez_dex_subsidies
