@@ -23,7 +23,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
             ctez_liquidity = ctez_liquidity,
             ctez_total_supply = total_supply,
             tez_liquidity = floor(target_ctez_liquidity * target_price),
-            reload_node = True
+            bootstrap_all_tez_balances = True
         )
         
         prev_last_update = ctez2.contract.storage()['last_update']
@@ -68,7 +68,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
             ctez_liquidity = target_ctez_liquidity,
             ctez_total_supply = total_supply,
             tez_liquidity = tez_liquidity,
-            reload_node = True
+            bootstrap_all_tez_balances = True
         )
         
         prev_last_update = ctez2.contract.storage()['last_update']
@@ -108,6 +108,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
             ctez_liquidity = ctez_liquidity,
             ctez_total_supply = total_supply,
             tez_liquidity = tez_liquidity,
+            bootstrap_all_tez_balances = True
         )
         
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()

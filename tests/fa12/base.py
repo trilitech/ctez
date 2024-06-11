@@ -13,8 +13,8 @@ class Fa12BaseTestCase(BaseTestCase):
         get_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
         get_allowances: Optional[Callable[[PyTezosClient, PyTezosClient], list[tuple[Addressable, Addressable, int]]]] = None
     ) -> tuple[PyTezosClient, PyTezosClient, Fa12]:
-        account1 = self.bootstrap_account()
-        account2 = self.bootstrap_account()
+        account1 = self.bootstrap_account(100_000_000)
+        account2 = self.bootstrap_account(100_000_000)
         admin = get_admin(account1, account2) if get_admin is not None else NULL_ADDRESS
         balances = get_balances(account1, account2) if get_balances is not None else {}
         allowances = get_allowances(account1, account2) if get_allowances is not None else []

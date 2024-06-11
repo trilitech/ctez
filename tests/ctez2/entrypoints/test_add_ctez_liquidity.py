@@ -51,7 +51,8 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
             tez_liquidity = deposit_amount,
             get_ctez_token_balances = lambda sender, *_: {
                 sender: deposit_amount
-            }
+            },
+            bootstrap_all_tez_balances = True
         )
 
         prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
@@ -82,6 +83,7 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         ctez2, ctez_token, depositor_1, depositor_2, depositor_0 = self.default_setup(
             ctez_liquidity = 100_000,
             ctez_total_supply = 100_000_000_000,
+            bootstrap_all_tez_balances = True
         )
 
         def swap_tez_to_ctez(depositor: Addressable, deposit_amount: int):

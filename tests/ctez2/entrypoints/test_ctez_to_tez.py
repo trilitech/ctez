@@ -35,7 +35,7 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
 
     def test_should_fail_if_insufficient_tokens_bought(self) -> None:
         ctez2, _, sender, receiver, *_ = self.default_setup(
-            tez_liquidity=100
+            tez_liquidity = 100
         )
 
         sent_ctez = 10
@@ -61,7 +61,8 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
             },
             ctez_total_supply = total_supply,
             tez_liquidity = tez_liquidity,
-            target_ctez_price = target_price
+            target_ctez_price = target_price,
+            bootstrap_all_tez_balances = True
         )
         receiver = TEST_ADDRESSES_SET[0]
 

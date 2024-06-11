@@ -10,6 +10,7 @@ from tests.helpers.contracts.fa12.fa12 import Fa12
 from pytezos.contract.result import ContractCallResult
 from pytezos.operation.group import OperationGroup
 from pytezos.operation.result import OperationResult
+from pytezos import Key
 
 from tests.helpers.contracts.fa12.fa12_tester import Fa12Tester
 from tests.helpers.utility import pkh
@@ -19,17 +20,26 @@ class BaseTestCase(SandboxedNodeTestCase):
     
     def setUp(self) -> None:
         self.accounts = []
-        self.manager = self.bootstrap_account()
+        self.manager = self.bootstrap_baker()
 
     def get_current_level(self) -> int:
         return self.client.shell.head.header()['level']
 
-    def bootstrap_account(self, n: Optional[int] = None) -> PyTezosClient:
+    def bootstrap_baker(self, n: Optional[int] = None) -> PyTezosClient:
         account_count = n or len(self.accounts)
         bootstrap: PyTezosClient = self.client.using(key=f'bootstrap{account_count + 1}')
         bootstrap.reveal()
         self.accounts.append(bootstrap)
         return bootstrap
+
+    def bootstrap_account(self, balance: Optional[int] = None, n: Optional[int] = None) -> PyTezosClient:
+        bootstrap: PyTezosClient = self.bootstrap_baker(n)
+        account: PyTezosClient = self.client.using(key=Key.generate(export=False))
+        initial_balance = balance if balance is not None else self.get_balance_mutez(bootstrap) - 100_000_000_000
+        bootstrap.transaction(pkh(account), initial_balance).autofill().sign().inject()
+        self.bake_block()
+        account.reveal().autofill().sign().inject()
+        return account
 
     def deploy_ctez2(
         self,

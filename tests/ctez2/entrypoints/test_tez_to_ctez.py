@@ -33,7 +33,8 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
     @parameterized.expand(range(0, 2))
     def test_should_fail_if_sell_token_amount_too_small(self, amount) -> None:
         ctez2, _, sender, receiver, *_ = self.default_setup(
-            ctez_liquidity = 100_000_000_000
+            ctez_liquidity = 100_000_000_000,
+            bootstrap_all_tez_balances = True
         )
 
         with self.raises_michelson_error(Ctez2.Errors.SMALL_SELL_AMOUNT):
@@ -57,7 +58,8 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
             target_ctez_price = target_price,
             get_ctez_token_balances = lambda *_: {
                 NULL_ADDRESS : total_supply - ctez_liquidity
-            }
+            },
+            bootstrap_all_tez_balances = True
         )
 
         prev_receiver_ctez_balance = ctez_token.view_balance(receiver)

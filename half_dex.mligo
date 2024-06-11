@@ -196,6 +196,7 @@ let remove_liquidity
     liquidity_owner.proceeds_owed
     (redeem_amount liquidity_redeemed t.proceeds_reserves t.total_liquidity_shares)
   in
+  // let () = failwith ("proceeds_redeemed", proceeds_redeemed) in
   let () = Assert.Error.assert (proceeds_redeemed >= min_proceeds_received) Errors.insufficient_proceeds_received in
   let subsidy_owed, subsidy_redeemed = subtract_debt
     liquidity_owner.subsidy_owed

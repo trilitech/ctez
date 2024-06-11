@@ -16,14 +16,15 @@ class Ctez2BaseTestCase(BaseTestCase):
         get_ctez_token_balances: Optional[Callable[[PyTezosClient, PyTezosClient], dict[Addressable, int]]] = None,
         ctez_total_supply: Optional[int] = None,
         target_ctez_price: float = 1.0,
-        reload_node = False
+        bootstrap_all_tez_balances = False # reloads none and transfer all bakers balances to bootstrapped accounts
     ) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient, PyTezosClient]:
-        if reload_node:
+        if bootstrap_all_tez_balances:
             self.tearDownClass()
             self.setUpClass()
-        account1 = self.bootstrap_account()
-        account2 = self.bootstrap_account()
-        donor = self.bootstrap_account()
+        initial_tez_balance = None if bootstrap_all_tez_balances else 100_000_000
+        account1 = self.bootstrap_account(initial_tez_balance)
+        account2 = self.bootstrap_account(initial_tez_balance)
+        donor = self.bootstrap_account(initial_tez_balance)
         ctez2 = self.deploy_ctez2(target_ctez_price=target_ctez_price)
 
         default_balances = {
