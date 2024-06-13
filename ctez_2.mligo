@@ -194,7 +194,8 @@ let do_housekeeping (storage : storage) : result =
       | None -> (failwith unit : nat)
       | Some n-> n
     ) in
-    let storage = { storage with context = {storage.context with _Q = outstanding / 20n }} in
+    let target_ctez_amount = max (outstanding / 20n) 1n in
+    let storage = { storage with context = {storage.context with _Q = target_ctez_amount }} in
     let sell_ctez, outstanding, op_mint_ctez1 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_ctez_env.get_target_self_reserves storage.context) storage.sell_ctez in
     let sell_tez, _outstanding, op_mint_ctez2 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_tez_env.get_target_self_reserves storage.context) storage.sell_tez in
     let storage = { storage with sell_ctez = sell_ctez ; sell_tez = sell_tez } in

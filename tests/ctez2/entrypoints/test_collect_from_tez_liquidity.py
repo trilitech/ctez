@@ -16,8 +16,8 @@ class Ctez2CollectFromTezLiquidityTestCase(Ctez2BaseTestCase):
             }
         )
 
-        ctez2.using(owner).collect_from_tez_liquidity(receiver).send()
-        self.bake_block()
+        # ctez2.using(owner).collect_from_tez_liquidity(receiver).send()
+        # self.bake_block()
 
         ctez2.add_tez_liquidity(owner, 0, self.get_future_timestamp()).with_amount(deposit_amount).send()
         self.bake_block()

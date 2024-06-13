@@ -127,16 +127,26 @@ let redeem_amount (x : nat) (reserve : nat) (total : nat) : nat =
   (* The redeem rate is defined as 
         RX_i(t_0, t_1) := r_i / total(t_0, t_1)
   *)
-  ceil_div (x * reserve) total
+  ceil_div (x * reserve) total // TODO: friendly error instead if div zero 
 
 [@inline]
-let redeem_amount_inverted (lqt : nat) (reserve: nat) (total: nat) : nat = 
-    // The redeem amount is defined as
-    //    lqt = x RX_i(t_0, t_1)
-    // Thus
-    //    x = (lqt * total(t_0, t_1)) / reserve
-    ceil_div (lqt * total) reserve
-    
+let redeem_amount_inverted (lqt : nat) (reserve: nat) (total_lpt: nat) : nat = 
+  (* The redeem amount is defined as
+      lqt = x RX_i(t_0, t_1)
+     Thus
+      x = (lqt * total(t_0, t_1)) / reserve
+  *)
+  (* in case if there no liquidity in dex *)
+  let numerator = max total_lpt 1n in
+  let denominator = max reserve 1n in
+  ceil_div (lqt * numerator) denominator
+
+[@inline]
+let increase_liquidity (new_total_lpt: nat) (prev_total_lpt : nat) (prev_liquidity: nat) : nat =
+  (* in case if there no liquidity in dex *)
+  let denominator = max prev_total_lpt 1n in 
+  ceil_div (new_total_lpt * prev_liquidity) denominator     
+
 let add_liquidity
     (t : t)
     ({ owner; amount_deposited; min_liquidity; deadline } : add_liquidity)
@@ -145,8 +155,10 @@ let add_liquidity
   let total_liquidity_shares = t.total_liquidity_shares + d_liquidity in
   let () = Assert.Error.assert (d_liquidity >= min_liquidity) Errors.insufficient_liquidity_created in
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let d_proceeds = redeem_amount d_liquidity t.proceeds_reserves total_liquidity_shares in
-  let d_subsidy = redeem_amount d_liquidity t.subsidy_reserves total_liquidity_shares in
+  let proceeds_reserves = increase_liquidity total_liquidity_shares t.total_liquidity_shares t.proceeds_reserves in
+  let d_proceeds = subtract_nat proceeds_reserves t.proceeds_reserves Errors.proceeds_decreased in
+  let subsidy_reserves = increase_liquidity total_liquidity_shares t.total_liquidity_shares t.subsidy_reserves in
+  let d_subsidy = subtract_nat subsidy_reserves t.subsidy_reserves Errors.subsidy_decreased in
   let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
     liquidity_owner with
     liquidity_shares = liquidity_owner.liquidity_shares + d_liquidity;
@@ -157,6 +169,8 @@ let add_liquidity
     t with
     total_liquidity_shares = total_liquidity_shares;
     self_reserves = t.self_reserves + amount_deposited;
+    proceeds_reserves = proceeds_reserves;
+    subsidy_reserves = subsidy_reserves;
   }
 
 type remove_liquidity = { 
@@ -192,17 +206,15 @@ let remove_liquidity
   let () = Assert.Error.assert (liquidity_owner.liquidity_shares >= liquidity_redeemed) Errors.insufficient_liquidity in
   let self_redeemed = redeem_amount liquidity_redeemed t.self_reserves t.total_liquidity_shares in
   let () = Assert.Error.assert (self_redeemed >= min_self_received) Errors.insufficient_self_received in
-  let proceeds_owed, proceeds_redeemed = subtract_debt
-    liquidity_owner.proceeds_owed
-    (redeem_amount liquidity_redeemed t.proceeds_reserves t.total_liquidity_shares)
-  in
-  // let () = failwith ("proceeds_redeemed", proceeds_redeemed) in
+  
+  let d_proceeds = redeem_amount liquidity_redeemed t.proceeds_reserves t.total_liquidity_shares in
+  let proceeds_owed, proceeds_redeemed = subtract_debt liquidity_owner.proceeds_owed d_proceeds in
   let () = Assert.Error.assert (proceeds_redeemed >= min_proceeds_received) Errors.insufficient_proceeds_received in
-  let subsidy_owed, subsidy_redeemed = subtract_debt
-    liquidity_owner.subsidy_owed
-    (redeem_amount liquidity_redeemed t.subsidy_reserves t.total_liquidity_shares)
-  in
+  
+  let d_subsidy = redeem_amount liquidity_redeemed t.subsidy_reserves t.total_liquidity_shares in 
+  let subsidy_owed, subsidy_redeemed = subtract_debt liquidity_owner.subsidy_owed d_subsidy in
   let () = Assert.Error.assert (subsidy_redeemed >= min_subsidy_received) Errors.insufficient_subsidy_received in
+  
   let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
     liquidity_owner with
     liquidity_shares = abs (liquidity_owner.liquidity_shares - liquidity_redeemed);
@@ -213,8 +225,8 @@ let remove_liquidity
     t with
     total_liquidity_shares = abs (t.total_liquidity_shares - liquidity_redeemed);
     self_reserves = abs (t.self_reserves - self_redeemed);
-    proceeds_reserves = abs (t.proceeds_reserves - proceeds_redeemed);
-    subsidy_reserves = abs (t.subsidy_reserves - subsidy_redeemed);
+    proceeds_reserves = abs (t.proceeds_reserves - d_proceeds);
+    subsidy_reserves = abs (t.subsidy_reserves - d_subsidy);
   } in
   let ops = [] in
   let ops = if ( subsidy_redeemed > 0n ) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops else ops in
@@ -239,7 +251,7 @@ let swap
   let trade_amount = env.apply_target_price ctxt proceeds_amount in
   let self_to_sell = Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt) in
   let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
-  let () = Assert.Error.assert (self_to_sell < t.self_reserves) Errors.insufficient_tokens_liquidity in
+  let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
   let t = { 
     t with
     self_reserves = abs (t.self_reserves - self_to_sell); 

@@ -11,6 +11,7 @@ let clamp_nat (x : int) : nat =
 
 [@inline]
 let min (x : nat) (y : nat) : nat = if x < y then x else y
+let max (x : nat) (y : nat) : nat = if x > y then x else y
 
 [@inline]
 let ceil_div (numerator : nat) (denominator : nat) : nat = abs ((- numerator) / (int denominator))
@@ -36,3 +37,9 @@ let assert_no_tez_in_transaction
 
 [@inline]
 let tez_to_nat (a: tez) : nat = a / 1mutez
+
+[@inline]
+let subtract_nat (a: nat) (b : nat) (error : string) : nat =
+  match is_nat (a - b) with
+    | Some (r) -> r
+    | None -> failwith error

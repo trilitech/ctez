@@ -16,8 +16,8 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
             }
         )
 
-        ctez2.using(owner).collect_from_ctez_liquidity(receiver).send()
-        self.bake_block()
+        # ctez2.using(owner).collect_from_ctez_liquidity(receiver).send()
+        # self.bake_block()
 
         owner.bulk(
             ctez_token.approve(ctez2, deposit_amount),

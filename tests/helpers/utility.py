@@ -1,3 +1,4 @@
+import pprint
 from pytezos.client import PyTezosClient
 from pytezos.contract.interface import ContractInterface
 from pytezos.operation.group import OperationGroup
@@ -135,3 +136,9 @@ def get_consumed_mutez(client: PyTezosClient, opg: OperationGroup) -> int:
             if update.get('category') == 'block fees' or update.get('category') == 'storage fees':
                 fee += int(update['change'])
     return fee
+
+def print_dict(caption: str, dict: dict) -> None:
+    pp = pprint.PrettyPrinter(depth=4)
+    
+    print(caption)
+    pp.pprint(dict)

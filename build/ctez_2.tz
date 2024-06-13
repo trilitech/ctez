@@ -96,6 +96,15 @@
              PAIR 3 ;
              TRANSFER_TOKENS } ;
          LAMBDA
+           (pair nat nat)
+           nat
+           { UNPAIR ;
+             DUP 2 ;
+             DUP 2 ;
+             COMPARE ;
+             GT ;
+             IF { SWAP ; DROP } { DROP } } ;
+         LAMBDA
            (pair nat nat nat nat)
            int
            { UNPAIR 4 ;
@@ -233,11 +242,12 @@
          PAIR ;
          APPLY ;
          LAMBDA
-           (pair (lambda
-                    (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
-                          address
-                          (lambda (pair nat nat nat) (pair nat nat nat)))
-                    (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+           (pair (pair (lambda
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                                address
+                                (lambda (pair nat nat nat) (pair nat nat nat)))
+                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+                       (lambda (pair nat nat) nat))
                  (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
                        address
                        nat
@@ -245,14 +255,26 @@
                        timestamp))
            (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
            { UNPAIR ;
-             SWAP ;
+             UNPAIR ;
+             DIG 2 ;
              UNPAIR ;
              SWAP ;
              UNPAIR 4 ;
-             DUP 5 ;
-             GET 5 ;
+             PUSH nat 1 ;
              DUP 6 ;
              GET 3 ;
+             PAIR ;
+             DUP 8 ;
+             SWAP ;
+             EXEC ;
+             PUSH nat 1 ;
+             DUP 7 ;
+             GET 5 ;
+             PAIR ;
+             DUP 9 ;
+             SWAP ;
+             EXEC ;
+             SWAP ;
              DUP 4 ;
              MUL ;
              SWAP ;
@@ -278,10 +300,16 @@
              COMPARE ;
              LE ;
              IF { DROP } { FAILWITH } ;
-             DUP ;
+             PUSH nat 1 ;
+             DUP 6 ;
+             GET 3 ;
+             PAIR ;
+             DUP 8 ;
+             SWAP ;
+             EXEC ;
              DUP 6 ;
              GET 7 ;
-             DUP 4 ;
+             DUP 3 ;
              MUL ;
              SWAP ;
              INT ;
@@ -291,8 +319,20 @@
              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
              CAR ;
              ABS ;
+             DUP 6 ;
+             GET 7 ;
              DUP 2 ;
-             DUP 7 ;
+             SUB ;
+             ISNAT ;
+             IF_NONE { PUSH string "PROCEEDS_DECREASED" ; FAILWITH } {} ;
+             PUSH nat 1 ;
+             DUP 8 ;
+             GET 3 ;
+             PAIR ;
+             DIG 9 ;
+             SWAP ;
+             EXEC ;
+             DUP 8 ;
              GET 9 ;
              DUP 5 ;
              MUL ;
@@ -304,6 +344,12 @@
              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
              CAR ;
              ABS ;
+             DUP 8 ;
+             GET 9 ;
+             DUP 2 ;
+             SUB ;
+             ISNAT ;
+             IF_NONE { PUSH string "SUBSIDY_DECREASED" ; FAILWITH } {} ;
              LAMBDA
                (pair (pair nat nat nat) (pair nat nat nat))
                (pair nat nat nat)
@@ -325,30 +371,39 @@
                  GET 4 ;
                  ADD ;
                  UPDATE 4 } ;
+             DUP 7 ;
              DUP 5 ;
-             DUP 4 ;
              DUP 4 ;
              PAIR 3 ;
              APPLY ;
              SWAP ;
-             DIG 2 ;
-             DIG 4 ;
-             DROP 3 ;
-             DIG 2 ;
-             DIG 4 ;
-             PAIR 3 ;
              DIG 3 ;
+             DIG 6 ;
+             DROP 3 ;
+             DIG 4 ;
+             DIG 6 ;
+             PAIR 3 ;
+             DIG 5 ;
              SWAP ;
              EXEC ;
              DUP ;
-             DIG 2 ;
+             DIG 4 ;
              UPDATE 3 ;
-             DUG 2 ;
+             DIG 4 ;
+             DIG 2 ;
              GET 5 ;
              ADD ;
-             UPDATE 5 } ;
-         DUP 2 ;
+             UPDATE 5 ;
+             DIG 2 ;
+             UPDATE 7 ;
+             SWAP ;
+             UPDATE 9 } ;
+         DUP 6 ;
+         DUP 3 ;
+         PAIR ;
          APPLY ;
+         DIG 5 ;
+         DROP ;
          LAMBDA
            (pair (pair (lambda
                           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
@@ -438,17 +493,18 @@
              DUP 3 ;
              COMPARE ;
              LT ;
-             IF { PUSH nat 0 ; DUG 2 ; SUB ; ABS } { SWAP ; SUB ; ABS ; PUSH nat 0 } ;
-             DIG 7 ;
+             IF { PUSH nat 0 ; DUP 3 ; DIG 2 ; SUB ; ABS }
+                { DUP 2 ; SUB ; ABS ; PUSH nat 0 } ;
+             DIG 8 ;
              DUP 3 ;
              COMPARE ;
              GE ;
              IF {} { PUSH string "INSUFFICIENT_PROCEEDS_RECEIVED" ; FAILWITH } ;
-             DUP 9 ;
-             GET 3 ;
              DUP 10 ;
+             GET 3 ;
+             DUP 11 ;
              GET 9 ;
-             DUP 9 ;
+             DUP 10 ;
              MUL ;
              SWAP ;
              INT ;
@@ -458,14 +514,15 @@
              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
              CAR ;
              ABS ;
-             DIG 4 ;
+             DIG 5 ;
              GET 4 ;
              DUP ;
              DUP 3 ;
              COMPARE ;
              LT ;
-             IF { PUSH nat 0 ; DUG 2 ; SUB ; ABS } { SWAP ; SUB ; ABS ; PUSH nat 0 } ;
-             DIG 8 ;
+             IF { PUSH nat 0 ; DUP 3 ; DIG 2 ; SUB ; ABS }
+                { DUP 2 ; SUB ; ABS ; PUSH nat 0 } ;
+             DIG 10 ;
              DUP 3 ;
              COMPARE ;
              GE ;
@@ -487,40 +544,40 @@
                  UPDATE 3 ;
                  SWAP ;
                  UPDATE 4 } ;
-             DUP 9 ;
-             DUP 5 ;
+             DUP 11 ;
+             DUP 6 ;
              DUP 4 ;
              PAIR 3 ;
              APPLY ;
              SWAP ;
-             DIG 3 ;
-             DROP 2 ;
              DIG 4 ;
-             DIG 7 ;
+             DROP 2 ;
+             DIG 6 ;
+             DIG 9 ;
              PAIR 3 ;
-             DIG 8 ;
+             DIG 10 ;
              SWAP ;
              EXEC ;
              DUP ;
-             DIG 6 ;
+             DIG 8 ;
              DUP 3 ;
              GET 3 ;
              SUB ;
              ABS ;
              UPDATE 3 ;
-             DUP 5 ;
+             DUP 7 ;
              DUP 3 ;
              GET 5 ;
              SUB ;
              ABS ;
              UPDATE 5 ;
-             DUP 4 ;
+             DIG 5 ;
              DUP 3 ;
              GET 7 ;
              SUB ;
              ABS ;
              UPDATE 7 ;
-             DUP 3 ;
+             DIG 3 ;
              DIG 2 ;
              GET 9 ;
              SUB ;
@@ -682,7 +739,7 @@
              GET 5 ;
              DUP 2 ;
              COMPARE ;
-             LT ;
+             LE ;
              IF {} { PUSH string "INSUFFICIENT_TOKENS_LIQUIDITY" ; FAILWITH } ;
              DUP 4 ;
              DUP 2 ;
@@ -1321,14 +1378,23 @@
                   UNIT ;
                   VIEW "viewTotalSupply" nat ;
                   IF_NONE { UNIT ; FAILWITH } {} ;
-                  DUP 6 ;
-                  DIG 6 ;
-                  GET 8 ;
+                  PUSH nat 1 ;
                   PUSH nat 20 ;
-                  DUP 4 ;
+                  DUP 3 ;
                   EDIV ;
                   IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
                   CAR ;
+                  PAIR ;
+                  DUP 7 ;
+                  DIG 7 ;
+                  GET 8 ;
+                  DIG 2 ;
+                  UNPAIR ;
+                  DUP 2 ;
+                  DUP 2 ;
+                  COMPARE ;
+                  GT ;
+                  IF { SWAP ; DROP } { DROP } ;
                   UPDATE 5 ;
                   UPDATE 8 ;
                   DUP ;

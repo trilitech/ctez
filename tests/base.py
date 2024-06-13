@@ -54,7 +54,7 @@ class BaseTestCase(SandboxedNodeTestCase):
     def deploy_fa12(
         self,
         admin: Addressable,
-        balances: dict[Addressable, int], 
+        balances: dict[Addressable, int] = {}, 
         allowances: Optional[list[tuple[Addressable, Addressable, int]]] = None
     ) -> Fa12:
         if allowances is None:

@@ -47,17 +47,10 @@ class Ctez2(ContractHelper):
         last_update: int,
         target_ctez_price = 1.0
     ) -> OperationGroup:
-        # we need to set initial liquidity as 1 which will never be withdrawn 
         half_dex_storage = {
-            'liquidity_owners' : {
-                NULL_ADDRESS: {
-                    'liquidity_shares': 1,
-                    'proceeds_owed': 0,
-                    'subsidy_owed': 0
-                }
-            },
-            'total_liquidity_shares' : 1,
-            'self_reserves' : 1,
+            'liquidity_owners' : {},
+            'total_liquidity_shares' : 0,
+            'self_reserves' : 0,
             'proceeds_reserves' : 0,
             'subsidy_reserves' : 0,
             'fee_index' : 2**48,
@@ -78,7 +71,7 @@ class Ctez2(ContractHelper):
         
         filename = join(get_build_dir(), 'ctez_2.tz')
 
-        return originate_from_file(filename, client, storage, balance=1)
+        return originate_from_file(filename, client, storage)
 
     def set_ctez_fa12_address(self, address : Addressable) -> ContractCall:
         return self.contract.set_ctez_fa12_address(get_address(address))

@@ -42,15 +42,25 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_TOKENS_BOUGHT):
             ctez2.using(sender).ctez_to_tez(receiver, sent_ctez, 1_000_000, self.get_future_timestamp()).send()
 
-    def test_should_not_allow_to_remove_all_liquidity(self) -> None:
+    def test_should_not_fail_if_all_liquidity_removed(self) -> None:
         all_liquidity = 8
-        ctez2, _, sender, receiver, *_ = self.default_setup(
-            tez_liquidity = all_liquidity
+        sent_ctez = 10
+        ctez2, ctez_token, sender, receiver, *_ = self.default_setup(
+            tez_liquidity = all_liquidity,
+            get_ctez_token_balances = lambda sender, *_: {
+                sender: sent_ctez 
+            }
         )
 
-        sent_tez = 10
-        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_TOKENS_LIQUIDITY):
-            ctez2.using(sender).ctez_to_tez(receiver, sent_tez, all_liquidity, self.get_future_timestamp()).send()
+        sender.bulk(
+            ctez_token.approve(ctez2, sent_ctez),
+            ctez2.ctez_to_tez(receiver, sent_ctez, all_liquidity, self.get_future_timestamp())
+        ).send()
+        self.bake_block()
+
+        # we need to ensure contract works well
+        ctez2.add_tez_liquidity(receiver, 0, self.get_future_timestamp()).with_amount(all_liquidity).send()
+        self.bake_block()
 
     @parameterized.expand(swap_ctez_to_tez_cases)
     def test_should_swap_ctez_to_tez_tokens_correctly(self, _, tez_liquidity, target_liquidity, sent_ctez, tez_bought, target_price) -> None:

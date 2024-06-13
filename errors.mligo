@@ -9,3 +9,5 @@
 [@inline] let insufficient_proceeds_received = "INSUFFICIENT_PROCEEDS_RECEIVED"
 [@inline] let insufficient_subsidy_received = "INSUFFICIENT_SUBSIDY_RECEIVED"
 [@inline] let small_sell_amount = "SMALL_SELL_AMOUNT"
+[@inline] let proceeds_decreased = "PROCEEDS_DECREASED"
+[@inline] let subsidy_decreased = "SUBSIDY_DECREASED"
