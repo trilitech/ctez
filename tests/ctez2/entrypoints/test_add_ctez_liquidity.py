@@ -63,7 +63,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert ctez_token.view_balance(ctez2) == prev_ctez2_balance
         assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
         assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
+        assert current_ctez_dex.proceeds_debts == prev_ctez_dex.proceeds_debts
         assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
+        assert current_ctez_dex.subsidy_debts == prev_ctez_dex.subsidy_debts
         assert owner_account.liquidity_shares == 0
         assert owner_account.proceeds_owed == 0
         assert owner_account.subsidy_owed == 0
@@ -96,7 +98,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_ctez_dex.total_liquidity_shares == prev_sell_ctez_dex.total_liquidity_shares + deposit_amount 
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount 
         assert current_sell_ctez_dex.proceeds_reserves == prev_sell_ctez_dex.proceeds_reserves
+        assert current_sell_ctez_dex.proceeds_debts == prev_sell_ctez_dex.proceeds_debts
         assert current_sell_ctez_dex.subsidy_reserves == prev_sell_ctez_dex.subsidy_reserves
+        assert current_sell_ctez_dex.subsidy_debts == prev_sell_ctez_dex.subsidy_debts
         
         assert current_liquidity_owner.liquidity_shares == deposit_amount
         assert current_liquidity_owner.proceeds_owed == 0
@@ -129,7 +133,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_ctez_dex.total_liquidity_shares == 100_000
         assert current_sell_ctez_dex.self_reserves == 100_000
         assert current_sell_ctez_dex.proceeds_reserves == 0
+        assert current_sell_ctez_dex.proceeds_debts == 0
         assert current_sell_ctez_dex.subsidy_reserves == 0
+        assert current_sell_ctez_dex.subsidy_debts == 0
 
         depositor_0_account = ctez2.get_ctez_liquidity_owner(depositor_0)
         assert depositor_0_account.liquidity_shares == 100_000  
@@ -152,7 +158,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_ctez_dex.total_liquidity_shares == 111_123
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_1 == 99_906
         assert current_sell_ctez_dex.proceeds_reserves == 11_780
+        assert current_sell_ctez_dex.proceeds_debts == 1_180
         assert current_sell_ctez_dex.subsidy_reserves == 69
+        assert current_sell_ctez_dex.subsidy_debts == 7
 
         assert depositor_0_account.liquidity_shares == 100_000  
         assert depositor_0_account.proceeds_owed == 0           # because there were no proceeds in dex on first deposit
@@ -177,7 +185,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_ctez_dex.total_liquidity_shares == 116_981
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_2 == 99_861
         assert current_sell_ctez_dex.proceeds_reserves == 17_981
+        assert current_sell_ctez_dex.proceeds_debts == 1_180 + 901
         assert current_sell_ctez_dex.subsidy_reserves == 138
+        assert current_sell_ctez_dex.subsidy_debts == 7 + 7
 
         assert depositor_0_account.liquidity_shares == 100_000  # has 85.48% of liquidity
         assert depositor_0_account.proceeds_owed == 0           # should be unchanged
@@ -207,7 +217,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_ctez_dex.total_liquidity_shares == 140_410
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_3 == 119_861
         assert current_sell_ctez_dex.proceeds_reserves == 21_583
+        assert current_sell_ctez_dex.proceeds_debts == 4782 + 901
         assert current_sell_ctez_dex.subsidy_reserves == 242
+        assert current_sell_ctez_dex.subsidy_debts == 48 + 7
 
         assert depositor_0_account.liquidity_shares == 100_000  # has 71.22% of liquidity
         assert depositor_0_account.proceeds_owed == 0           # should be unchanged

@@ -31,7 +31,9 @@ class Ctez2(ContractHelper):
         liquidity_owners: int
         total_liquidity_shares: int
         self_reserves: int
+        proceeds_debts: int
         proceeds_reserves: int
+        subsidy_debts: int
         subsidy_reserves: int
         fee_index: int
 
@@ -48,11 +50,13 @@ class Ctez2(ContractHelper):
         target_ctez_price = 1.0
     ) -> OperationGroup:
         half_dex_storage = {
-            'liquidity_owners' : {},
-            'total_liquidity_shares' : 0,
-            'self_reserves' : 0,
-            'proceeds_reserves' : 0,
-            'subsidy_reserves' : 0,
+            'liquidity_owners': {},
+            'total_liquidity_shares': 0,
+            'self_reserves': 0,
+            'proceeds_debts': 0,
+            'proceeds_reserves': 0,
+            'subsidy_debts': 0,
+            'subsidy_reserves': 0,
             'fee_index' : 2**48,
         }
 

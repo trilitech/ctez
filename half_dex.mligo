@@ -96,9 +96,11 @@ type liquidity_owner = {
 type t = { 
   liquidity_owners : (address, liquidity_owner) big_map; (** map of liquidity owners. *)
   total_liquidity_shares : nat;  (** total amount of liquidity shares. *)
-  self_reserves : nat;  (** total amount of liquidity. *)
-  proceeds_reserves : nat; (** total amount accumulated from proceeds. *)
-  subsidy_reserves : nat; (** total amount accumulated from subsidy. *)
+  self_reserves : nat; (** total amount of liquidity. *)
+  proceeds_debts: nat; (** used to simplify analytics *)
+  proceeds_reserves : nat; (** total amount accumulated from proceeds + proceeds_debts *)
+  subsidy_debts: nat; (** used to simplify analytics *)
+  subsidy_reserves : nat; (** total amount accumulated from subsidy + subsidy_debts *)
   fee_index : Float48.t; (** the fee index. *)
 }
 
@@ -171,7 +173,9 @@ let add_liquidity
     t with
     total_liquidity_shares = total_liquidity_shares;
     self_reserves = t.self_reserves + amount_deposited;
+    proceeds_debts = t.proceeds_debts + d_proceeds;
     proceeds_reserves = proceeds_reserves;
+    subsidy_debts = t.subsidy_debts + d_subsidy;
     subsidy_reserves = subsidy_reserves;
   }
 
@@ -216,20 +220,21 @@ let remove_liquidity
   let d_subsidy = redeem_amount liquidity_redeemed t.subsidy_reserves t.total_liquidity_shares in 
   let subsidy_owed, subsidy_redeemed = subtract_debt liquidity_owner.subsidy_owed d_subsidy in
   let () = Assert.Error.assert (subsidy_redeemed >= min_subsidy_received) Errors.insufficient_subsidy_received in
-  
+  let t = { 
+    t with
+    total_liquidity_shares = abs (t.total_liquidity_shares - liquidity_redeemed);
+    self_reserves = abs (t.self_reserves - self_redeemed);
+    proceeds_debts = abs (t.proceeds_debts - (liquidity_owner.proceeds_owed - proceeds_owed));
+    proceeds_reserves = abs (t.proceeds_reserves - d_proceeds);
+    subsidy_debts = abs (t.subsidy_debts - (liquidity_owner.subsidy_owed - subsidy_owed));
+    subsidy_reserves = abs (t.subsidy_reserves - d_subsidy);
+  } in
   let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
     liquidity_owner with
     liquidity_shares = abs (liquidity_owner.liquidity_shares - liquidity_redeemed);
     proceeds_owed;
     subsidy_owed;
   }) in
-  let t = { 
-    t with
-    total_liquidity_shares = abs (t.total_liquidity_shares - liquidity_redeemed);
-    self_reserves = abs (t.self_reserves - self_redeemed);
-    proceeds_reserves = abs (t.proceeds_reserves - d_proceeds);
-    subsidy_reserves = abs (t.subsidy_reserves - d_subsidy);
-  } in
   let ops = [] in
   let ops = if ( subsidy_redeemed > 0n ) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops else ops in
   let ops = if ( proceeds_redeemed > 0n ) then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops else ops in
@@ -286,6 +291,11 @@ let collect_proceeds_and_subsidy
     t.total_liquidity_shares
   in
   let amount_subsidy_withdrawn = clamp_nat (share_of_subsidy - liquidity_owner.subsidy_owed) in
+  let t = {
+    t with
+    proceeds_debts = abs (t.proceeds_debts - (share_of_proceeds - liquidity_owner.proceeds_owed));
+    subsidy_debts = abs (t.subsidy_debts - (share_of_subsidy - liquidity_owner.subsidy_owed))
+  } in
   let t = set_liquidity_owner t owner { 
     liquidity_owner with
     proceeds_owed = share_of_proceeds;

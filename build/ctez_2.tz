@@ -58,7 +58,9 @@
                 (pair (nat %liquidity_shares) (nat %proceeds_owed) (nat %subsidy_owed)))
              (nat %total_liquidity_shares)
              (nat %self_reserves)
+             (nat %proceeds_debts)
              (nat %proceeds_reserves)
+             (nat %subsidy_debts)
              (nat %subsidy_reserves)
              (nat %fee_index))
           (pair %sell_tez
@@ -67,7 +69,9 @@
                 (pair (nat %liquidity_shares) (nat %proceeds_owed) (nat %subsidy_owed)))
              (nat %total_liquidity_shares)
              (nat %self_reserves)
+             (nat %proceeds_debts)
              (nat %proceeds_reserves)
+             (nat %subsidy_debts)
              (nat %subsidy_reserves)
              (nat %fee_index))
           (pair %context (nat %target) (int %drift) (nat %_Q) (address %ctez_fa12_address))) ;
@@ -191,7 +195,7 @@
              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
              CAR } ;
          LAMBDA
-           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) address)
+           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) address)
            (pair nat nat nat)
            { UNPAIR ;
              CAR ;
@@ -199,28 +203,28 @@
              GET ;
              IF_NONE { PUSH nat 0 ; PUSH nat 0 ; PUSH nat 0 ; PAIR 3 } {} } ;
          LAMBDA
-           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  address
                  nat
                  nat
                  nat)
-           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
            { UNPAIR 3 ; DUP ; CAR ; DIG 3 ; SOME ; DIG 3 ; UPDATE ; UPDATE 1 } ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                                 address
                                 nat
                                 nat
                                 nat)
-                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
                        (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) address)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) address)
                           (pair nat nat nat)))
-                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        address
                        (lambda (pair nat nat nat) (pair nat nat nat))))
-           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
            { UNPAIR ;
              UNPAIR ;
              DIG 2 ;
@@ -243,17 +247,17 @@
          APPLY ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                                 address
                                 (lambda (pair nat nat nat) (pair nat nat nat)))
-                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
                        (lambda (pair nat nat) nat))
-                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        address
                        nat
                        nat
                        timestamp))
-           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
            { UNPAIR ;
              UNPAIR ;
              DIG 2 ;
@@ -308,7 +312,7 @@
              SWAP ;
              EXEC ;
              DUP 6 ;
-             GET 7 ;
+             GET 9 ;
              DUP 3 ;
              MUL ;
              SWAP ;
@@ -320,7 +324,7 @@
              CAR ;
              ABS ;
              DUP 6 ;
-             GET 7 ;
+             GET 9 ;
              DUP 2 ;
              SUB ;
              ISNAT ;
@@ -333,7 +337,7 @@
              SWAP ;
              EXEC ;
              DUP 8 ;
-             GET 9 ;
+             GET 13 ;
              DUP 5 ;
              MUL ;
              SWAP ;
@@ -345,7 +349,7 @@
              CAR ;
              ABS ;
              DUP 8 ;
-             GET 9 ;
+             GET 13 ;
              DUP 2 ;
              SUB ;
              ISNAT ;
@@ -376,44 +380,51 @@
              DUP 4 ;
              PAIR 3 ;
              APPLY ;
-             SWAP ;
-             DIG 3 ;
              DIG 6 ;
-             DROP 3 ;
-             DIG 4 ;
+             DROP ;
              DIG 6 ;
+             DIG 8 ;
              PAIR 3 ;
-             DIG 5 ;
+             DIG 7 ;
              SWAP ;
              EXEC ;
              DUP ;
-             DIG 4 ;
+             DIG 6 ;
              UPDATE 3 ;
-             DIG 4 ;
-             DIG 2 ;
+             DIG 6 ;
+             DUP 3 ;
              GET 5 ;
              ADD ;
              UPDATE 5 ;
-             DIG 2 ;
+             DIG 4 ;
+             DUP 3 ;
+             GET 7 ;
+             ADD ;
              UPDATE 7 ;
+             DIG 4 ;
+             UPDATE 9 ;
+             DUG 2 ;
+             GET 11 ;
+             ADD ;
+             UPDATE 11 ;
              SWAP ;
-             UPDATE 9 } ;
+             UPDATE 13 } ;
          DUP 6 ;
          DUP 3 ;
          PAIR ;
          APPLY ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                                 address
                                 (lambda (pair nat nat nat) (pair nat nat nat)))
-                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
                        (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) address)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) address)
                           (pair nat nat nat))
                        (lambda (pair nat nat) nat)
                        (lambda (pair (pair nat int nat address) address address nat) operation))
-                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair nat int nat address)
                        (pair (lambda
                                 (pair nat int nat address)
@@ -427,7 +438,15 @@
                        nat
                        nat
                        timestamp))
-           (pair (list operation) (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (list operation)
+                 (big_map address (pair nat nat nat))
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat)
            { UNPAIR ;
              UNPAIR 4 ;
              DIG 4 ;
@@ -485,7 +504,7 @@
              SWAP ;
              EXEC ;
              DUP 9 ;
-             GET 7 ;
+             GET 9 ;
              DUP 7 ;
              MUL ;
              SWAP ;
@@ -517,7 +536,7 @@
              SWAP ;
              EXEC ;
              DUP 11 ;
-             GET 9 ;
+             GET 13 ;
              DUP 10 ;
              MUL ;
              SWAP ;
@@ -528,7 +547,7 @@
              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
              CAR ;
              ABS ;
-             DIG 5 ;
+             DUP 6 ;
              GET 4 ;
              DUP ;
              DUP 3 ;
@@ -536,11 +555,54 @@
              LT ;
              IF { PUSH nat 0 ; DUP 3 ; DIG 2 ; SUB ; ABS }
                 { DUP 2 ; SUB ; ABS ; PUSH nat 0 } ;
-             DIG 10 ;
+             DIG 11 ;
              DUP 3 ;
              COMPARE ;
              GE ;
              IF {} { PUSH string "INSUFFICIENT_SUBSIDY_RECEIVED" ; FAILWITH } ;
+             DUP 12 ;
+             DUP 12 ;
+             DUP 14 ;
+             GET 3 ;
+             SUB ;
+             ABS ;
+             UPDATE 3 ;
+             DUP 8 ;
+             DUP 14 ;
+             GET 5 ;
+             SUB ;
+             ABS ;
+             UPDATE 5 ;
+             DUP 5 ;
+             DUP 10 ;
+             GET 3 ;
+             SUB ;
+             DUP 14 ;
+             GET 7 ;
+             SUB ;
+             ABS ;
+             UPDATE 7 ;
+             DIG 6 ;
+             DUP 13 ;
+             GET 9 ;
+             SUB ;
+             ABS ;
+             UPDATE 9 ;
+             DUP 2 ;
+             DIG 8 ;
+             GET 4 ;
+             SUB ;
+             DUP 12 ;
+             GET 11 ;
+             SUB ;
+             ABS ;
+             UPDATE 11 ;
+             DIG 3 ;
+             DIG 10 ;
+             GET 13 ;
+             SUB ;
+             ABS ;
+             UPDATE 13 ;
              LAMBDA
                (pair (pair nat nat nat) (pair nat nat nat))
                (pair nat nat nat)
@@ -558,45 +620,21 @@
                  UPDATE 3 ;
                  SWAP ;
                  UPDATE 4 } ;
-             DUP 11 ;
+             DUP 10 ;
              DUP 6 ;
-             DUP 4 ;
+             DUP 5 ;
              PAIR 3 ;
              APPLY ;
-             SWAP ;
+             DIG 2 ;
              DIG 4 ;
-             DROP 2 ;
-             DIG 6 ;
              DIG 9 ;
+             DROP 3 ;
+             DIG 5 ;
+             DIG 2 ;
              PAIR 3 ;
-             DIG 10 ;
+             DIG 7 ;
              SWAP ;
              EXEC ;
-             DUP ;
-             DIG 8 ;
-             DUP 3 ;
-             GET 3 ;
-             SUB ;
-             ABS ;
-             UPDATE 3 ;
-             DUP 7 ;
-             DUP 3 ;
-             GET 5 ;
-             SUB ;
-             ABS ;
-             UPDATE 5 ;
-             DIG 5 ;
-             DUP 3 ;
-             GET 7 ;
-             SUB ;
-             ABS ;
-             UPDATE 7 ;
-             DIG 3 ;
-             DIG 2 ;
-             GET 9 ;
-             SUB ;
-             ABS ;
-             UPDATE 9 ;
              NIL operation ;
              PUSH nat 0 ;
              DUP 4 ;
@@ -660,7 +698,7 @@
          DROP ;
          LAMBDA
            (pair (lambda (pair nat nat nat nat) int)
-                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair nat int nat address)
                        (pair (lambda
                                 (pair nat int nat address)
@@ -672,7 +710,15 @@
                        nat
                        nat
                        timestamp))
-           (pair (list operation) (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (list operation)
+                 (big_map address (pair nat nat nat))
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat)
            { UNPAIR ;
              SWAP ;
              UNPAIR 4 ;
@@ -765,9 +811,9 @@
              UPDATE 5 ;
              DIG 3 ;
              DIG 4 ;
-             GET 7 ;
+             GET 9 ;
              ADD ;
-             UPDATE 7 ;
+             UPDATE 9 ;
              SWAP ;
              DIG 2 ;
              SELF_ADDRESS ;
@@ -793,18 +839,18 @@
          DROP ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                                 address
                                 nat
                                 nat
                                 nat)
-                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat))
+                          (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
                        (lambda
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) address)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) address)
                           (pair nat nat nat))
                        (lambda (pair nat nat) nat)
                        (lambda (pair (pair nat int nat address) address address nat) operation))
-                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair nat int nat address)
                        (pair (lambda
                                 (pair nat int nat address)
@@ -813,7 +859,15 @@
                              (lambda (pair nat int nat address) nat)
                              (lambda (pair nat int nat address) (lambda nat nat)))
                        address))
-           (pair (list operation) (big_map address (pair nat nat nat)) nat nat nat nat nat)
+           (pair (list operation)
+                 (big_map address (pair nat nat nat))
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat
+                 nat)
            { UNPAIR ;
              UNPAIR 4 ;
              DIG 4 ;
@@ -834,7 +888,7 @@
              SWAP ;
              EXEC ;
              DUP 5 ;
-             GET 7 ;
+             GET 9 ;
              DUP 3 ;
              CAR ;
              MUL ;
@@ -860,7 +914,7 @@
              SWAP ;
              EXEC ;
              DUP 7 ;
-             GET 9 ;
+             GET 13 ;
              DUP 5 ;
              CAR ;
              MUL ;
@@ -878,13 +932,32 @@
              SUB ;
              ISNAT ;
              IF_NONE { PUSH nat 0 } {} ;
-             DIG 4 ;
-             DIG 4 ;
-             UPDATE 3 ;
-             DIG 2 ;
-             UPDATE 4 ;
-             DIG 3 ;
+             DUP 8 ;
+             DUP 6 ;
+             GET 3 ;
+             DUP 6 ;
+             SUB ;
+             DUP 10 ;
+             GET 7 ;
+             SUB ;
+             ABS ;
+             UPDATE 7 ;
+             DUP 6 ;
+             GET 4 ;
+             DUP 4 ;
+             SUB ;
+             DIG 9 ;
+             GET 11 ;
+             SUB ;
+             ABS ;
+             UPDATE 11 ;
              DIG 5 ;
+             DIG 5 ;
+             UPDATE 3 ;
+             DIG 3 ;
+             UPDATE 4 ;
+             DIG 4 ;
+             DIG 2 ;
              PAIR 3 ;
              DIG 6 ;
              SWAP ;
@@ -936,8 +1009,8 @@
            (pair (pair nat address)
                  (big_map (pair nat address) (pair mutez nat address nat))
                  timestamp
-                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
-                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair nat int nat address))
            (pair mutez nat address nat)
            { UNPAIR ;
@@ -949,10 +1022,10 @@
                { DROP ; PUSH nat 4 ; FAILWITH }
                { DUP 2 ;
                  GET 7 ;
-                 GET 10 ;
+                 GET 14 ;
                  DIG 2 ;
                  GET 5 ;
-                 GET 10 ;
+                 GET 14 ;
                  MUL ;
                  DUP 2 ;
                  GET 6 ;
@@ -1199,8 +1272,21 @@
          PAIR 4 ;
          LAMBDA
            (pair (lambda address (contract (pair int address)))
-                 (pair address nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat))
-           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) nat operation)
+                 (pair address
+                       nat
+                       nat
+                       nat
+                       (big_map address (pair nat nat nat))
+                       nat
+                       nat
+                       nat
+                       nat
+                       nat
+                       nat
+                       nat))
+           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+                 nat
+                 operation)
            { UNPAIR ;
              SWAP ;
              UNPAIR 5 ;
@@ -1241,18 +1327,18 @@
              PUSH nat 48 ;
              SWAP ;
              DUP 6 ;
-             GET 10 ;
+             GET 14 ;
              DIG 4 ;
              MUL ;
              MUL ;
              LSR ;
              DUP 4 ;
-             GET 10 ;
+             GET 14 ;
              ADD ;
              DUP 4 ;
-             GET 10 ;
+             GET 14 ;
              DUP 5 ;
-             GET 10 ;
+             GET 14 ;
              DUP 3 ;
              SUB ;
              DUP 5 ;
@@ -1276,21 +1362,34 @@
              IF_NONE { PUSH nat 0 } {} ;
              DUP 5 ;
              DIG 4 ;
-             UPDATE 10 ;
+             UPDATE 14 ;
              DIG 3 ;
              DIG 4 ;
-             GET 9 ;
+             GET 13 ;
              ADD ;
              ISNAT ;
              IF_NONE { PUSH nat 0 } {} ;
-             UPDATE 9 ;
+             UPDATE 13 ;
              PAIR 3 } ;
          DUP 4 ;
          APPLY ;
          LAMBDA
            (pair (pair (lambda
-                          (pair address nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat)
-                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat) nat operation))
+                          (pair address
+                                nat
+                                nat
+                                nat
+                                (big_map address (pair nat nat nat))
+                                nat
+                                nat
+                                nat
+                                nat
+                                nat
+                                nat
+                                nat)
+                          (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+                                nat
+                                operation))
                        (pair (lambda
                                 (pair nat int nat address)
                                 (lambda address (lambda address (lambda nat operation))))
@@ -1305,14 +1404,14 @@
                              (lambda (pair nat int nat address) (lambda nat nat))))
                  (pair (big_map (pair nat address) (pair mutez nat address nat))
                        timestamp
-                       (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
-                       (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                       (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+                       (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair nat int nat address)))
            (pair (list operation)
                  (big_map (pair nat address) (pair mutez nat address nat))
                  timestamp
-                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
-                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat)
+                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+                 (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair nat int nat address))
            { UNPAIR ;
              UNPAIR 3 ;
@@ -2244,10 +2343,10 @@
                                                                                               PAIR } } } } } } ;
                                                                   DUP 5 ;
                                                                   GET 7 ;
-                                                                  GET 10 ;
+                                                                  GET 14 ;
                                                                   DUP 6 ;
                                                                   GET 5 ;
-                                                                  GET 10 ;
+                                                                  GET 14 ;
                                                                   MUL ;
                                                                   DIG 2 ;
                                                                   PUSH nat 0 ;

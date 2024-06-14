@@ -96,14 +96,18 @@ class Ctez2BaseTestCase(BaseTestCase):
         assert depositor_accounts[1] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=142)
         assert depositor_accounts[2] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=261)
 
-        dex = ctez2.get_sell_ctez_dex()
-        assert dex.total_liquidity_shares == 45000000
-        assert dex.self_reserves == 30000000
-        assert dex.proceeds_reserves == 15746262 
-        assert dex.proceeds_reserves - sum(a.proceeds_owed for a in depositor_accounts) == (self.get_balance_mutez(ctez2) - ctez2.get_sell_tez_dex().self_reserves)
-        assert dex.subsidy_reserves == 1019
+        ctez_dex = ctez2.get_sell_ctez_dex()
+        tez_dex = ctez2.get_sell_tez_dex()
+        assert ctez_dex.total_liquidity_shares == 45000000
+        assert ctez_dex.self_reserves == 30000000
+        assert ctez_dex.proceeds_reserves == 15746262 
+        assert ctez_dex.proceeds_debts == sum(a.proceeds_owed for a in depositor_accounts) 
+        assert ctez_dex.proceeds_reserves - ctez_dex.proceeds_debts == (self.get_balance_mutez(ctez2) - tez_dex.self_reserves)
+        assert ctez_dex.subsidy_reserves == 1019
+        assert ctez_dex.subsidy_debts == sum(a.subsidy_owed for a in depositor_accounts)
+        assert (ctez_dex.subsidy_reserves - ctez_dex.subsidy_debts) == (ctez_token.view_balance(ctez2) - ctez_dex.self_reserves - (tez_dex.proceeds_reserves - tez_dex.proceeds_debts) - (tez_dex.subsidy_reserves - tez_dex.subsidy_debts))
 
-        print('initial dex state:', dex)
+        print('initial dex state:', ctez_dex)
         print('depositor_0:', depositor_accounts[0])
         print('depositor_1:', depositor_accounts[1])
         print('depositor_2:', depositor_accounts[2])
