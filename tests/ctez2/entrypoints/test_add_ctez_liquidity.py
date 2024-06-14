@@ -45,6 +45,29 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert ctez_token.view_balance(sender) == prev_sender_balance - deposit_amount
         assert ctez_token.view_balance(ctez2) == prev_ctez2_balance + deposit_amount
 
+    def test_should_add_zero_liquidity_correctly(self) -> None:
+        deposit_amount = 0
+        ctez2, ctez_token, sender, owner, *_ = self.default_setup()
+
+        prev_sender_balance = ctez_token.view_balance(sender)
+        prev_ctez2_balance = ctez_token.view_balance(ctez2)
+        prev_ctez_dex = ctez2.get_sell_ctez_dex()
+
+        ctez2.using(owner).add_ctez_liquidity(owner, deposit_amount, deposit_amount, self.get_future_timestamp()).send()
+        self.bake_block()
+
+        current_ctez_dex = ctez2.get_sell_ctez_dex()
+        owner_account = ctez2.get_ctez_liquidity_owner(owner)
+
+        assert ctez_token.view_balance(sender) == prev_sender_balance
+        assert ctez_token.view_balance(ctez2) == prev_ctez2_balance
+        assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
+        assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
+        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
+        assert owner_account.liquidity_shares == 0
+        assert owner_account.proceeds_owed == 0
+        assert owner_account.subsidy_owed == 0
+
     def test_should_deposit_ctez_correctly_at_the_beginning(self) -> None:
         deposit_amount = 1_000_000
         ctez2, ctez_token, sender, owner, *_ = self.default_setup(

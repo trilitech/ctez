@@ -122,8 +122,9 @@ def originate_from_file(
     
 def iter_balance_updates(op_result: dict[str, any]) -> Iterator[list[dict[str, any]]]:
     for content in OperationResult.iter_contents(op_result):
-        if content.get('metadata') and content.get('metadata', {}).get('balance_updates'):
-            yield content['metadata']['balance_updates']
+        if content.get('metadata'):
+            if content['metadata'].get('balance_updates'):
+                yield content['metadata']['balance_updates']
             if content['metadata'].get('operation_result', {}).get('balance_updates'):
                 yield content['metadata']['operation_result']['balance_updates']
 
@@ -138,7 +139,7 @@ def get_consumed_mutez(client: PyTezosClient, opg: OperationGroup) -> int:
     return fee
 
 def print_dict(caption: str, dict: dict) -> None:
-    pp = pprint.PrettyPrinter(depth=4)
+    pp = pprint.PrettyPrinter(depth=10)
     
     print(caption)
     pp.pprint(dict)

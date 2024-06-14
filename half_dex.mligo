@@ -127,7 +127,9 @@ let redeem_amount (x : nat) (reserve : nat) (total : nat) : nat =
   (* The redeem rate is defined as 
         RX_i(t_0, t_1) := r_i / total(t_0, t_1)
   *)
-  ceil_div (x * reserve) total // TODO: friendly error instead if div zero 
+  (* in case if there no liquidity in dex *)
+  let denominator = max total 1n in
+  ceil_div (x * reserve) denominator
 
 [@inline]
 let redeem_amount_inverted (lqt : nat) (reserve: nat) (total_lpt: nat) : nat = 

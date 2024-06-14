@@ -97,56 +97,6 @@ class Ctez2RemoveCtezLiquidityTestCase(Ctez2BaseTestCase):
         ctez_dex_subsidies = ctez_token.view_total_supply() - prev_total_supply - ctez2.get_sell_tez_dex().subsidy_reserves
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + deposit_amount + ctez_dex_subsidies
         
-    def prepare_liquidity_owners(self) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient, PyTezosClient]:
-        deposit_amount_1 = 10_000_000
-        deposit_amount_2 = 10_000_000
-        swap_amount = 5_000_000
-        ctez_liquidity = 10_000_000 + swap_amount # 10_000_000 is depositor_0 deposit + 5_000_000 to convert into proceeds
-
-        ctez2, ctez_token, depositor_1, depositor_2, depositor_0 = self.default_setup(
-            ctez_total_supply = ctez_liquidity * 10_000,
-            ctez_liquidity = ctez_liquidity,
-            tez_liquidity = ctez_liquidity * 10_000, # to avoid collecting subsidies in sell_tez dex
-            get_ctez_token_balances = lambda depositor_1, depositor_2: {
-                depositor_1: deposit_amount_1,
-                depositor_2: deposit_amount_2
-            },
-            bootstrap_all_tez_balances = True
-        )
-
-        ctez2.using(depositor_0).tez_to_ctez(depositor_0, 5_000_000, self.get_future_timestamp()).with_amount(5_248_754).send()
-        self.bake_block()
-
-        for (depositor, deposit_amount) in ((depositor_1, deposit_amount_1), (depositor_2, deposit_amount_2)):
-            depositor.bulk(
-                ctez_token.approve(ctez2, deposit_amount),
-                ctez2.add_ctez_liquidity(depositor, deposit_amount, 0, self.get_future_timestamp())
-            ).send()
-            self.bake_blocks(5) # to collect more subsidies between deposits
-
-        ctez2.using(depositor_0).mint_or_burn(0, -ctez_token.view_balance(depositor_0)).send() # to stop collecting subsidies (all total_supply is in dex)
-        self.bake_block()
-
-        depositors = (depositor_0, depositor_1, depositor_2)
-        depositor_accounts = list(map(ctez2.get_ctez_liquidity_owner, depositors))
-        assert depositor_accounts[0] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=0,       subsidy_owed=0)
-        assert depositor_accounts[1] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=142)
-        assert depositor_accounts[2] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=261)
-
-        dex = ctez2.get_sell_ctez_dex()
-        assert dex.total_liquidity_shares == 45000000
-        assert dex.self_reserves == 30000000
-        assert dex.proceeds_reserves == 15746262 
-        assert dex.proceeds_reserves - sum(a.proceeds_owed for a in depositor_accounts) == (self.get_balance_mutez(ctez2) - ctez2.get_sell_tez_dex().self_reserves)
-        assert dex.subsidy_reserves == 1019
-
-        print('initial dex state:', dex)
-        print('depositor_0:', depositor_accounts[0])
-        print('depositor_1:', depositor_accounts[1])
-        print('depositor_2:', depositor_accounts[2])
-
-        return ctez2, ctez_token, depositor_0, depositor_1, depositor_2
-
     @parameterized.expand([
         (lambda d0, d1, d2: (d0, d1, d2)),
         (lambda d0, d1, d2: (d0, d2, d1)),
@@ -159,7 +109,7 @@ class Ctez2RemoveCtezLiquidityTestCase(Ctez2BaseTestCase):
             self, 
             order_depositors : Callable[[tuple[PyTezosClient, PyTezosClient, PyTezosClient]], tuple[PyTezosClient, PyTezosClient, PyTezosClient]]
         ) -> None:
-        ctez2, ctez_token, depositor_0, depositor_1, depositor_2 = self.prepare_liquidity_owners()
+        ctez2, ctez_token, depositor_0, depositor_1, depositor_2 = self.prepare_ctez_dex_liquidity()
 
         depositors = (depositor_0, depositor_1, depositor_2)
         depositor_names = dict((t[1], f'depositor_{t[0]}') for t in enumerate(depositors))
@@ -220,4 +170,76 @@ class Ctez2RemoveCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert all(a.liquidity_shares == 0 and a.proceeds_owed == 0 and a.subsidy_owed == 0 for a in depositor_accounts.values())
         assert sum(d.ctez_diff for d in depositor_balances_diffs.values()) == prev_ctez_dex_ctez_balance 
 
-# todo: test for the case when not all liquidity shares are provided to remove_liquidity  
+    def test_should_remove_zero_liquidity_from_empty_account_correctly(self) -> None:
+        ctez2, ctez_token, empty_account, _, _ = self.default_setup()
+
+        prev_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_depositor_ctez_balance = ctez_token.view_balance(empty_account)
+        ctez2.using(empty_account).remove_ctez_liquidity(empty_account, 0, 0, 0, 0, self.get_future_timestamp()).send()
+        self.bake_block()
+        
+        current_ctez_dex = ctez2.get_sell_ctez_dex()
+        current_account = ctez2.get_ctez_liquidity_owner(empty_account)
+        assert current_ctez_dex.total_liquidity_shares == prev_ctez_dex.total_liquidity_shares
+        assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
+        assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
+        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
+        assert current_account.liquidity_shares == 0
+        assert current_account.proceeds_owed == 0
+        assert current_account.subsidy_owed == 0
+        assert ctez_token.view_balance(empty_account) == prev_depositor_ctez_balance
+
+    def test_should_remove_zero_liquidity_from_not_empty_account_correctly(self) -> None:
+        ctez2, ctez_token, _, depositor_1, _ = self.prepare_ctez_dex_liquidity()
+
+        prev_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_account = ctez2.get_ctez_liquidity_owner(depositor_1)
+        prev_depositor_ctez_balance = ctez_token.view_balance(depositor_1)
+        ctez2.using(depositor_1).remove_ctez_liquidity(depositor_1, 0, 0, 0, 0, self.get_future_timestamp()).send()
+        self.bake_block()
+        
+        current_ctez_dex = ctez2.get_sell_ctez_dex()
+        current_account = ctez2.get_ctez_liquidity_owner(depositor_1)
+        assert current_ctez_dex.total_liquidity_shares == prev_ctez_dex.total_liquidity_shares
+        assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
+        assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
+        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
+        assert current_account.liquidity_shares == prev_account.liquidity_shares
+        assert current_account.proceeds_owed == prev_account.proceeds_owed
+        assert current_account.subsidy_owed == prev_account.subsidy_owed
+        assert ctez_token.view_balance(depositor_1) == prev_depositor_ctez_balance
+
+    def test_should_remove_partial_liquidity_correctly(self) -> None:
+        ctez2, ctez_token, _, depositor_1, _ = self.prepare_ctez_dex_liquidity()
+
+        redeemed_liquidity = 7_500_000
+        prev_ctez_dex = ctez2.get_sell_ctez_dex()
+        prev_depositor_ctez_balance = ctez_token.view_balance(depositor_1)
+        # remove 50% of liquidity
+        ctez2.using(depositor_1).remove_ctez_liquidity(depositor_1, redeemed_liquidity, 0, 0, 0, self.get_future_timestamp()).send()
+        self.bake_block()
+        
+        current_ctez_dex = ctez2.get_sell_ctez_dex()
+        current_account = ctez2.get_ctez_liquidity_owner(depositor_1)
+        assert current_ctez_dex.total_liquidity_shares == prev_ctez_dex.total_liquidity_shares - redeemed_liquidity
+        assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves - 5_000_000
+        assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves - 2624377
+        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves - 170
+        assert current_account.liquidity_shares == 7500000 # 50% of shares have been removed
+        assert current_account.proceeds_owed == 2624377 # 50% of debts have been removed
+        assert current_account.subsidy_owed == 0 # 170 earned - 142 debts = 28 to send and 0 is rest debt
+        assert ctez_token.view_balance(depositor_1) == prev_depositor_ctez_balance + 5_000_000 + 28 # 50% of deposited self token + subsidy
+
+    def test_should_fail_if_insufficient_amount_received(self) -> None:
+        ctez2, _, depositor_0, *_ = self.prepare_ctez_dex_liquidity()
+        account = ctez2.get_ctez_liquidity_owner(depositor_0)
+
+        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_SELF_RECEIVED):
+            ctez2.using(depositor_0).remove_ctez_liquidity(depositor_0, account.liquidity_shares, 10000001, 0, 0, self.get_future_timestamp()).send()
+
+        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_PROCEEDS_RECEIVED):
+            ctez2.using(depositor_0).remove_ctez_liquidity(depositor_0, account.liquidity_shares, 0, 5248755, 0, self.get_future_timestamp()).send()
+
+        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_SUBSIDY_RECEIVED):
+            ctez2.using(depositor_0).remove_ctez_liquidity(depositor_0, account.liquidity_shares, 0, 0, 341, self.get_future_timestamp()).send()
+        

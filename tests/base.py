@@ -39,6 +39,8 @@ class BaseTestCase(SandboxedNodeTestCase):
         bootstrap.transaction(pkh(account), initial_balance).autofill().sign().inject()
         self.bake_block()
         account.reveal().autofill().sign().inject()
+        self.bake_block()
+        
         return account
 
     def deploy_ctez2(
