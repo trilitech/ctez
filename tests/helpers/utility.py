@@ -127,6 +127,10 @@ def iter_balance_updates(op_result: dict[str, any]) -> Iterator[list[dict[str, a
                 yield content['metadata']['balance_updates']
             if content['metadata'].get('operation_result', {}).get('balance_updates'):
                 yield content['metadata']['operation_result']['balance_updates']
+            if content['metadata'].get('internal_operation_results'):
+                for int_op_result in content['metadata']['internal_operation_results']:
+                    if int_op_result.get('result', {}).get('balance_updates'):
+                        yield int_op_result['result']['balance_updates']
 
 
 def get_consumed_mutez(client: PyTezosClient, opg: OperationGroup) -> int:

@@ -53,7 +53,10 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         prev_ctez2_balance = ctez_token.view_balance(ctez2)
         prev_ctez_dex = ctez2.get_sell_ctez_dex()
 
-        ctez2.using(owner).add_ctez_liquidity(owner, deposit_amount, deposit_amount, self.get_future_timestamp()).send()
+        sender.bulk(
+            ctez_token.approve(ctez2, deposit_amount),
+            ctez2.add_ctez_liquidity(owner, deposit_amount, deposit_amount, self.get_future_timestamp())
+        ).send()
         self.bake_block()
 
         current_ctez_dex = ctez2.get_sell_ctez_dex()
@@ -113,9 +116,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
             bootstrap_all_tez_balances = True
         )
 
-        def swap_tez_to_ctez(depositor: Addressable, deposit_amount: int):
-            proceeds_amount = ceil(deposit_amount*1.06)
-            ctez2.using(depositor).tez_to_ctez(depositor, deposit_amount, self.get_future_timestamp()).with_amount(proceeds_amount).send()
+        def swap_tez_to_ctez(depositor: Addressable, ctez_amount: int):
+            tez_amount = ceil(ctez_amount*1.06)
+            ctez2.using(depositor).tez_to_ctez(depositor, ctez_amount, self.get_future_timestamp()).with_amount(tez_amount).send()
             self.bake_block()
             
         def deposit_ctez(depositor: Addressable, deposit_amount: int):
@@ -154,6 +157,7 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         depositor_1_account = ctez2.get_ctez_liquidity_owner(depositor_1)
 
         assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
         assert current_sell_ctez_dex.total_liquidity_shares == 111_123
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_1 == 99_906
@@ -181,6 +185,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         depositor_0_account = ctez2.get_ctez_liquidity_owner(depositor_0)
         depositor_1_account = ctez2.get_ctez_liquidity_owner(depositor_1)
         depositor_2_account = ctez2.get_ctez_liquidity_owner(depositor_2)
+
+        assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
         assert current_sell_ctez_dex.total_liquidity_shares == 116_981
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_2 == 99_861
@@ -213,6 +220,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         depositor_0_account = ctez2.get_ctez_liquidity_owner(depositor_0)
         depositor_1_account = ctez2.get_ctez_liquidity_owner(depositor_1)
         depositor_2_account = ctez2.get_ctez_liquidity_owner(depositor_2)
+
+        assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
+        assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
         assert current_sell_ctez_dex.total_liquidity_shares == 140_410
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_3 == 119_861

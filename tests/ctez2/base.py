@@ -113,3 +113,53 @@ class Ctez2BaseTestCase(BaseTestCase):
         print('depositor_2:', depositor_accounts[2])
 
         return ctez2, ctez_token, depositor_0, depositor_1, depositor_2
+
+    def prepare_tez_dex_liquidity(self) -> tuple[Ctez2, Fa12, PyTezosClient, PyTezosClient, PyTezosClient]:
+        deposit_amount_1 = 10_000_000
+        deposit_amount_2 = 10_000_000
+        swap_amount = 5_000_000
+        tez_liquidity = 10_000_000 + swap_amount # 10_000_000 is depositor_0 deposit + 5_000_000 to convert into proceeds
+
+        ctez2, ctez_token, depositor_1, depositor_2, depositor_0 = self.default_setup(
+            ctez_total_supply = tez_liquidity * 10_000 + 10_000_000,
+            ctez_liquidity = tez_liquidity,
+            tez_liquidity = tez_liquidity,
+            bootstrap_all_tez_balances = True
+        )
+
+        depositor_0.bulk(
+            ctez_token.approve(ctez2, 5_248_754),
+            ctez2.ctez_to_tez(depositor_0, 5_248_754, 5_000_000, self.get_future_timestamp())
+        ).send()
+        self.bake_block()
+
+        for (depositor, deposit_amount) in ((depositor_1, deposit_amount_1), (depositor_2, deposit_amount_2)):
+            ctez2.add_tez_liquidity(depositor, 0, self.get_future_timestamp()).with_amount(deposit_amount).send()
+            self.bake_blocks(5) # to collect more subsidies between deposits
+
+        ctez2.using(depositor_0).mint_or_burn(0, -ctez_token.view_balance(depositor_0)).send() # to stop collecting subsidies (all total_supply is in dex)
+        self.bake_block()
+
+        depositors = (depositor_0, depositor_1, depositor_2)
+        depositor_accounts = list(map(ctez2.get_tez_liquidity_owner, depositors))
+        assert depositor_accounts[0] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=0,       subsidy_owed=0)
+        assert depositor_accounts[1] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=94)
+        assert depositor_accounts[2] == Ctez2.LiquidityOwner(liquidity_shares=15000000, proceeds_owed=5248754, subsidy_owed=213)
+
+        tez_dex = ctez2.get_sell_tez_dex()
+        ctez_dex = ctez2.get_sell_ctez_dex()
+        assert tez_dex.total_liquidity_shares == 45000000
+        assert tez_dex.self_reserves == 30000000
+        assert tez_dex.proceeds_reserves == 15746262 
+        assert tez_dex.proceeds_debts == sum(a.proceeds_owed for a in depositor_accounts) 
+        assert tez_dex.proceeds_reserves - tez_dex.proceeds_debts == (ctez_token.view_balance(ctez2) - ctez_dex.self_reserves - (ctez_dex.subsidy_reserves - ctez_dex.subsidy_debts) - (tez_dex.subsidy_reserves - tez_dex.subsidy_debts))
+        assert tez_dex.subsidy_reserves == 875
+        assert tez_dex.subsidy_debts == sum(a.subsidy_owed for a in depositor_accounts)
+        assert (tez_dex.subsidy_reserves - tez_dex.subsidy_debts) == (ctez_token.view_balance(ctez2) - ctez_dex.self_reserves - (ctez_dex.subsidy_reserves - ctez_dex.subsidy_debts) - (tez_dex.proceeds_reserves - tez_dex.proceeds_debts))
+
+        print('initial dex state:', tez_dex)
+        print('depositor_0:', depositor_accounts[0])
+        print('depositor_1:', depositor_accounts[1])
+        print('depositor_2:', depositor_accounts[2])
+
+        return ctez2, ctez_token, depositor_0, depositor_1, depositor_2

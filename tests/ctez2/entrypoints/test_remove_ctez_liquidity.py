@@ -109,7 +109,7 @@ class Ctez2RemoveCtezLiquidityTestCase(Ctez2BaseTestCase):
         (lambda d0, d1, d2: (d2, d0, d1)),
         (lambda d0, d1, d2: (d2, d1, d0)),
     ])
-    def test_should_withdraw_correctly_for_several_depositors_regardless_of_order(
+    def test_should_withdraw_correctly_from_ctez_dex_for_several_depositors_regardless_of_order(
             self, 
             order_depositors : Callable[[tuple[PyTezosClient, PyTezosClient, PyTezosClient]], tuple[PyTezosClient, PyTezosClient, PyTezosClient]]
         ) -> None:

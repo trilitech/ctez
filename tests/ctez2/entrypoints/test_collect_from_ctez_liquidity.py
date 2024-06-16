@@ -33,7 +33,6 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
         assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
 
-
     def test_should_collect_tokens_correctly(self) -> None:
         ctez2, ctez_token, liquidity_owner, *_ = self.prepare_ctez_dex_liquidity()
         receiver = self.bootstrap_account()
