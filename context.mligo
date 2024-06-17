@@ -1,7 +1,7 @@
 #include "stdctez.mligo"
 
 type t = { 
-  target : nat; 
+  target : Float48.t; 
   drift : int; 
   _Q : nat; (* Q is the desired quantity of ctez in the ctez half dex,
             floor(Q * target) is the desired quantity of tez in the tez half dex *)

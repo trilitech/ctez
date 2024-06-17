@@ -141,13 +141,14 @@ let sell_ctez_env : Half_dex.environment = {
 (* housekeeping *)
 
 [@inline]
-let drift_adjustment (storage : storage) : int =
-  let target = storage.context.target in 
-  let qc = min storage.sell_ctez.self_reserves storage.context._Q in
-  let qt = min storage.sell_tez.self_reserves (storage.context._Q * target) in
-  let tqc_m_qt = target * qc - qt in
-  let tQ = target * storage.context._Q in
-  tqc_m_qt * tqc_m_qt * tqc_m_qt / (tQ * tQ * tQ)
+let drift_adjustment (storage : storage) (delta : nat): int =
+  let ctxt = storage.context in
+  let tQ = sell_tez_env.get_target_self_reserves ctxt in
+  let qc = min storage.sell_ctez.self_reserves ctxt._Q in
+  let qt = min storage.sell_tez.self_reserves tQ in
+  let tqc_m_qt = (sell_tez_env.apply_target_price ctxt qc) - qt in
+  let d_drift = delta * abs(tqc_m_qt * tqc_m_qt * tqc_m_qt) / (tQ * tQ * tQ) in
+  if tqc_m_qt < 0 then -d_drift else int d_drift 
 
 let fee_rate (q : nat) (_Q : nat) : Float48.t =
   if 8n * q < _Q  (* if q < 12.5% of _Q *)
@@ -171,36 +172,38 @@ let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : na
   {dex with fee_index = new_fee_index; subsidy_reserves = clamp_nat (dex.subsidy_reserves + minted) }, clamp_nat (outstanding + minted), op_mint_ctez
 
 let do_housekeeping (storage : storage) : result =
-  let curr_timestamp = Tezos.get_now () in
-  if storage.last_update <> curr_timestamp then
-    let d_drift = drift_adjustment storage in
+  let now = Tezos.get_now () in
+  if storage.last_update <> now then
+    let delta = abs (now - storage.last_update) in
+    let d_drift = drift_adjustment storage delta in
     (* This is not homegeneous, but setting the constant delta is multiplied with
        to 1.0 magically happens to be reasonable. Why?
        Because (24 * 3600 / 2^48) * 365.25*24*3600 ~ 0.97%.
        This means that the annualized drift changes by roughly one percentage point per day at most.
     *)
-    let new_drift = storage.context.drift + d_drift in
+    let drift = storage.context.drift in
+    let new_drift = drift + d_drift in
 
-    let delta = abs (curr_timestamp - storage.last_update) in
     let target = storage.context.target in
-    let d_target = Bitwise.shift_right (target * (abs storage.context.drift) * delta) 48n in
+    let d_target = Bitwise.shift_right (target * (abs drift) * delta) 48n in
     (* We assume that `target - d_target < 0` never happens for economic reasons.
        Concretely, even drift were as low as -50% annualized, it would take not
        updating the target for 1.4 years for a negative number to occur *)
-    let new_target  = if storage.context.drift < 0  then abs (target - d_target) else target + d_target in
+    let new_target = if drift < 0  then abs (target - d_target) else target + d_target in
     (* Compute what the liquidity fee should be, based on the ratio of total outstanding ctez to ctez in dexes *)
+    let ctez_fa12_address = storage.context.ctez_fa12_address in
     let outstanding = (
-      match (Tezos.Next.View.call "viewTotalSupply" () storage.context.ctez_fa12_address) with
+      match (Tezos.Next.View.call "viewTotalSupply" () ctez_fa12_address) with
       | None -> (failwith unit : nat)
       | Some n-> n
     ) in
-    let target_ctez_amount = max (outstanding / 20n) 1n in
-    let storage = { storage with context = {storage.context with _Q = target_ctez_amount }} in
-    let sell_ctez, outstanding, op_mint_ctez1 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_ctez_env.get_target_self_reserves storage.context) storage.sell_ctez in
-    let sell_tez, _outstanding, op_mint_ctez2 = update_fee_index storage.context.ctez_fa12_address delta outstanding (sell_tez_env.get_target_self_reserves storage.context) storage.sell_tez in
+    let _Q = max (outstanding / 20n) 1n in
+    let storage = { storage with context = {storage.context with _Q = _Q }} in
+    let sell_ctez, outstanding, op_mint_ctez1 = update_fee_index ctez_fa12_address delta outstanding (sell_ctez_env.get_target_self_reserves storage.context) storage.sell_ctez in
+    let sell_tez, _outstanding, op_mint_ctez2 = update_fee_index ctez_fa12_address delta outstanding (sell_tez_env.get_target_self_reserves storage.context) storage.sell_tez in
     let storage = { storage with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
     (* TODO: we can combine two mint ops into one *)
-    ([op_mint_ctez1 ; op_mint_ctez2], {storage with last_update = curr_timestamp ; context = {storage.context with drift = new_drift ; target = new_target }})
+    ([op_mint_ctez1 ; op_mint_ctez2], {storage with last_update = now ; context = {storage.context with drift = new_drift ; target = new_target }})
   else
     ([], storage)
 
