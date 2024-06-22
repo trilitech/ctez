@@ -108,3 +108,6 @@ class BaseTestCase(SandboxedNodeTestCase):
     def get_balance_mutez(self, client_or_contract: Addressable) -> int:
         address = get_address(client_or_contract)
         return int(self.manager.account(address)['balance'])
+    
+    def get_contract_delegate(self, contract: Addressable) -> str | None:
+        return self.client.shell.contracts[get_address(contract)]().get('delegate', None)

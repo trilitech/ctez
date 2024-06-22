@@ -39,18 +39,19 @@ class Ctez2BaseTestCase(BaseTestCase):
         rest_supply = ctez_total_supply if ctez_total_supply is not None else sum(balances.values()) + ctez_liquidity
         tez_deposit = ceil(rest_supply * target_ctez_price * 16/15) # ctez_outstanding = tez*target_price*16/16 not to get under_collateralized
 
-        donor.bulk(
-            ctez2.create_oven(0, None, None).with_amount(tez_deposit),
-            ctez2.mint_or_burn(0, rest_supply),
-            *(
-                ctez_token.approve(ctez2, ctez_liquidity),
-                ctez2.add_ctez_liquidity(donor, ctez_liquidity, 0, self.get_future_timestamp()),
-            ) if ctez_liquidity > 0 else (),
-            *(
-                ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
-            ) if tez_liquidity > 0 else (),
-        ).send()
-        self.bake_block()
+        if (tez_deposit > 0) or (tez_liquidity > 0):
+            donor.bulk(
+                ctez2.create_oven(0, None, None).with_amount(tez_deposit),
+                ctez2.mint_or_burn(0, rest_supply),
+                *(
+                    ctez_token.approve(ctez2, ctez_liquidity),
+                    ctez2.add_ctez_liquidity(donor, ctez_liquidity, 0, self.get_future_timestamp()),
+                ) if ctez_liquidity > 0 else (),
+                *(
+                    ctez2.add_tez_liquidity(donor, 0, self.get_future_timestamp()).with_amount(tez_liquidity),
+                ) if tez_liquidity > 0 else (),
+            ).send()
+            self.bake_block()
 
         if len(balances):
             donor.bulk(

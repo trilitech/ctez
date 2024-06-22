@@ -1,21 +1,21 @@
 { parameter
     (or (pair %ctez_to_tez
-           (address %to_)
+           (address %to)
            (nat %ctez_sold)
            (nat %min_tez_bought)
            (timestamp %deadline))
-        (or (pair %tez_to_ctez (address %to_) (nat %min_ctez_bought) (timestamp %deadline))
+        (or (pair %tez_to_ctez (address %to) (nat %min_ctez_bought) (timestamp %deadline))
             (or (address %collect_from_ctez_liquidity)
                 (or (address %collect_from_tez_liquidity)
                     (or (pair %remove_ctez_liquidity
-                           (address %to_)
+                           (address %to)
                            (nat %liquidity_redeemed)
                            (nat %min_self_received)
                            (nat %min_proceeds_received)
                            (nat %min_subsidy_received)
                            (timestamp %deadline))
                         (or (pair %remove_tez_liquidity
-                               (address %to_)
+                               (address %to)
                                (nat %liquidity_redeemed)
                                (nat %min_self_received)
                                (nat %min_proceeds_received)
@@ -1019,7 +1019,7 @@
              SWAP ;
              GET ;
              IF_NONE
-               { DROP ; PUSH nat 4 ; FAILWITH }
+               { DROP ; PUSH string "OVEN_NOT_EXISTS" ; FAILWITH }
                { DUP 2 ;
                  GET 7 ;
                  GET 14 ;
@@ -1067,12 +1067,12 @@
            address
            (contract (pair mutez (contract unit)))
            { CONTRACT %oven_withdraw (pair mutez (contract unit)) ;
-             IF_NONE { PUSH nat 5 ; FAILWITH } {} } ;
+             IF_NONE { PUSH string "MISSING_WITHDRAW_ENTRYPOINT" ; FAILWITH } {} } ;
          LAMBDA
            address
            (contract (pair int address))
            { CONTRACT %mintOrBurn (pair int address) ;
-             IF_NONE { PUSH nat 9 ; FAILWITH } {} } ;
+             IF_NONE { PUSH string "MISSING_MINT_OR_BURN_ENTRYPOINT" ; FAILWITH } {} } ;
          LAMBDA
            (pair nat int nat address)
            (lambda nat nat)
@@ -1967,6 +1967,12 @@
                                              SWAP ;
                                              EXEC ;
                                              UNPAIR ;
+                                             PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+                                             PUSH mutez 0 ;
+                                             AMOUNT ;
+                                             COMPARE ;
+                                             EQ ;
+                                             IF { DROP } { FAILWITH } ;
                                              SENDER ;
                                              DUP 4 ;
                                              CAR ;
@@ -1983,7 +1989,7 @@
                                              GET 3 ;
                                              ADD ;
                                              ISNAT ;
-                                             IF_NONE { PUSH nat 10 ; FAILWITH } {} ;
+                                             IF_NONE { PUSH string "EXCESSIVE_CTEZ_BURNING" ; FAILWITH } {} ;
                                              UPDATE 3 ;
                                              DUP 4 ;
                                              DIG 4 ;
@@ -2001,7 +2007,7 @@
                                              DIG 5 ;
                                              SWAP ;
                                              EXEC ;
-                                             IF { DROP 4 ; PUSH nat 12 ; FAILWITH }
+                                             IF { DROP 4 ; PUSH string "EXCESSIVE_CTEZ_MINTING" ; FAILWITH }
                                                 { DUP ;
                                                   GET 8 ;
                                                   GET 6 ;
@@ -2030,6 +2036,12 @@
                                                  SWAP ;
                                                  EXEC ;
                                                  UNPAIR ;
+                                                 PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+                                                 PUSH mutez 0 ;
+                                                 AMOUNT ;
+                                                 COMPARE ;
+                                                 EQ ;
+                                                 IF { DROP } { FAILWITH } ;
                                                  DUP 2 ;
                                                  DUP 4 ;
                                                  CAR ;
@@ -2051,7 +2063,7 @@
                                                       GET 3 ;
                                                       SUB ;
                                                       ISNAT ;
-                                                      IF_NONE { PUSH nat 10 ; FAILWITH } {} ;
+                                                      IF_NONE { PUSH string "EXCESSIVE_CTEZ_BURNING" ; FAILWITH } {} ;
                                                       PUSH nat 31 ;
                                                       PUSH mutez 1 ;
                                                       PUSH nat 43 ;
@@ -2070,7 +2082,7 @@
                                                       DUP 4 ;
                                                       CAR ;
                                                       SUB_MUTEZ ;
-                                                      IF_NONE { PUSH nat 999 ; FAILWITH } {} ;
+                                                      IF_NONE { PUSH string "IMPOSSIBLE" ; FAILWITH } {} ;
                                                       DIG 3 ;
                                                       DIG 3 ;
                                                       UPDATE 3 ;
@@ -2121,7 +2133,7 @@
                                                       ITER { CONS } ;
                                                       ITER { CONS } ;
                                                       PAIR }
-                                                    { DROP 6 ; PUSH nat 11 ; FAILWITH } }
+                                                    { DROP 6 ; PUSH string "NOT_UNDERCOLLATERALIZED" ; FAILWITH } }
                                                { DIG 3 ;
                                                  DROP ;
                                                  IF_LEFT
@@ -2145,7 +2157,7 @@
                                                      GET 5 ;
                                                      COMPARE ;
                                                      NEQ ;
-                                                     IF { DROP 4 ; PUSH nat 1 ; FAILWITH }
+                                                     IF { DROP 4 ; PUSH string "ONLY_OVEN_CAN_CALL" ; FAILWITH }
                                                         { DUP ;
                                                           DUP 5 ;
                                                           CDR ;
@@ -2170,6 +2182,12 @@
                                                          SWAP ;
                                                          EXEC ;
                                                          UNPAIR ;
+                                                         PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+                                                         PUSH mutez 0 ;
+                                                         AMOUNT ;
+                                                         COMPARE ;
+                                                         EQ ;
+                                                         IF { DROP } { FAILWITH } ;
                                                          SENDER ;
                                                          DUP 4 ;
                                                          CAR ;
@@ -2190,7 +2208,7 @@
                                                          DUP 3 ;
                                                          CAR ;
                                                          SUB_MUTEZ ;
-                                                         IF_NONE { PUSH nat 8 ; FAILWITH } {} ;
+                                                         IF_NONE { PUSH string "EXCESSIVE_TEZ_WITHDRAWAL" ; FAILWITH } {} ;
                                                          DIG 2 ;
                                                          SWAP ;
                                                          UPDATE 1 ;
@@ -2210,7 +2228,7 @@
                                                          DIG 5 ;
                                                          SWAP ;
                                                          EXEC ;
-                                                         IF { DROP 4 ; PUSH nat 8 ; FAILWITH }
+                                                         IF { DROP 4 ; PUSH string "EXCESSIVE_TEZ_WITHDRAWAL" ; FAILWITH }
                                                             { SWAP ;
                                                               PUSH mutez 0 ;
                                                               DUP 5 ;
@@ -2247,7 +2265,7 @@
                                                              CAR ;
                                                              DUP 2 ;
                                                              MEM ;
-                                                             IF { DROP 5 ; PUSH nat 0 ; FAILWITH }
+                                                             IF { DROP 5 ; PUSH string "OVEN_ALREADY_EXISTS" ; FAILWITH }
                                                                 { DIG 4 ;
                                                                   DUP 2 ;
                                                                   SELF_ADDRESS ;

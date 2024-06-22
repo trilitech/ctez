@@ -12,3 +12,9 @@ from os.path import join
 class Oven(ContractHelper):
     def deposit(self) -> ContractCall:
         return self.contract.default()
+
+    def get_depositors(self) -> list | None:
+        return self.contract.storage()['depositors']
+
+    def get_admin(self) -> str:
+        return self.contract.storage()['admin']

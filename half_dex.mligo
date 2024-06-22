@@ -179,7 +179,8 @@ let add_liquidity
     subsidy_reserves = subsidy_reserves;
   }
 
-type remove_liquidity = { 
+type remove_liquidity = {
+  [@annot:to]
   to_: address; (** the address to receive the tokens *)
   liquidity_redeemed : nat; (** the amount of liquidity shares to redeem *)
   min_self_received : nat; (* minimum amount of tez to receive *)
@@ -241,7 +242,8 @@ let remove_liquidity
   let ops = if ( self_redeemed > 0n ) then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops else ops in
   ops, t
 
-type swap = { 
+type swap = {
+  [@annot:to]
   to_: address; (** address that will own the 'self' tokens in the swap *)
   proceeds_amount : nat; (** the amount of the 'proceed' token used to buy the 'self' token *)    
   min_self : nat; (** the minimum amount of 'self' tokens to receive *)

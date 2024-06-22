@@ -17,13 +17,15 @@ type add_ctez_liquidity = {
   deadline : timestamp;
 }
 
-type tez_to_ctez = { 
+type tez_to_ctez = {
+  [@annot:to]
   to_: address; 
   min_ctez_bought : nat;
   deadline : timestamp
 }
 
-type ctez_to_tez = { 
+type ctez_to_tez = {
+  [@annot:to]
   to_: address; 
   ctez_sold : nat;
   min_tez_bought : nat;
@@ -72,32 +74,13 @@ type storage = {
 
 type result = storage with_operations
 
-(* Errors *)
-
-[@inline] let error_OVEN_ALREADY_EXISTS = 0n
-[@inline] let error_INVALID_CALLER_FOR_OVEN_OWNER = 1n
-[@inline] let error_CTEZ_FA12_ADDRESS_ALREADY_SET = 2n
-[@inline] let error_CFMM_ADDRESS_ALREADY_SET = 3n
-[@inline] let error_OVEN_DOESNT_EXIST= 4n
-[@inline] let error_OVEN_MISSING_WITHDRAW_ENTRYPOINT = 5n
-[@inline] let error_OVEN_MISSING_DEPOSIT_ENTRYPOINT = 6n
-[@inline] let error_OVEN_MISSING_DELEGATE_ENTRYPOINT = 7n
-[@inline] let error_EXCESSIVE_TEZ_WITHDRAWAL = 8n
-[@inline] let error_CTEZ_FA12_CONTRACT_MISSING_MINT_OR_BURN_ENTRYPOINT = 9n
-[@inline] let error_CANNOT_BURN_MORE_THAN_OUTSTANDING_AMOUNT_OF_CTEZ = 10n
-[@inline] let error_OVEN_NOT_UNDERCOLLATERALIZED = 11n
-[@inline] let error_EXCESSIVE_CTEZ_MINTING = 12n
-[@inline] let error_CALLER_MUST_BE_CFMM = 13n
-[@inline] let error_INVALID_CTEZ_TARGET_ENTRYPOINT = 14n
-[@inline] let error_IMPOSSIBLE = 999n (* an error that should never happen *)
-
 #include "oven.mligo"
 
 (* Functions *)
 
 let get_oven (handle : oven_handle) (s : storage) : oven =
   match Big_map.find_opt handle s.ovens with
-  | None -> (failwith error_OVEN_DOESNT_EXIST : oven)
+  | None -> (failwith Errors.oven_not_exists : oven)
   | Some oven -> 
     (* Adjust the amount of outstanding ctez in the oven, record the fee index at that time. *)
     let new_fee_index = s.sell_ctez.fee_index * s.sell_tez.fee_index in
@@ -109,17 +92,12 @@ let is_under_collateralized (oven : oven) (target : nat) : bool =
 
 let get_oven_withdraw (oven_address : address) : (tez * (unit contract)) contract =
   match (Tezos.get_entrypoint_opt "%oven_withdraw" oven_address : (tez * (unit contract)) contract option) with
-  | None -> (failwith error_OVEN_MISSING_WITHDRAW_ENTRYPOINT : (tez * (unit contract)) contract)
-  | Some c -> c
-
-let get_oven_delegate (oven_address : address) : (key_hash option) contract =
-  match (Tezos.get_entrypoint_opt "%oven_delegate" oven_address : (key_hash option) contract option) with
-  | None -> (failwith error_OVEN_MISSING_DELEGATE_ENTRYPOINT : (key_hash option) contract)
+  | None -> (failwith Errors.missing_withdraw_entrypoint : (tez * (unit contract)) contract)
   | Some c -> c
 
 let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
   match (Tezos.get_entrypoint_opt  "%mintOrBurn"  fa12_address : ((int * address) contract) option) with
-  | None -> (failwith error_CTEZ_FA12_CONTRACT_MISSING_MINT_OR_BURN_ENTRYPOINT : (int * address) contract)
+  | None -> (failwith Errors.missing_mint_or_burn_entrypoint : (int * address) contract)
   | Some c -> c
 
 (* Environments *)
@@ -221,7 +199,7 @@ let create_oven ({ id; delegate; depositors }: create_oven) (s : storage) : resu
   let house_ops, s = do_housekeeping s in
   let handle = { id ; owner = Tezos.get_sender () } in
   if Big_map.mem handle s.ovens then
-    (failwith error_OVEN_ALREADY_EXISTS : result)
+    (failwith Errors.oven_already_exists : result)
   else
     let (origination_op, oven_address) : operation * address =
     originate_oven delegate (Tezos.get_amount ()) { admin = Tezos.get_self_address () ; handle = handle ; depositors = depositors } in
@@ -232,19 +210,19 @@ let create_oven ({ id; delegate; depositors }: create_oven) (s : storage) : resu
 [@entry]
 let withdraw_from_oven (p : withdraw) (s : storage) : result =
   let house_ops, s = do_housekeeping s in
+  let () = assert_no_tez_in_transaction () in
   let handle = {id = p.id ; owner = Tezos.get_sender ()} in
   let oven : oven = get_oven handle s in
   let oven_contract = get_oven_withdraw oven.address in
-
   (* Check for undercollateralization *)
   let new_balance = match (oven.tez_balance - p.amount) with
-  | None -> (failwith error_EXCESSIVE_TEZ_WITHDRAWAL : tez)
+  | None -> (failwith Errors.excessive_tez_withdrawal : tez)
   | Some x -> x in
   let oven = {oven with tez_balance = new_balance} in
   let ovens = Big_map.update handle (Some oven) s.ovens in
   let s = {s with ovens = ovens} in
   if is_under_collateralized oven s.context.target then
-    (failwith error_EXCESSIVE_TEZ_WITHDRAWAL : result)
+    (failwith Errors.excessive_tez_withdrawal : result)
   else
     let withdraw_op = Tezos.Next.Operation.transaction (p.amount, p.to_) 0mutez oven_contract in
     (List.append house_ops [withdraw_op], s)
@@ -256,7 +234,7 @@ let register_oven_deposit (p : register_oven_deposit) (s : storage) : result =
     (* First check that the call is legit *)
     let oven = get_oven p.handle s in
     if oven.address <> Tezos.get_sender () then
-      (failwith error_INVALID_CALLER_FOR_OVEN_OWNER : result)
+      (failwith Errors.only_oven_can_call : result)
     else
       (* register the increased balance *)
       let oven = {oven with tez_balance = oven.tez_balance + p.amount} in
@@ -267,15 +245,16 @@ let register_oven_deposit (p : register_oven_deposit) (s : storage) : result =
 [@entry]
 let liquidate_oven (p : liquidate)  (s: storage) : result  =
   let house_ops, s = do_housekeeping s in
+  let () = assert_no_tez_in_transaction () in
   let oven : oven = get_oven p.handle s in
   if is_under_collateralized oven s.context.target then
     let remaining_ctez = match is_nat (oven.ctez_outstanding - p.quantity) with
-      | None -> (failwith error_CANNOT_BURN_MORE_THAN_OUTSTANDING_AMOUNT_OF_CTEZ : nat)
+      | None -> (failwith Errors.excessive_ctez_burning : nat)
       | Some n -> n  in
     (* get 32/31 of the target price, meaning there is a 1/31 penalty for the oven owner for being liquidated *)
     let extracted_balance = (Bitwise.shift_right (p.quantity * s.context.target) 43n) * 1mutez / 31n in (* 43 is 48 - log2(32) *)
     let new_balance = match oven.tez_balance - extracted_balance with
-    | None -> (failwith error_IMPOSSIBLE : tez)
+    | None -> (failwith Errors.impossible : tez)
     | Some x -> x in
     let oven = {oven with ctez_outstanding = remaining_ctez ; tez_balance = new_balance} in
     let ovens = Big_map.update p.handle (Some oven) s.ovens in
@@ -286,21 +265,22 @@ let liquidate_oven (p : liquidate)  (s: storage) : result  =
     let op_burn_ctez = Tezos.Next.Operation.transaction (-p.quantity, Tezos.get_sender ()) 0mutez ctez_mint_or_burn in
     List.append house_ops [op_burn_ctez ; op_take_collateral], s
   else
-    (failwith error_OVEN_NOT_UNDERCOLLATERALIZED : result)
+    (failwith Errors.not_undercollateralized : result)
 
 [@entry]
 let mint_or_burn (p : mint_or_burn)  (s : storage) : result =
   let house_ops, s = do_housekeeping s in
+  let () = assert_no_tez_in_transaction () in
   let handle = { id = p.id ; owner = Tezos.get_sender () } in
   let oven : oven = get_oven handle s in
   let ctez_outstanding = match is_nat (oven.ctez_outstanding + p.quantity) with
-    | None -> (failwith error_CANNOT_BURN_MORE_THAN_OUTSTANDING_AMOUNT_OF_CTEZ : nat)
+    | None -> (failwith Errors.excessive_ctez_burning : nat)
     | Some n -> n in
   let oven = {oven with ctez_outstanding = ctez_outstanding} in
   let ovens = Big_map.update handle (Some oven) s.ovens in
   let s = {s with ovens = ovens} in
   if is_under_collateralized oven s.context.target then
-    (failwith  error_EXCESSIVE_CTEZ_MINTING : result)
+    (failwith  Errors.excessive_ctez_minting : result)
     (* mint or burn quantity in the fa1.2 of ctez *)
   else
     let ctez_mint_or_burn = get_ctez_mint_or_burn s.context.ctez_fa12_address in

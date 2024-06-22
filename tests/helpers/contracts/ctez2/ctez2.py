@@ -26,6 +26,13 @@ class Ctez2(ContractHelper):
         INSUFFICIENT_PROCEEDS_RECEIVED = 'INSUFFICIENT_PROCEEDS_RECEIVED'
         INSUFFICIENT_SUBSIDY_RECEIVED = 'INSUFFICIENT_SUBSIDY_RECEIVED'
         SMALL_SELL_AMOUNT = 'SMALL_SELL_AMOUNT'
+        OVEN_ALREADY_EXISTS = 'OVEN_ALREADY_EXISTS'
+        OVEN_NOT_EXISTS = 'OVEN_NOT_EXISTS'
+        ONLY_OVEN_CAN_CALL = 'ONLY_OVEN_CAN_CALL'
+        EXCESSIVE_TEZ_WITHDRAWAL = 'EXCESSIVE_TEZ_WITHDRAWAL'
+        EXCESSIVE_CTEZ_BURNING = 'EXCESSIVE_CTEZ_BURNING'
+        EXCESSIVE_CTEZ_MINTING = 'EXCESSIVE_CTEZ_MINTING'
+        NOT_UNDERCOLLATERALIZED = 'NOT_UNDERCOLLATERALIZED'
 
     class HalfDex(NamedTuple):
         liquidity_owners: int
@@ -41,6 +48,12 @@ class Ctez2(ContractHelper):
         liquidity_shares: int
         proceeds_owed: int
         subsidy_owed: int
+
+    class OvenInfo(NamedTuple):
+        tez_balance: int
+        ctez_outstanding: int
+        address: str
+        fee_index: int
 
     @classmethod
     def originate(
@@ -97,22 +110,44 @@ class Ctez2(ContractHelper):
         owner_address = get_address(owner)
         return Ctez2.LiquidityOwner(**self.contract.storage['sell_tez']['liquidity_owners'][owner_address]())
     
+    def get_oven(self, owner: Addressable, oven_id: int) -> OvenInfo:
+        return Ctez2.OvenInfo(**self.contract.storage['ovens'][(oven_id, get_address(owner))]())
+    
     def get_oven_contract(self, client: PyTezosClient, owner: Addressable, oven_id: int) -> Oven:
-        oven_record = self.contract.storage['ovens'][(oven_id, get_address(owner))]()
-        print(oven_record)
-        return Oven.from_address(client, oven_record['address'])
+        oven_record = self.get_oven(owner, oven_id)
+        return Oven.from_address(client, oven_record.address)
 
-    def create_oven(self, id: int, delegate: Optional[Addressable], depositors: Optional[list]) -> ContractCall:
+    def create_oven(self, oven_id: int, delegate: Optional[Addressable], depositors: Optional[list]) -> ContractCall:
         return self.contract.create_oven({ 
-            'id': id,
+            'id': oven_id,
             'delegate': get_address(delegate) if delegate is not None else None, 
             'depositors': {'any': None} if depositors is None else {'whitelist': depositors}
+        })
+    
+    def register_oven_deposit(self, oven_id: int, owner: Addressable, amount: int) -> ContractCall:
+        return self.contract.register_oven_deposit({ 
+            'handle': (oven_id, get_address(owner)),
+            'amount': amount, 
+        })
+    
+    def withdraw_from_oven(self, oven_id: int, amount: int, to: Addressable) -> ContractCall:
+        return self.contract.withdraw_from_oven({ 
+            'id': oven_id,
+            'amount': amount, 
+            'to': get_address(to),
         })
     
     def mint_or_burn(self, id: int, quantity: int) -> ContractCall:
         return self.contract.mint_or_burn({
             'id': id,
             'quantity': quantity
+        })
+    
+    def liquidate_oven(self, oven_owner: Addressable, oven_id: int, quantity: int, to: Addressable) -> ContractCall:
+        return self.contract.liquidate_oven({
+            'handle' : (oven_id, get_address(oven_owner)), 
+            'quantity': quantity,
+            'to' : get_address(to)
         })
 
     def add_ctez_liquidity(self, owner : Addressable, amount_deposited : int, min_liquidity : int, deadline : int ) -> ContractCall:
@@ -140,7 +175,7 @@ class Ctez2(ContractHelper):
             deadline : int 
             ) -> ContractCall:
         return self.contract.remove_ctez_liquidity({ 
-            'to_': get_address(to),
+            'to': get_address(to),
             'liquidity_redeemed': liquidity_redeemed, 
             'min_self_received': min_self_received, 
             'min_proceeds_received': min_proceeds_received, 
@@ -158,7 +193,7 @@ class Ctez2(ContractHelper):
             deadline : int 
             ) -> ContractCall:
         return self.contract.remove_tez_liquidity({ 
-            'to_': get_address(to),
+            'to': get_address(to),
             'liquidity_redeemed': liquidity_redeemed, 
             'min_self_received': min_self_received, 
             'min_proceeds_received': min_proceeds_received, 
@@ -174,14 +209,14 @@ class Ctez2(ContractHelper):
 
     def tez_to_ctez(self, to : Addressable, min_ctez_bought : int, deadline : int ) -> ContractCall:
         return self.contract.tez_to_ctez({ 
-            'to_': get_address(to),
+            'to': get_address(to),
             'min_ctez_bought': min_ctez_bought, 
             'deadline': deadline 
         })
 
     def ctez_to_tez(self, to : Addressable, ctez_sold : int, min_tez_bought : int, deadline : int ) -> ContractCall:
         return self.contract.ctez_to_tez({ 
-            'to_': get_address(to),
+            'to': get_address(to),
             'ctez_sold': ctez_sold,
             'min_tez_bought': min_tez_bought, 
             'deadline': deadline 

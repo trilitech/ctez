@@ -131,3 +131,5 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
         assert ctez_dex_subsidies == 316
         assert ctez_token.view_total_supply() == prev_total_supply + tez_dex_subsidies + ctez_dex_subsidies
         assert ctez_token.view_balance(ctez2) == prev_ctez2_balance + tez_dex_subsidies + ctez_dex_subsidies
+
+    # TODO: AssertionError: 'INSUFFICIENT_OUTSTANDING_CTEZ' != 'CannotBurnMoreThanTheTargetsBalance'
