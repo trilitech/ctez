@@ -2284,13 +2284,19 @@
                                                                               (or %depositors (unit %any) (set %whitelist address))) ;
                                                                       code { UNPAIR ;
                                                                              IF_LEFT
-                                                                               { DUP 2 ;
+                                                                               { PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+                                                                                 PUSH mutez 0 ;
+                                                                                 AMOUNT ;
+                                                                                 COMPARE ;
+                                                                                 EQ ;
+                                                                                 IF { DROP } { FAILWITH } ;
+                                                                                 DUP 2 ;
                                                                                  GET 3 ;
                                                                                  CDR ;
                                                                                  SENDER ;
                                                                                  COMPARE ;
                                                                                  NEQ ;
-                                                                                 IF { DROP 2 ; PUSH nat 1002 ; FAILWITH }
+                                                                                 IF { DROP 2 ; PUSH string "ONLY_OWNER_CAN_CALL" ; FAILWITH }
                                                                                     { SWAP ; NIL operation ; DIG 2 ; SET_DELEGATE ; CONS ; PAIR } }
                                                                                { IF_LEFT
                                                                                    { DROP ;
@@ -2306,9 +2312,9 @@
                                                                                      OR ;
                                                                                      IF { DUP ;
                                                                                           CAR ;
-                                                                                          CONTRACT %register_deposit
+                                                                                          CONTRACT %register_oven_deposit
                                                                                             (pair (pair %handle (nat %id) (address %owner)) (mutez %amount)) ;
-                                                                                          IF_NONE { PUSH nat 1003 ; FAILWITH } {} ;
+                                                                                          IF_NONE { PUSH string "MISSING_DEPOSIT_ENTRYPOINT" ; FAILWITH } {} ;
                                                                                           DUP 2 ;
                                                                                           NIL operation ;
                                                                                           AMOUNT ;
@@ -2321,22 +2327,28 @@
                                                                                           TRANSFER_TOKENS ;
                                                                                           CONS ;
                                                                                           PAIR }
-                                                                                        { DROP ; PUSH nat 1004 ; FAILWITH } }
+                                                                                        { DROP ; PUSH string "UNAUTHORIZED_DEPOSITOR" ; FAILWITH } }
                                                                                    { IF_LEFT
-                                                                                       { DUP 2 ;
+                                                                                       { PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
+                                                                                         PUSH mutez 0 ;
+                                                                                         AMOUNT ;
+                                                                                         COMPARE ;
+                                                                                         EQ ;
+                                                                                         IF { DROP } { FAILWITH } ;
+                                                                                         DUP 2 ;
                                                                                          GET 3 ;
                                                                                          CDR ;
                                                                                          SENDER ;
                                                                                          COMPARE ;
                                                                                          NEQ ;
-                                                                                         IF { DROP 2 ; PUSH nat 1006 ; FAILWITH }
+                                                                                         IF { DROP 2 ; PUSH string "ONLY_OWNER_CAN_CALL" ; FAILWITH }
                                                                                             { IF_LEFT
                                                                                                 { IF { UNIT ; LEFT (set address) } { EMPTY_SET address ; RIGHT unit } }
                                                                                                 { UNPAIR ;
                                                                                                   DUP 3 ;
                                                                                                   GET 4 ;
                                                                                                   IF_LEFT
-                                                                                                    { DROP 3 ; PUSH nat 1005 ; FAILWITH }
+                                                                                                    { DROP 3 ; PUSH string "SET_ANY_OFF_FIRST" ; FAILWITH }
                                                                                                     { SWAP ;
                                                                                                       IF { PUSH bool True ; DIG 2 ; UPDATE }
                                                                                                          { PUSH bool False ; DIG 2 ; UPDATE } ;
@@ -2349,7 +2361,7 @@
                                                                                          SENDER ;
                                                                                          COMPARE ;
                                                                                          NEQ ;
-                                                                                         IF { DROP 2 ; PUSH nat 1001 ; FAILWITH }
+                                                                                         IF { DROP 2 ; PUSH string "ONLY_MAIN_CONTRACT_CAN_CALL" ; FAILWITH }
                                                                                             { SWAP ;
                                                                                               NIL operation ;
                                                                                               DUP 3 ;

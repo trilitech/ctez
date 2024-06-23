@@ -9,7 +9,7 @@ class Ctez2RegisterOvenDepositTestCase(Ctez2BaseTestCase):
         with self.raises_michelson_error(Ctez2.Errors.OVEN_NOT_EXISTS):
             ctez2.using(owner).register_oven_deposit(oven_id, owner, 123).send()
 
-    def test_should_fail_if_not_called_by_oven(self) -> None:
+    def test_should_fail_if_called_not_by_oven(self) -> None:
         ctez2, _, owner, *_ = self.default_setup()
 
         oven_id = 2

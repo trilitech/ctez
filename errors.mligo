@@ -1,4 +1,6 @@
 [@inline] let tez_in_transaction_disallowed = "TEZ_IN_TRANSACTION_DISALLOWED"
+
+(* ctez2 *)
 [@inline] let deadline_has_passed = "DEADLINE_HAS_PASSED"
 [@inline] let insufficient_liquidity_created = "INSUFFICIENT_LIQUIDITY_CREATED"
 [@inline] let ctez_fa12_address_already_set = "CTEZ_FA12_ADDRESS_ALREADY_SET"
@@ -21,3 +23,10 @@
 [@inline] let missing_mint_or_burn_entrypoint = "MISSING_MINT_OR_BURN_ENTRYPOINT"
 [@inline] let not_undercollateralized = "NOT_UNDERCOLLATERALIZED"
 [@inline] let impossible = "IMPOSSIBLE"
+
+(* oven *)
+[@inline] let only_main_contract_can_call = "ONLY_MAIN_CONTRACT_CAN_CALL"
+[@inline] let only_owner_can_call = "ONLY_OWNER_CAN_CALL"
+[@inline] let unauthorized_depositor = "UNAUTHORIZED_DEPOSITOR"
+[@inline] let missing_deposit_entrypoint = "MISSING_DEPOSIT_ENTRYPOINT"
+[@inline] let set_any_off_first = "SET_ANY_OFF_FIRST"

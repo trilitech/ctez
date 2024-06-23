@@ -117,11 +117,16 @@ class Ctez2(ContractHelper):
         oven_record = self.get_oven(owner, oven_id)
         return Oven.from_address(client, oven_record.address)
 
-    def create_oven(self, oven_id: int, delegate: Optional[Addressable], depositors: Optional[list]) -> ContractCall:
+    def create_oven(
+        self, 
+        oven_id: int, 
+        delegate: Optional[Addressable], 
+        depositors: Optional[list[Addressable]]
+    ) -> ContractCall:
         return self.contract.create_oven({ 
             'id': oven_id,
             'delegate': get_address(delegate) if delegate is not None else None, 
-            'depositors': {'any': None} if depositors is None else {'whitelist': depositors}
+            'depositors': {'any': None} if depositors is None else {'whitelist': list(map(get_address, depositors))}
         })
     
     def register_oven_deposit(self, oven_id: int, owner: Addressable, amount: int) -> ContractCall:

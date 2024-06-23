@@ -2,7 +2,6 @@ from tests.ctez2.base import Ctez2BaseTestCase
 from tests.helpers.addressable import get_address
 from parameterized import parameterized
 from pytezos import Unit
-
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.utility import TEST_ADDRESSES_SET
 
@@ -32,7 +31,7 @@ class Ctez2CreateOvenTestCase(Ctez2BaseTestCase):
         assert self.get_balance_mutez(oven) == initial_balance
         assert self.get_contract_delegate(oven) == delegate
         assert oven.get_admin() == get_address(ctez2)
-        assert oven.get_depositors() == ({'any': Unit} if depositors == None else {'whitelist': depositors})
+        assert oven.get_depositors() == True if depositors == None else depositors
 
     def test_should_fail_if_oven_with_the_same_id_already_created(self) -> None:
         ctez2, _, owner, *_ = self.default_setup()
