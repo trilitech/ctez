@@ -91,7 +91,7 @@ let get_oven (handle : oven_handle) (s : storage) : oven =
     {oven with fee_index = new_fee_index ; ctez_outstanding = ctez_outstanding}
 
 let is_under_collateralized (oven : oven) (target : nat) : bool =
-  (15n * oven.tez_balance) < (Bitwise.shift_right (oven.ctez_outstanding * target) 44n) * 1mutez
+  (15n * oven.tez_balance) < (16n * Float48.mul oven.ctez_outstanding target) * 1mutez
 
 let get_oven_withdraw (oven_address : address) : (tez * (unit contract)) contract =
   match (Tezos.get_entrypoint_opt "%oven_withdraw" oven_address : (tez * (unit contract)) contract option) with
@@ -108,15 +108,15 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
-  get_target_self_reserves = fun (c) -> Bitwise.shift_right (c._Q * c.target) 48n;
-  apply_target_price = fun (c) (amt) -> Bitwise.shift_right (amt * c.target) 48n;
+  get_target_self_reserves = fun (c) -> Float48.mul c._Q c.target;
+  multiply_by_target = fun (c) (amt) -> Float48.mul amt c.target;
 }
 
 let sell_ctez_env : Half_dex.environment = {
   transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
-  apply_target_price = fun (c) (amt) -> Bitwise.shift_left (amt) 48n / c.target;
+  multiply_by_target = fun (c) (amt) -> Float48.div amt c.target;
 }
 
 (* housekeeping *)
@@ -127,7 +127,7 @@ let drift_adjustment (storage : storage) (delta : nat): int =
   let tQ = sell_tez_env.get_target_self_reserves ctxt in
   let qc = min storage.sell_ctez.self_reserves ctxt._Q in
   let qt = min storage.sell_tez.self_reserves tQ in
-  let tqc_m_qt = (sell_tez_env.apply_target_price ctxt qc) - qt in
+  let tqc_m_qt = (sell_tez_env.multiply_by_target ctxt qc) - qt in
   let d_drift = delta * abs(tqc_m_qt * tqc_m_qt * tqc_m_qt) / (tQ * tQ * tQ) in
   if tqc_m_qt < 0 then -d_drift else int d_drift 
 
@@ -141,7 +141,7 @@ let fee_rate (q : nat) (_Q : nat) : Float48.t =
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
   let rate = fee_rate dex.self_reserves _Q in
   (* rate is given as a multiple of 2^(-48), roughly [0%, 1%] / year *)
-  let new_fee_index = dex.fee_index + Bitwise.shift_right (delta * dex.fee_index * rate) 48n in
+  let new_fee_index = dex.fee_index + Float48.mul (delta * dex.fee_index) rate in
   (* Compute how many ctez have implicitly been minted since the last update *)
   (* We round this down while we round the ctez owed up. This leads, over time, to slightly overestimating the outstanding ctez, which is conservative. *)
   let minted = outstanding * (new_fee_index - dex.fee_index) / dex.fee_index in
@@ -166,7 +166,7 @@ let do_housekeeping (storage : storage) : result =
     let new_drift = drift + d_drift in
 
     let target = storage.context.target in
-    let d_target = Bitwise.shift_right (target * (abs drift) * delta) 48n in
+    let d_target = Float48.mul ((abs drift) * delta) target in
     (* We assume that `target - d_target < 0` never happens for economic reasons.
        Concretely, even drift were as low as -50% annualized, it would take not
        updating the target for 1.4 years for a negative number to occur *)
@@ -255,7 +255,7 @@ let liquidate_oven (p : liquidate)  (s: storage) : result  =
       | None -> (failwith Errors.excessive_ctez_burning : nat)
       | Some n -> n  in
     (* get 32/31 of the target price, meaning there is a 1/31 penalty for the oven owner for being liquidated *)
-    let extracted_balance = (Bitwise.shift_right (p.quantity * s.context.target) 43n) * 1mutez / 31n in (* 43 is 48 - log2(32) *)
+    let extracted_balance = (Float48.mul (32n * p.quantity) s.context.target) * 1mutez / 31n in
     let new_balance = match oven.tez_balance - extracted_balance with
     | None -> (failwith Errors.impossible : tez)
     | Some x -> x in

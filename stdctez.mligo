@@ -18,8 +18,13 @@ let ceil_div (numerator : nat) (denominator : nat) : nat = abs ((- numerator) / 
 
 module Float48 = struct
   type t = nat
+  let pow = 48n 
 
-  // TODO
+  [@inline]
+  let mul (a : nat) (b : t) : nat = Bitwise.shift_right (a * b) pow
+
+  [@inline]
+  let div (num : nat) (denom : t) : nat = Bitwise.shift_left (num) pow / denom
 end
 
 module List = struct

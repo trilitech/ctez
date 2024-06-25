@@ -1005,6 +1005,7 @@
          DIG 5 ;
          DIG 6 ;
          DROP 3 ;
+         PUSH nat 48 ;
          LAMBDA
            (pair (pair nat address)
                  (big_map (pair nat address) (pair mutez nat address nat))
@@ -1049,9 +1050,14 @@
                       GET 6 ;
                       DUP 3 ;
                       MUL ;
+                      SWAP ;
+                      INT ;
+                      SWAP ;
+                      NEG ;
                       EDIV ;
                       IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
-                      CAR }
+                      CAR ;
+                      ABS }
                     { SWAP } ;
                  DIG 2 ;
                  SWAP ;
@@ -1059,16 +1065,20 @@
                  SWAP ;
                  UPDATE 3 } } ;
          LAMBDA
-           (pair (pair mutez nat address nat) nat)
+           (pair nat (pair (pair mutez nat address nat) nat))
            bool
            { UNPAIR ;
+             SWAP ;
+             UNPAIR ;
              PUSH mutez 1 ;
-             PUSH nat 44 ;
+             DIG 3 ;
              DIG 3 ;
              DUP 4 ;
              GET 3 ;
              MUL ;
              LSR ;
+             PUSH nat 16 ;
+             MUL ;
              MUL ;
              SWAP ;
              CAR ;
@@ -1076,6 +1086,8 @@
              MUL ;
              COMPARE ;
              LT } ;
+         DUP 3 ;
+         APPLY ;
          LAMBDA
            address
            (contract (pair mutez (contract unit)))
@@ -1087,20 +1099,29 @@
            { CONTRACT %mintOrBurn (pair int address) ;
              IF_NONE { PUSH string "MISSING_MINT_OR_BURN_ENTRYPOINT" ; FAILWITH } {} } ;
          LAMBDA
-           (pair nat int nat address)
+           (pair nat (pair nat int nat address))
            (lambda nat nat)
-           { LAMBDA
-               (pair (pair nat int nat address) nat)
+           { UNPAIR ;
+             SWAP ;
+             LAMBDA
+               (pair (pair (pair nat int nat address) nat) nat)
                nat
-               { UNPAIR ; SWAP ; PUSH nat 48 ; DIG 2 ; CAR ; DIG 2 ; MUL ; LSR } ;
-             DUP 2 ;
+               { UNPAIR ; UNPAIR ; CAR ; DIG 2 ; MUL ; LSR } ;
+             DUP 3 ;
+             DUP 3 ;
+             PAIR ;
              APPLY ;
              SWAP ;
-             DROP } ;
+             DIG 2 ;
+             DROP 2 } ;
+         DUP 6 ;
+         APPLY ;
          LAMBDA
-           (pair nat int nat address)
+           (pair nat (pair nat int nat address))
            nat
-           { PUSH nat 48 ; DUP 2 ; CAR ; DIG 2 ; GET 5 ; MUL ; LSR } ;
+           { UNPAIR ; DUP 2 ; CAR ; DIG 2 ; GET 5 ; MUL ; LSR } ;
+         DUP 7 ;
+         APPLY ;
          LAMBDA
            (pair (lambda (pair (pair nat int nat address) address address nat) operation)
                  (pair nat int nat address))
@@ -1138,7 +1159,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 12 ;
+         DUP 13 ;
          APPLY ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -1172,27 +1193,36 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 14 ;
+         DUP 15 ;
          APPLY ;
          PAIR 4 ;
          LAMBDA
-           (pair nat int nat address)
+           (pair nat (pair nat int nat address))
            (lambda nat nat)
-           { LAMBDA
-               (pair (pair nat int nat address) nat)
+           { UNPAIR ;
+             SWAP ;
+             LAMBDA
+               (pair (pair (pair nat int nat address) nat) nat)
                nat
                { UNPAIR ;
-                 CAR ;
-                 PUSH nat 48 ;
+                 UNPAIR ;
                  DIG 2 ;
+                 SWAP ;
+                 CAR ;
+                 DUG 2 ;
                  LSL ;
                  EDIV ;
                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
                  CAR } ;
-             DUP 2 ;
+             DUP 3 ;
+             DUP 3 ;
+             PAIR ;
              APPLY ;
              SWAP ;
-             DROP } ;
+             DIG 2 ;
+             DROP 2 } ;
+         DUP 7 ;
+         APPLY ;
          LAMBDA (pair nat int nat address) nat { GET 5 } ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -1218,9 +1248,9 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 14 ;
+         DUP 15 ;
          APPLY ;
-         DIG 13 ;
+         DIG 14 ;
          DROP ;
          LAMBDA
            (pair (lambda (pair (pair nat int nat address) address address nat) operation)
@@ -1280,11 +1310,11 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 14 ;
+         DUP 15 ;
          APPLY ;
          PAIR 4 ;
          LAMBDA
-           (pair (lambda address (contract (pair int address)))
+           (pair (pair (lambda address (contract (pair int address))) nat)
                  (pair address
                        nat
                        nat
@@ -1301,7 +1331,8 @@
                  nat
                  operation)
            { UNPAIR ;
-             SWAP ;
+             UNPAIR ;
+             DIG 2 ;
              UNPAIR 5 ;
              DUP 5 ;
              GET 5 ;
@@ -1337,12 +1368,12 @@
                        EDIV ;
                        IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
                        CAR } } ;
-             PUSH nat 48 ;
-             SWAP ;
-             DUP 6 ;
+             DUP 5 ;
              GET 14 ;
-             DIG 4 ;
+             DIG 3 ;
              MUL ;
+             DIG 6 ;
+             DUG 2 ;
              MUL ;
              LSR ;
              DUP 4 ;
@@ -1384,7 +1415,9 @@
              IF_NONE { PUSH nat 0 } {} ;
              UPDATE 13 ;
              PAIR 3 } ;
-         DUP 4 ;
+         DUP 8 ;
+         DUP 5 ;
+         PAIR ;
          APPLY ;
          LAMBDA
            (pair (pair (lambda
@@ -1414,7 +1447,8 @@
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                              (lambda (pair nat int nat address) nat)
-                             (lambda (pair nat int nat address) (lambda nat nat))))
+                             (lambda (pair nat int nat address) (lambda nat nat)))
+                       nat)
                  (pair (big_map (pair nat address) (pair mutez nat address nat))
                        timestamp
                        (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
@@ -1427,8 +1461,8 @@
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair nat int nat address))
            { UNPAIR ;
-             UNPAIR 3 ;
-             DIG 3 ;
+             UNPAIR 4 ;
+             DIG 4 ;
              NOW ;
              DUP ;
              DUP 3 ;
@@ -1503,12 +1537,13 @@
                   DUP 5 ;
                   GET 8 ;
                   CAR ;
-                  PUSH nat 48 ;
+                  DUP ;
                   DUP 5 ;
                   DUP 5 ;
                   ABS ;
-                  DUP 4 ;
                   MUL ;
+                  DIG 11 ;
+                  DUG 2 ;
                   MUL ;
                   LSR ;
                   PUSH int 0 ;
@@ -1596,16 +1631,17 @@
                   CONS ;
                   DIG 2 ;
                   CONS }
-                { DIG 2 ; DIG 3 ; DIG 4 ; DROP 4 ; NIL operation } ;
+                { DIG 2 ; DIG 3 ; DIG 4 ; DIG 5 ; DROP 5 ; NIL operation } ;
              PAIR } ;
-         DUP 4 ;
-         DUP 4 ;
-         DUP 4 ;
-         PAIR 3 ;
+         DUP 9 ;
+         DUP 5 ;
+         DUP 5 ;
+         DUP 5 ;
+         PAIR 4 ;
          APPLY ;
          SWAP ;
          DROP ;
-         DIG 12 ;
+         DIG 13 ;
          UNPAIR ;
          IF_LEFT
            { DIG 3 ;
@@ -1614,9 +1650,10 @@
              DIG 7 ;
              DIG 8 ;
              DIG 9 ;
-             DIG 11 ;
+             DIG 10 ;
              DIG 12 ;
-             DROP 8 ;
+             DIG 13 ;
+             DROP 9 ;
              UNPAIR 4 ;
              DIG 4 ;
              DIG 5 ;
@@ -1671,10 +1708,11 @@
                  DIG 7 ;
                  DIG 8 ;
                  DIG 9 ;
-                 DIG 11 ;
+                 DIG 10 ;
                  DIG 12 ;
                  DIG 13 ;
-                 DROP 9 ;
+                 DIG 14 ;
+                 DROP 10 ;
                  UNPAIR 3 ;
                  DIG 3 ;
                  DIG 4 ;
@@ -1711,7 +1749,7 @@
                  ITER { CONS } ;
                  ITER { CONS } ;
                  PAIR }
-               { DIG 10 ;
+               { DIG 11 ;
                  DROP ;
                  IF_LEFT
                    { DIG 4 ;
@@ -1719,10 +1757,11 @@
                      DIG 6 ;
                      DIG 7 ;
                      DIG 8 ;
-                     DIG 10 ;
+                     DIG 9 ;
                      DIG 11 ;
                      DIG 12 ;
-                     DROP 8 ;
+                     DIG 13 ;
+                     DROP 9 ;
                      SWAP ;
                      DIG 2 ;
                      SWAP ;
@@ -1761,10 +1800,11 @@
                          DIG 6 ;
                          DIG 7 ;
                          DIG 8 ;
-                         DIG 10 ;
+                         DIG 9 ;
                          DIG 11 ;
                          DIG 12 ;
-                         DROP 8 ;
+                         DIG 13 ;
+                         DROP 9 ;
                          SWAP ;
                          DIG 2 ;
                          SWAP ;
@@ -1797,7 +1837,7 @@
                          ITER { CONS } ;
                          ITER { CONS } ;
                          PAIR }
-                       { DIG 9 ;
+                       { DIG 10 ;
                          DROP ;
                          IF_LEFT
                            { DIG 4 ;
@@ -1805,9 +1845,10 @@
                              DIG 6 ;
                              DIG 7 ;
                              DIG 8 ;
-                             DIG 10 ;
+                             DIG 9 ;
                              DIG 11 ;
-                             DROP 7 ;
+                             DIG 12 ;
+                             DROP 8 ;
                              SWAP ;
                              DIG 2 ;
                              SWAP ;
@@ -1847,9 +1888,10 @@
                                  DIG 5 ;
                                  DIG 6 ;
                                  DIG 7 ;
-                                 DIG 9 ;
+                                 DIG 8 ;
                                  DIG 10 ;
-                                 DROP 6 ;
+                                 DIG 11 ;
+                                 DROP 7 ;
                                  SWAP ;
                                  DIG 2 ;
                                  SWAP ;
@@ -1883,14 +1925,15 @@
                                  ITER { CONS } ;
                                  PAIR }
                                { DIG 3 ;
-                                 DIG 8 ;
+                                 DIG 9 ;
                                  DROP 2 ;
                                  IF_LEFT
                                    { DIG 3 ;
                                      DIG 4 ;
                                      DIG 5 ;
                                      DIG 6 ;
-                                     DROP 4 ;
+                                     DIG 7 ;
+                                     DROP 5 ;
                                      UNPAIR 4 ;
                                      DIG 4 ;
                                      DIG 5 ;
@@ -1935,14 +1978,15 @@
                                      ITER { CONS } ;
                                      ITER { CONS } ;
                                      PAIR }
-                                   { DIG 8 ;
+                                   { DIG 9 ;
                                      DROP ;
                                      IF_LEFT
                                        { DIG 3 ;
                                          DIG 4 ;
                                          DIG 5 ;
                                          DIG 6 ;
-                                         DROP 4 ;
+                                         DIG 7 ;
+                                         DROP 5 ;
                                          UNPAIR 3 ;
                                          DIG 3 ;
                                          DIG 4 ;
@@ -1970,11 +2014,12 @@
                                          UPDATE 7 ;
                                          SWAP ;
                                          PAIR }
-                                       { DIG 7 ;
+                                       { DIG 8 ;
                                          DROP ;
                                          IF_LEFT
                                            { DIG 4 ;
-                                             DROP ;
+                                             DIG 7 ;
+                                             DROP 2 ;
                                              SWAP ;
                                              DIG 2 ;
                                              SWAP ;
@@ -2079,12 +2124,15 @@
                                                       IF_NONE { PUSH string "EXCESSIVE_CTEZ_BURNING" ; FAILWITH } {} ;
                                                       PUSH nat 31 ;
                                                       PUSH mutez 1 ;
-                                                      PUSH nat 43 ;
-                                                      DUP 7 ;
+                                                      DUP 6 ;
                                                       GET 8 ;
                                                       CAR ;
-                                                      DUP 9 ;
+                                                      DUP 8 ;
                                                       GET 3 ;
+                                                      PUSH nat 32 ;
+                                                      MUL ;
+                                                      DIG 11 ;
+                                                      DUG 2 ;
                                                       MUL ;
                                                       LSR ;
                                                       MUL ;
@@ -2146,9 +2194,10 @@
                                                       ITER { CONS } ;
                                                       ITER { CONS } ;
                                                       PAIR }
-                                                    { DROP 6 ; PUSH string "NOT_UNDERCOLLATERALIZED" ; FAILWITH } }
+                                                    { DROP 7 ; PUSH string "NOT_UNDERCOLLATERALIZED" ; FAILWITH } }
                                                { DIG 3 ;
-                                                 DROP ;
+                                                 DIG 7 ;
+                                                 DROP 2 ;
                                                  IF_LEFT
                                                    { DIG 3 ;
                                                      DIG 4 ;

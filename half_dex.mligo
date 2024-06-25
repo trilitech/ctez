@@ -21,7 +21,7 @@ type environment = {
   transfer_self : Context.t -> address -> address -> nat -> operation; 
   transfer_proceeds : Context.t -> address -> nat -> operation; 
   get_target_self_reserves : Context.t -> nat;
-  apply_target_price : Context.t -> nat -> nat;
+  multiply_by_target : Context.t -> nat -> nat;
 }
 
 module Curve = struct
@@ -257,7 +257,7 @@ let swap
     ({ to_; proceeds_amount; min_self; deadline } : swap)
     : t with_operations =
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let trade_amount = env.apply_target_price ctxt proceeds_amount in
+  let trade_amount = env.multiply_by_target ctxt proceeds_amount in
   let self_to_sell = Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt) in
   let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
   let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
