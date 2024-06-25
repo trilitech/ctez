@@ -101,7 +101,7 @@ type t = {
   proceeds_reserves : nat; (** total amount accumulated from proceeds + proceeds_debts *)
   subsidy_debts: nat; (** used to simplify analytics *)
   subsidy_reserves : nat; (** total amount accumulated from subsidy + subsidy_debts *)
-  fee_index : Float48.t; (** the fee index. *)
+  fee_index : Float64.t; (** the fee index. *)
 }
 
 let default_liquidity_owner = { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }

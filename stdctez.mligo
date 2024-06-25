@@ -16,9 +16,9 @@ let max (x : nat) (y : nat) : nat = if x > y then x else y
 [@inline]
 let ceil_div (numerator : nat) (denominator : nat) : nat = abs ((- numerator) / (int denominator))
 
-module Float48 = struct
+module Float64 = struct
   type t = nat
-  let pow = 48n 
+  let pow = 64n 
 
   [@inline]
   let mul (a : nat) (b : t) : nat = Bitwise.shift_right (a * b) pow

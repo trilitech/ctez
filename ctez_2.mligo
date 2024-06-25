@@ -91,7 +91,7 @@ let get_oven (handle : oven_handle) (s : storage) : oven =
     {oven with fee_index = new_fee_index ; ctez_outstanding = ctez_outstanding}
 
 let is_under_collateralized (oven : oven) (target : nat) : bool =
-  (15n * oven.tez_balance) < (16n * Float48.mul oven.ctez_outstanding target) * 1mutez
+  (15n * oven.tez_balance) < (16n * Float64.mul oven.ctez_outstanding target) * 1mutez
 
 let get_oven_withdraw (oven_address : address) : (tez * (unit contract)) contract =
   match (Tezos.get_entrypoint_opt "%oven_withdraw" oven_address : (tez * (unit contract)) contract option) with
@@ -108,40 +108,40 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
-  get_target_self_reserves = fun (c) -> Float48.mul c._Q c.target;
-  multiply_by_target = fun (c) (amt) -> Float48.mul amt c.target;
+  get_target_self_reserves = fun (c) -> Float64.mul c._Q c.target;
+  multiply_by_target = fun (c) (amt) -> Float64.mul amt c.target;
 }
 
 let sell_ctez_env : Half_dex.environment = {
   transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
-  multiply_by_target = fun (c) (amt) -> Float48.div amt c.target;
+  multiply_by_target = fun (c) (amt) -> Float64.div amt c.target;
 }
 
 (* housekeeping *)
 
 [@inline]
-let drift_adjustment (storage : storage) (delta : nat): int =
+let drift_adjustment (storage : storage) (delta : nat): int = // Float64
   let ctxt = storage.context in
   let tQ = sell_tez_env.get_target_self_reserves ctxt in
   let qc = min storage.sell_ctez.self_reserves ctxt._Q in
   let qt = min storage.sell_tez.self_reserves tQ in
   let tqc_m_qt = (sell_tez_env.multiply_by_target ctxt qc) - qt in
-  let d_drift = delta * abs(tqc_m_qt * tqc_m_qt * tqc_m_qt) / (tQ * tQ * tQ) in
+  let d_drift = 65536n * delta * abs(tqc_m_qt * tqc_m_qt * tqc_m_qt) / (tQ * tQ * tQ) in
   if tqc_m_qt < 0 then -d_drift else int d_drift 
 
-let fee_rate (q : nat) (_Q : nat) : Float48.t =
+let fee_rate (q : nat) (_Q : nat) : Float64.t =
   if 8n * q < _Q  (* if q < 12.5% of _Q *)
-    then 89195n (* ~1% / year *)
+    then 5845483520n (* ~1% / year *)
   else if 8n * q > 7n * _Q (* if q > 87.5% of _Q*) 
     then 0n (* 0% / year *)
-    else abs(89195n  * (7n * _Q - 8n * q)) / (6n * _Q) (* [0%, ~1%] / year *)
+    else abs(5845483520n  * (7n * _Q - 8n * q)) / (6n * _Q) (* [0%, ~1%] / year *)
 
 let update_fee_index (ctez_fa12_address: address) (delta: nat) (outstanding : nat) (_Q : nat) (dex : Half_dex.t) : Half_dex.t * nat * operation = 
   let rate = fee_rate dex.self_reserves _Q in
-  (* rate is given as a multiple of 2^(-48), roughly [0%, 1%] / year *)
-  let new_fee_index = dex.fee_index + Float48.mul (delta * dex.fee_index) rate in
+  (* rate is given as a multiple of 2^(-64), roughly [0%, 1%] / year *)
+  let new_fee_index = dex.fee_index + Float64.mul (delta * dex.fee_index) rate in
   (* Compute how many ctez have implicitly been minted since the last update *)
   (* We round this down while we round the ctez owed up. This leads, over time, to slightly overestimating the outstanding ctez, which is conservative. *)
   let minted = outstanding * (new_fee_index - dex.fee_index) / dex.fee_index in
@@ -159,14 +159,14 @@ let do_housekeeping (storage : storage) : result =
     let d_drift = drift_adjustment storage delta in
     (* This is not homegeneous, but setting the constant delta is multiplied with
        to 1.0 magically happens to be reasonable. Why?
-       Because (24 * 3600 / 2^48) * 365.25*24*3600 ~ 0.97%.
+       Because (2^16 * 24 * 3600 / 2^64) * 365.25*24*3600 ~ 0.97%.
        This means that the annualized drift changes by roughly one percentage point per day at most.
     *)
     let drift = storage.context.drift in
     let new_drift = drift + d_drift in
 
     let target = storage.context.target in
-    let d_target = Float48.mul ((abs drift) * delta) target in
+    let d_target = Float64.mul ((abs drift) * delta) target in
     (* We assume that `target - d_target < 0` never happens for economic reasons.
        Concretely, even drift were as low as -50% annualized, it would take not
        updating the target for 1.4 years for a negative number to occur *)
@@ -255,7 +255,7 @@ let liquidate_oven (p : liquidate)  (s: storage) : result  =
       | None -> (failwith Errors.excessive_ctez_burning : nat)
       | Some n -> n  in
     (* get 32/31 of the target price, meaning there is a 1/31 penalty for the oven owner for being liquidated *)
-    let extracted_balance = (Float48.mul (32n * p.quantity) s.context.target) * 1mutez / 31n in
+    let extracted_balance = (Float64.mul (32n * p.quantity) s.context.target) * 1mutez / 31n in
     let new_balance = match oven.tez_balance - extracted_balance with
     | None -> (failwith Errors.impossible : tez)
     | Some x -> x in

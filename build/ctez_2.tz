@@ -1005,7 +1005,7 @@
          DIG 5 ;
          DIG 6 ;
          DROP 3 ;
-         PUSH nat 48 ;
+         PUSH nat 64 ;
          LAMBDA
            (pair (pair nat address)
                  (big_map (pair nat address) (pair mutez nat address nat))
@@ -1342,7 +1342,7 @@
              MUL ;
              COMPARE ;
              LT ;
-             IF { DIG 4 ; DROP 2 ; PUSH nat 89195 }
+             IF { DIG 4 ; DROP 2 ; PUSH nat 5845483520 }
                 { DUP 5 ;
                   PUSH nat 7 ;
                   MUL ;
@@ -1362,7 +1362,7 @@
                        PUSH nat 7 ;
                        MUL ;
                        SUB ;
-                       PUSH nat 89195 ;
+                       PUSH nat 5845483520 ;
                        MUL ;
                        ABS ;
                        EDIV ;
@@ -1519,6 +1519,8 @@
                   MUL ;
                   ABS ;
                   DUP 4 ;
+                  PUSH nat 65536 ;
+                  MUL ;
                   MUL ;
                   EDIV ;
                   IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;

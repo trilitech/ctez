@@ -192,7 +192,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
 
         assert delta == current_last_update - prev_last_update
         assert total_subsidies == 7745
-        assert oven0_subsidies == 7745
+        assert oven0_subsidies == 7746
         assert oven1_subsidies == 0 # subsidies have not been charged because ctez minted in the same block
         assert oven2_subsidies == 0
 
@@ -225,7 +225,7 @@ class Ctez2SubsidiesTestCase(Ctez2BaseTestCase):
         
         assert delta == current_last_update - prev_last_update
         assert total_subsidies == 15490
-        assert oven0_subsidies == 15491
+        assert oven0_subsidies == 15492
         assert oven1_subsidies == 0
         assert oven2_subsidies == 0 # subsidies have not been charged because ctez minted in the same block
 

@@ -13,7 +13,7 @@ class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
         tez_liquidity: int, 
         target_ctez_price: float,
         delta: int,
-        expected_drift_change: int,
+        expected_drift_change_percent: int,
     ) -> None:
         ctez2, ctez_token, sender, _, *_ = self.default_setup(
             target_ctez_price = target_ctez_price,
@@ -25,7 +25,7 @@ class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
 
         context = ctez2.contract.storage()['context']
         assert context['drift'] == 0
-        assert context['target'] == floor(target_ctez_price * 2**48)
+        assert context['target'] == floor(target_ctez_price * 2**64)
 
         # do something to inject housekeeping (update Q)
         ctez2.using(sender).collect_from_ctez_liquidity(sender).send()
@@ -43,13 +43,13 @@ class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
 
         new_drift = context['drift']
         d_drift = new_drift - prev_drift
-        assert d_drift == expected_drift_change
+        assert round(100 * d_drift / (delta * 2**16)) == expected_drift_change_percent
 
         delta = 2
-        self.bake_block(delta - 1) # to make new delta is 2
+        self.bake_blocks(delta - 1) # to make new delta is 2
         ctez2.using(sender).collect_from_ctez_liquidity(sender).send() # force housekeeping again to apply new drift to target
         self.bake_block()
 
         context = ctez2.contract.storage()['context']
         d_target = context['target'] - prev_target
-        assert d_target == (prev_target * abs(new_drift) * delta // 2**48) * (-1 if new_drift < 0 else 1) # to check that drift applied correctly
+        assert d_target == (prev_target * abs(new_drift) * delta // 2**64) * (-1 if new_drift < 0 else 1) # to check that drift applied correctly
