@@ -84,7 +84,10 @@ let get_oven (handle : oven_handle) (s : storage) : oven =
   | Some oven -> 
     (* Adjust the amount of outstanding ctez in the oven, record the fee index at that time. *)
     let new_fee_index = s.sell_ctez.fee_index * s.sell_tez.fee_index in
-    let ctez_outstanding = ceil_div (oven.ctez_outstanding * new_fee_index) oven.fee_index in
+    let ctez_outstanding = (oven.ctez_outstanding * new_fee_index) / oven.fee_index in 
+    let new_fee_index = if oven.ctez_outstanding > 0n 
+      then ceil_div (ctez_outstanding * oven.fee_index) oven.ctez_outstanding 
+      else new_fee_index in 
     {oven with fee_index = new_fee_index ; ctez_outstanding = ctez_outstanding}
 
 let is_under_collateralized (oven : oven) (target : nat) : bool =
