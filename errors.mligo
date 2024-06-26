@@ -22,7 +22,8 @@
 [@inline] let missing_withdraw_entrypoint = "MISSING_WITHDRAW_ENTRYPOINT"
 [@inline] let missing_mint_or_burn_entrypoint = "MISSING_MINT_OR_BURN_ENTRYPOINT"
 [@inline] let not_undercollateralized = "NOT_UNDERCOLLATERALIZED"
-[@inline] let impossible = "IMPOSSIBLE"
+[@inline] let missing_total_supply_view = "MISSING_TOTAL_SUPPLY_VIEW"
+[@inline] let insufficient_tez_in_oven = "INSUFFICIENT_TEZ_IN_OVEN"
 
 (* oven *)
 [@inline] let only_main_contract_can_call = "ONLY_MAIN_CONTRACT_CAN_CALL"

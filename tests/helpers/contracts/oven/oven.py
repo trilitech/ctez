@@ -26,15 +26,15 @@ class Oven(ContractHelper):
         return self.contract.default()
 
     def oven_withdraw(self, amount: int, to: Addressable) -> ContractCall:
-        return self.contract.oven_withdraw((amount, get_address(to)))
+        return self.contract.withdraw((amount, get_address(to)))
 
     def oven_delegate(self, delegate: Addressable | None) -> ContractCall:
-        return self.contract.oven_delegate(
+        return self.contract.delegate(
             get_address(delegate) if delegate is not None else None
         )
 
     def oven_edit_depositor(self, depositor_or_allow_any: tuple[Addressable, bool] | bool) -> ContractCall:
-        return self.contract.oven_edit_depositor(
+        return self.contract.edit_depositor(
             {'allow_any': depositor_or_allow_any} if isinstance(depositor_or_allow_any, bool) 
                 else {'allow_account': (depositor_or_allow_any[1], get_address(depositor_or_allow_any[0]))}
         )

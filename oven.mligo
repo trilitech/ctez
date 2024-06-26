@@ -1,43 +1,74 @@
-#import "errors.mligo" "Errors"
 #include "stdctez.mligo"
-#include "oven_types.mligo"
+#import "errors.mligo" "Errors"
 
-let originate_oven (delegate : key_hash option) (amnt : tez) (storage : oven_storage) = Tezos.Next.Operation.create_contract
+type edit =
+  | Allow_any of bool
+  | Allow_account of bool * address
+
+type entrypoint =
+  | Delegate of (key_hash option)
+  | [@annot:default] Deposit
+  | Edit_depositor of edit
+  | Withdraw of tez * (unit contract)
+
+type depositors =
+  | Any
+  | Whitelist of address set
+
+type handle = {
+	id : nat; 
+	owner : address;
+}
+
+type register_deposit = { 
+  handle : handle; 
+  amount : tez;
+}
+
+type storage = {
+  admin : address (* vault admin contract *) ;
+  handle : handle (* owner of the oven *) ;
+  depositors : depositors (* who can deposit in the oven *) ;
+}
+
+type result = storage with_operations
+
+let originate_oven (delegate : key_hash option) (amnt : tez) (storage : storage) = Tezos.Next.Operation.create_contract
 	(* Contract code for an oven *)
-	(fun (p : oven_parameter) (s : oven_storage) -> (
+	(fun (p : entrypoint) (s : storage) -> (
 	    (match p with
 	    (* Withdraw form the oven, can only be called from the main contract. *)
-	    | Oven_withdraw x ->
+	    | Withdraw x ->
 			if Tezos.get_sender () <> s.admin then
-				(failwith Errors.only_main_contract_can_call : oven_result)
+				(failwith Errors.only_main_contract_can_call : result)
 			else
 				([Tezos.Next.Operation.transaction unit x.0 x.1], s)
 	    (* Change delegation *)
-	    | Oven_delegate ko ->
+	    | Delegate ko ->
 			let () = assert_no_tez_in_transaction() in
 			if Tezos.get_sender () <> s.handle.owner then
-				(failwith Errors.only_owner_can_call : oven_result)
+				(failwith Errors.only_owner_can_call : result)
 			else 
 				([Tezos.Next.Operation.set_delegate ko], s)
 		(* Make a deposit. If authorized, this will notify the main contract. *)
-	    | Oven_deposit ->
+	    | Deposit ->
 			if Tezos.get_sender () = s.handle.owner or (
 			    match s.depositors with
 				| Any -> true
 				| Whitelist depositors -> Set.mem (Tezos.get_sender ()) depositors
 			) then
 			    let register = (
-				match (Tezos.get_entrypoint_opt "%register_oven_deposit" s.admin : (register_oven_deposit contract) option) with
-					| None -> (failwith Errors.missing_deposit_entrypoint : register_oven_deposit contract)
+				match (Tezos.get_entrypoint_opt "%register_oven_deposit" s.admin : (register_deposit contract) option) with
+					| None -> (failwith Errors.missing_deposit_entrypoint : register_deposit contract)
 					| Some register -> register) in
 			    (([ Tezos.Next.Operation.transaction {amount = Tezos.get_amount () ; handle = s.handle} 0mutez register] : operation list), s)
 			else
-			    (failwith Errors.unauthorized_depositor : oven_result)
+			    (failwith Errors.unauthorized_depositor : result)
 	    (* Edit the set of authorized depositors. *)
-	    | Oven_edit_depositor edit ->
+	    | Edit_depositor edit ->
 			let () = assert_no_tez_in_transaction() in
 			if Tezos.get_sender () <> s.handle.owner then
-			    (failwith Errors.only_owner_can_call : oven_result)
+			    (failwith Errors.only_owner_can_call : result)
 			else
 			    let depositors = (match edit with
 				| Allow_any allow -> if allow then Any else Whitelist (Set.empty : address set)

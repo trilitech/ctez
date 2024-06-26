@@ -53,3 +53,20 @@ class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
         context = ctez2.contract.storage()['context']
         d_target = context['target'] - prev_target
         assert d_target == (prev_target * abs(new_drift) * delta // 2**64) * (-1 if new_drift < 0 else 1) # to check that drift applied correctly
+
+    # def test_drift_and_target_calc(self) -> None:
+    #     self.manager.context.now
+    #     seconds_in_day = 60*60*24
+    #     d_drift_per_day = (2**16 * seconds_in_day)
+    #     drift = 0
+    #     initial_target = 2**64
+    #     target = initial_target
+    #     days = 366 // 2
+
+    #     for i in range(days):
+    #         target += (drift * seconds_in_day * target) // 2**64 
+    #         drift += d_drift_per_day
+
+    #     print('target', target / 2**64)
+    #     print('grow_%', (target - initial_target) / initial_target * 100)
+    #     assert False
