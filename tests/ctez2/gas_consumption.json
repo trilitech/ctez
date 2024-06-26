@@ -1,0 +1,37 @@
+{
+    "add_ctez_liquidity_with_subsidies": {
+        "consumed_gas": 8978,
+        "consumed_mutez": 21772,
+        "paid_storage_size_diff": 82
+    },
+    "add_ctez_liquidity_without_subsidies": {
+        "consumed_gas": 8976,
+        "consumed_mutez": 21272,
+        "paid_storage_size_diff": 80
+    },
+    "add_tez_liquidity_with_subsidies": {
+        "consumed_gas": 6116,
+        "consumed_mutez": 21483,
+        "paid_storage_size_diff": 82
+    },
+    "add_tez_liquidity_without_subsidies": {
+        "consumed_gas": 6114,
+        "consumed_mutez": 20983,
+        "paid_storage_size_diff": 80
+    },
+    "collect_from_ctez_liquidity": {
+        "consumed_gas": 8452,
+        "consumed_mutez": 1187,
+        "paid_storage_size_diff": 0
+    },
+    "collect_from_tez_liquidity": {
+        "consumed_gas": 10589,
+        "consumed_mutez": 1399,
+        "paid_storage_size_diff": 0
+    },
+    "create_oven": {
+        "consumed_gas": 7661,
+        "consumed_mutez": 390449,
+        "paid_storage_size_diff": 1300
+    }
+}
