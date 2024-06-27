@@ -33,5 +33,45 @@
         "consumed_gas": 7661,
         "consumed_mutez": 390449,
         "paid_storage_size_diff": 1300
+    },
+    "ctez_to_tez": {
+        "consumed_gas": 7888,
+        "consumed_mutez": 67158,
+        "paid_storage_size_diff": 7
+    },
+    "liquidate_oven": {
+        "consumed_gas": 9602,
+        "consumed_mutez": 18100,
+        "paid_storage_size_diff": 67
+    },
+    "mint_or_burn": {
+        "consumed_gas": 7648,
+        "consumed_mutez": 1056,
+        "paid_storage_size_diff": 0
+    },
+    "oven_deposit": {
+        "consumed_gas": 8887,
+        "consumed_mutez": 1406,
+        "paid_storage_size_diff": 1
+    },
+    "remove_ctez_liquidity": {
+        "consumed_gas": 11186,
+        "consumed_mutez": 1500,
+        "paid_storage_size_diff": 0
+    },
+    "remove_tez_liquidity": {
+        "consumed_gas": 11178,
+        "consumed_mutez": 1498,
+        "paid_storage_size_diff": 0
+    },
+    "tez_to_ctez": {
+        "consumed_gas": 7695,
+        "consumed_mutez": 20137,
+        "paid_storage_size_diff": 76
+    },
+    "withdraw_from_oven": {
+        "consumed_gas": 8325,
+        "consumed_mutez": 1179,
+        "paid_storage_size_diff": 0
     }
 }
