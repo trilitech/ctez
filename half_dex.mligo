@@ -106,10 +106,10 @@ type t = {
 
 let default_liquidity_owner = { liquidity_shares = 0n ; proceeds_owed = 0n ; subsidy_owed = 0n }
 
-let find_liquidity_owner  (t : t) (owner : address) : liquidity_owner = 
+let find_liquidity_owner (t : t) (owner : address) : liquidity_owner = 
   Option.value default_liquidity_owner (Big_map.find_opt owner t.liquidity_owners)
 
-let set_liquidity_owner  (t : t) (owner : address) (liquidity_owner : liquidity_owner) : t = 
+let set_liquidity_owner (t : t) (owner : address) (liquidity_owner : liquidity_owner) : t = 
   { t with liquidity_owners = Big_map.update owner (Some liquidity_owner) t.liquidity_owners }
 
 let update_liquidity_owner (t : t) (owner : address) (f : liquidity_owner -> liquidity_owner) : t = 
@@ -129,7 +129,7 @@ let redeem_amount (x : nat) (reserve : nat) (total : nat) : nat =
   (* The redeem rate is defined as 
         RX_i(t_0, t_1) := r_i / total(t_0, t_1)
   *)
-  (* in case if there no liquidity in dex *)
+  (* in case if there is no liquidity in dex *)
   let denominator = max total 1n in
   ceil_div (x * reserve) denominator
 
@@ -140,14 +140,14 @@ let redeem_amount_inverted (lqt : nat) (reserve: nat) (total_lpt: nat) : nat =
      Thus
       x = (lqt * total(t_0, t_1)) / reserve
   *)
-  (* in case if there no liquidity in dex *)
+  (* in case if there is no liquidity in dex *)
   let numerator = max total_lpt 1n in
   let denominator = max reserve 1n in
   ceil_div (lqt * numerator) denominator
 
 [@inline]
 let increase_liquidity (new_total_lpt: nat) (prev_total_lpt : nat) (prev_liquidity: nat) : nat =
-  (* in case if there no liquidity in dex *)
+  (* in case if there is no liquidity in dex *)
   let denominator = max prev_total_lpt 1n in 
   ceil_div (new_total_lpt * prev_liquidity) denominator     
 
@@ -237,9 +237,15 @@ let remove_liquidity
     subsidy_owed;
   }) in
   let ops = [] in
-  let ops = if ( subsidy_redeemed > 0n ) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops else ops in
-  let ops = if ( proceeds_redeemed > 0n ) then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops else ops in
-  let ops = if ( self_redeemed > 0n ) then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops else ops in
+  let ops = if ( subsidy_redeemed > 0n ) 
+    then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops 
+    else ops in
+  let ops = if ( proceeds_redeemed > 0n ) 
+    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
+    else ops in
+  let ops = if ( self_redeemed > 0n ) 
+    then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops 
+    else ops in
   ops, t
 
 type swap = {
@@ -305,6 +311,10 @@ let collect_proceeds_and_subsidy
   }
   in
   let ops = [] in
-  let ops = if (amount_subsidy_withdrawn > 0n) then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ amount_subsidy_withdrawn :: ops else ops in
-  let ops = if (amount_proceeds_withdrawn > 0n) then env.transfer_proceeds ctxt to_ amount_proceeds_withdrawn :: ops else ops in
+  let ops = if (amount_subsidy_withdrawn > 0n) 
+    then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ amount_subsidy_withdrawn :: ops 
+    else ops in
+  let ops = if (amount_proceeds_withdrawn > 0n) 
+    then env.transfer_proceeds ctxt to_ amount_proceeds_withdrawn :: ops 
+    else ops in
   ops, t

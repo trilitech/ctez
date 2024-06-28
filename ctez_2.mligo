@@ -81,25 +81,27 @@ let get_oven (handle : Oven.handle) (s : storage) : oven =
   | None -> (failwith Errors.oven_not_exists : oven)
   | Some oven -> 
     (* Adjust the amount of outstanding ctez in the oven, record the fee index at that time. *)
-    let new_fee_index = s.sell_ctez.fee_index * s.sell_tez.fee_index in
-    let ctez_outstanding = (oven.ctez_outstanding * new_fee_index) / oven.fee_index in 
-    let new_fee_index = if oven.ctez_outstanding > 0n 
-      then ceil_div (ctez_outstanding * oven.fee_index) oven.ctez_outstanding 
-      else new_fee_index in 
-    {oven with fee_index = new_fee_index ; ctez_outstanding = ctez_outstanding}
+    let fee_index = s.sell_ctez.fee_index * s.sell_tez.fee_index in
+    let prev_ctez_outstanding = oven.ctez_outstanding in
+    let prev_fee_index = oven.fee_index in
+    let ctez_outstanding = (prev_ctez_outstanding * fee_index) / prev_fee_index in 
+    let fee_index = if prev_ctez_outstanding > 0n 
+      then ceil_div (ctez_outstanding * prev_fee_index) prev_ctez_outstanding 
+      else fee_index in 
+    {oven with fee_index ; ctez_outstanding}
 
 let is_under_collateralized (oven : oven) (target : nat) : bool =
   (15n * oven.tez_balance) < (16n * Float64.mul oven.ctez_outstanding target) * 1mutez
 
 let get_oven_withdraw (oven_address : address) : (tez * (unit contract)) contract =
   match (Tezos.get_entrypoint_opt "%withdraw" oven_address : (tez * (unit contract)) contract option) with
-  | None -> (failwith Errors.missing_withdraw_entrypoint : (tez * (unit contract)) contract)
-  | Some c -> c
+    | None -> (failwith Errors.missing_withdraw_entrypoint : (tez * (unit contract)) contract)
+    | Some c -> c
 
 let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
   match (Tezos.get_entrypoint_opt  "%mintOrBurn"  fa12_address : ((int * address) contract) option) with
-  | None -> (failwith Errors.missing_mint_or_burn_entrypoint : (int * address) contract)
-  | Some c -> c
+    | None -> (failwith Errors.missing_mint_or_burn_entrypoint : (int * address) contract)
+    | Some c -> c
 
 (* Environments *)
 
@@ -133,31 +135,27 @@ let drift_adjustment
   if tqc_m_qt < 0 then -d_drift else int d_drift 
 
 let fee_rate (q : nat) (_Q : nat) : Float64.t =
+  let max_rate = 5845483520n in 
   if 8n * q < _Q  (* if q < 12.5% of _Q *)
-    then 5845483520n (* ~1% / year *)
+    then max_rate (* ~1% / year *)
   else if 8n * q > 7n * _Q (* if q > 87.5% of _Q*) 
     then 0n (* 0% / year *)
-    else abs(5845483520n  * (7n * _Q - 8n * q)) / (6n * _Q) (* [0%, ~1%] / year *)
+    else abs(max_rate  * (7n * _Q - 8n * q)) / (6n * _Q) (* [0%, ~1%] / year *)
 
 let update_fee_index 
-    (ctez_fa12_address: address) 
     (delta: nat) 
     (outstanding : nat) 
     (_Q : nat) 
     (dex : Half_dex.t) 
-    : Half_dex.t * nat * operation = 
+    : Half_dex.t * nat = 
   let rate = fee_rate dex.self_reserves _Q in
+  let fee_index = dex.fee_index in 
   (* rate is given as a multiple of 2^(-64), roughly [0%, 1%] / year *)
-  let new_fee_index = dex.fee_index + Float64.mul (delta * dex.fee_index) rate in
+  let new_fee_index = fee_index + Float64.mul (delta * fee_index) rate in
   (* Compute how many ctez have implicitly been minted since the last update *)
   (* We round this down while we round the ctez owed up. This leads, over time, to slightly overestimating the outstanding ctez, which is conservative. *)
-  let minted = outstanding * (new_fee_index - dex.fee_index) / dex.fee_index in
-
-  (* Create the operation to explicitly mint the ctez in the FA12 contract, and credit it to the CFMM *)
-  let ctez_mint_or_burn = get_ctez_mint_or_burn ctez_fa12_address in
-  let op_mint_ctez = Tezos.Next.Operation.transaction (minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn in
-
-  {dex with fee_index = new_fee_index; subsidy_reserves = clamp_nat (dex.subsidy_reserves + minted) }, clamp_nat (outstanding + minted), op_mint_ctez
+  let minted = outstanding * (new_fee_index - fee_index) / fee_index in
+  {dex with fee_index = new_fee_index; subsidy_reserves = clamp_nat (dex.subsidy_reserves + minted) }, clamp_nat (outstanding + minted)
 
 let do_housekeeping (s : storage) : result =
   let now = Tezos.get_now () in
@@ -184,12 +182,17 @@ let do_housekeeping (s : storage) : result =
       | None -> (failwith Errors.missing_total_supply_view : nat)
       | Some n-> n in
     let _Q = max (outstanding / 20n) 1n in
-    let storage = { s with context = {s.context with _Q = _Q }} in
-    let sell_ctez, outstanding, op_mint_ctez1 = update_fee_index ctez_fa12_address delta outstanding (sell_ctez_env.get_target_self_reserves storage.context) storage.sell_ctez in
-    let sell_tez, _outstanding, op_mint_ctez2 = update_fee_index ctez_fa12_address delta outstanding (sell_tez_env.get_target_self_reserves storage.context) storage.sell_tez in
-    let storage = { storage with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
-    (* TODO: we can combine two mint ops into one *)
-    ([op_mint_ctez1 ; op_mint_ctez2], { storage with last_update = now ; context = { storage.context with drift = new_drift ; target = new_target }})
+    let s = { s with context = {s.context with _Q = _Q }} in
+    let sell_ctez, new_outstanding = update_fee_index delta outstanding (sell_ctez_env.get_target_self_reserves s.context) s.sell_ctez in
+    let sell_tez, new_outstanding = update_fee_index delta new_outstanding (sell_tez_env.get_target_self_reserves s.context) s.sell_tez in
+    let s = { s with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
+    
+    (* Create the operation to explicitly mint the ctez in the FA12 contract, and credit it to the CFMM *)
+    let minted = new_outstanding - outstanding in
+    let ctez_mint_or_burn = get_ctez_mint_or_burn ctez_fa12_address in
+    let op_mint_ctez = Tezos.Next.Operation.transaction (minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn in
+
+    ([op_mint_ctez], { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
   else
     ([], s)
 
@@ -201,10 +204,8 @@ let set_ctez_fa12_address
     (s : storage) 
     : result =
   let () = assert_no_tez_in_transaction () in
-  if s.context.ctez_fa12_address <> ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) then
-    (failwith Errors.ctez_fa12_address_already_set : result)
-  else
-    (([] : operation list), { s with context = { s.context with ctez_fa12_address = ctez_fa12_address }})
+  let () = Assert.Error.assert (s.context.ctez_fa12_address = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address)) Errors.ctez_fa12_address_already_set in
+  ([], { s with context = { s.context with ctez_fa12_address }})
 
 [@entry]
 let create_oven 
@@ -215,7 +216,7 @@ let create_oven
   let handle = { id ; owner = Tezos.get_sender () } in
   let () = Assert.Error.assert (not Big_map.mem handle s.ovens) Errors.oven_already_exists in
   let (origination_op, oven_address) : operation * address =
-    Oven.originate_oven delegate (Tezos.get_amount ()) { admin = Tezos.get_self_address () ; handle = handle ; depositors = depositors } in
+    Oven.originate_oven delegate (Tezos.get_amount ()) { admin = Tezos.get_self_address () ; handle ; depositors } in
   let oven = {
     tez_balance = (Tezos.get_amount ()); 
     ctez_outstanding = 0n; 
@@ -223,7 +224,7 @@ let create_oven
     fee_index = s.sell_ctez.fee_index * s.sell_tez.fee_index
   } in
   let ovens = Big_map.update handle (Some oven) s.ovens in
-  (List.append house_ops [origination_op], { s with ovens = ovens })
+  (List.append house_ops [origination_op], { s with ovens })
 
 [@entry]
 let withdraw_from_oven
@@ -269,12 +270,13 @@ let liquidate_oven
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
   let oven : oven = get_oven handle s in
-  let () = Assert.Error.assert (is_under_collateralized oven s.context.target) Errors.not_undercollateralized in
+  let target = s.context.target in
+  let () = Assert.Error.assert (is_under_collateralized oven target) Errors.not_undercollateralized in
   let remaining_ctez = match is_nat (oven.ctez_outstanding - quantity) with
     | None -> (failwith Errors.excessive_ctez_burning : nat)
     | Some n -> n  in
   (* get 32/31 of the target price, meaning there is a 1/31 penalty for the oven owner for being liquidated *)
-  let extracted_balance = (Float64.mul (32n * quantity) s.context.target) * 1mutez / 31n in
+  let extracted_balance = (Float64.mul (32n * quantity) target) * 1mutez / 31n in
   let new_balance = match oven.tez_balance - extracted_balance with
     | None -> (failwith Errors.insufficient_tez_in_oven : tez)
     | Some x -> x in
@@ -316,9 +318,9 @@ let add_tez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let amount_deposited = tez_to_nat (Tezos.get_amount ()) in
-  let p : Half_dex.add_liquidity = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
+  let p : Half_dex.add_liquidity = { owner; amount_deposited; min_liquidity; deadline } in
   let sell_tez = Half_dex.add_liquidity s.sell_tez p in
-  house_ops, { s with sell_tez = sell_tez }
+  house_ops, { s with sell_tez }
 
 [@entry]
 let add_ctez_liquidity 
@@ -327,10 +329,10 @@ let add_ctez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let p : Half_dex.add_liquidity = { owner = owner; amount_deposited = amount_deposited; min_liquidity = min_liquidity; deadline = deadline } in
+  let p : Half_dex.add_liquidity = { owner; amount_deposited; min_liquidity; deadline } in
   let sell_ctez = Half_dex.add_liquidity s.sell_ctez p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
-  List.append house_ops [transfer_ctez_op], { s with sell_ctez = sell_ctez }
+  List.append house_ops [transfer_ctez_op], { s with sell_ctez }
 
 [@entry]
 let remove_tez_liquidity 
@@ -340,7 +342,7 @@ let remove_tez_liquidity
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
   let (ops, sell_tez) = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
-  List.append house_ops ops, { s with sell_tez = sell_tez }
+  List.append house_ops ops, { s with sell_tez }
 
 [@entry]
 let remove_ctez_liquidity 
@@ -350,7 +352,7 @@ let remove_ctez_liquidity
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
   let (ops, sell_ctez) = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
-  List.append house_ops ops, { s with sell_ctez = sell_ctez }
+  List.append house_ops ops, { s with sell_ctez }
 
 [@entry]
 let collect_from_tez_liquidity
@@ -360,7 +362,7 @@ let collect_from_tez_liquidity
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
   let (ops, sell_tez) = Half_dex.collect_proceeds_and_subsidy s.sell_tez s.context sell_tez_env p in
-  List.append house_ops ops, { s with sell_tez = sell_tez }
+  List.append house_ops ops, { s with sell_tez }
 
 [@entry]
 let collect_from_ctez_liquidity 
@@ -370,7 +372,7 @@ let collect_from_ctez_liquidity
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
   let (ops, sell_ctez) = Half_dex.collect_proceeds_and_subsidy s.sell_ctez s.context sell_ctez_env p in
-  List.append house_ops ops, { s with sell_ctez = sell_ctez }
+  List.append house_ops ops, { s with sell_ctez }
 
 [@entry]
 let tez_to_ctez
@@ -378,9 +380,9 @@ let tez_to_ctez
     (s : storage)
     : result =
   let house_ops, s = do_housekeeping s in
-  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = tez_to_nat (Tezos.get_amount ()); min_self = min_ctez_bought } in
+  let p : Half_dex.swap = { to_ ; deadline; proceeds_amount = tez_to_nat (Tezos.get_amount ()); min_self = min_ctez_bought } in
   let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
-  List.append house_ops ops, { s with sell_ctez = sell_ctez }
+  List.append house_ops ops, { s with sell_ctez }
 
 [@entry]
 let ctez_to_tez
@@ -389,7 +391,7 @@ let ctez_to_tez
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let p : Half_dex.swap = { to_ = to_; deadline = deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
+  let p : Half_dex.swap = { to_ ; deadline; proceeds_amount = ctez_sold; min_self = min_tez_bought } in
   let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
   let ops = transfer_ctez_op :: ops in 
