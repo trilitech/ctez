@@ -223,16 +223,16 @@ let remove_liquidity
   let () = Assert.Error.assert (subsidy_redeemed >= min_subsidy_received) Errors.insufficient_subsidy_received in
   let t = { 
     t with
-    total_liquidity_shares = abs (t.total_liquidity_shares - liquidity_redeemed);
-    self_reserves = abs (t.self_reserves - self_redeemed);
-    proceeds_debts = abs (t.proceeds_debts - (liquidity_owner.proceeds_owed - proceeds_owed));
-    proceeds_reserves = abs (t.proceeds_reserves - d_proceeds);
-    subsidy_debts = abs (t.subsidy_debts - (liquidity_owner.subsidy_owed - subsidy_owed));
-    subsidy_reserves = abs (t.subsidy_reserves - d_subsidy);
+    total_liquidity_shares = subtract_nat t.total_liquidity_shares liquidity_redeemed Errors.incorrect_subtraction;
+    self_reserves = subtract_nat t.self_reserves self_redeemed Errors.incorrect_subtraction;
+    proceeds_debts = subtract_nat (t.proceeds_debts + proceeds_owed) proceeds_owed Errors.incorrect_subtraction;
+    proceeds_reserves = subtract_nat t.proceeds_reserves d_proceeds Errors.incorrect_subtraction;
+    subsidy_debts = subtract_nat (t.subsidy_debts + subsidy_owed) liquidity_owner.subsidy_owed Errors.incorrect_subtraction;
+    subsidy_reserves = subtract_nat t.subsidy_reserves d_subsidy Errors.incorrect_subtraction;
   } in
   let t = update_liquidity_owner t owner (fun liquidity_owner -> { 
     liquidity_owner with
-    liquidity_shares = abs (liquidity_owner.liquidity_shares - liquidity_redeemed);
+    liquidity_shares = subtract_nat liquidity_owner.liquidity_shares liquidity_redeemed Errors.incorrect_subtraction;
     proceeds_owed;
     subsidy_owed;
   }) in
@@ -269,7 +269,7 @@ let swap
   let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
   let t = { 
     t with
-    self_reserves = abs (t.self_reserves - self_to_sell); 
+    self_reserves = subtract_nat t.self_reserves self_to_sell Errors.incorrect_subtraction; 
     proceeds_reserves = t.proceeds_reserves + proceeds_amount
   } in
   let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_to_sell in
@@ -301,8 +301,8 @@ let collect_proceeds_and_subsidy
   let amount_subsidy_withdrawn = clamp_nat (share_of_subsidy - liquidity_owner.subsidy_owed) in
   let t = {
     t with
-    proceeds_debts = abs (t.proceeds_debts - (share_of_proceeds - liquidity_owner.proceeds_owed));
-    subsidy_debts = abs (t.subsidy_debts - (share_of_subsidy - liquidity_owner.subsidy_owed))
+    proceeds_debts = subtract_nat (t.proceeds_debts + liquidity_owner.proceeds_owed) share_of_proceeds Errors.incorrect_subtraction;
+    subsidy_debts = subtract_nat (t.subsidy_debts + liquidity_owner.subsidy_owed) share_of_subsidy Errors.incorrect_subtraction
   } in
   let t = set_liquidity_owner t owner { 
     liquidity_owner with

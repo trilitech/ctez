@@ -175,7 +175,9 @@ let do_housekeeping (s : storage) : result =
     (* We assume that `target - d_target < 0` never happens for economic reasons.
        Concretely, even drift were as low as -50% annualized, it would take not
        updating the target for 1.4 years for a negative number to occur *)
-    let new_target = if drift < 0  then abs (target - d_target) else target + d_target in
+    let new_target = if drift < 0 
+      then subtract_nat target d_target Errors.incorrect_subtraction 
+      else target + d_target in
     (* Compute what the liquidity fee should be, based on the ratio of total outstanding ctez to ctez in dexes *)
     let ctez_fa12_address = s.context.ctez_fa12_address in
     let outstanding = match (Tezos.Next.View.call "viewTotalSupply" () ctez_fa12_address) with

@@ -1,4 +1,5 @@
 [@inline] let tez_in_transaction_disallowed = "TEZ_IN_TRANSACTION_DISALLOWED"
+[@inline] let incorrect_subtraction = "INCORRECT_SUBTRACTION"
 
 (* ctez2 *)
 [@inline] let deadline_has_passed = "DEADLINE_HAS_PASSED"
