@@ -62,6 +62,33 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
         ctez2.add_tez_liquidity(receiver, 0, self.get_future_timestamp()).with_amount(all_liquidity).send()
         self.bake_block()
 
+    @parameterized.expand(range(0, 2))
+    def test_should_fail_if_sell_token_amount_too_small(self, sell_amount) -> None:
+        ctez2, _, sender, receiver, *_ = self.default_setup(
+            tez_liquidity = 100_000_000,
+        )
+
+        with self.raises_michelson_error(Ctez2.Errors.SMALL_SELL_AMOUNT):
+            ctez2.using(sender).ctez_to_tez(receiver, sell_amount, 0, self.get_future_timestamp()).send()
+
+    def test_should_not_fail_if_bought_token_amount_is_zero(self) -> None:
+        sell_amount = 3
+        ctez2, ctez_token, sender, receiver, *_ = self.default_setup(
+            tez_liquidity = 100_000_000,
+            get_ctez_token_balances = lambda sender, *_: {
+                sender : sell_amount
+            }
+        )
+
+        prev_receiver_ctez_balance = ctez_token.view_balance(receiver)
+        sender.bulk(
+            ctez_token.approve(ctez2, sell_amount),
+            ctez2.ctez_to_tez(receiver, sell_amount, 0, self.get_future_timestamp())
+        ).send()
+        self.bake_block()
+
+        assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance
+
     @parameterized.expand(swap_ctez_to_tez_cases)
     def test_should_swap_ctez_to_tez_tokens_correctly(self, _, tez_liquidity, target_liquidity, sent_ctez, tez_bought, target_price) -> None:
         total_supply = floor(target_liquidity * 20 / target_price) # ctez_target_liquidity(Q) is 5% of total supply, tez_target liquidity is floor(Q * target)
@@ -87,14 +114,14 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
             ctez2.ctez_to_tez(receiver, sent_ctez, tez_bought, self.get_future_timestamp())
         ).send()
         self.bake_block()
-        
+
+        subsidies = ctez2.get_sell_ctez_dex().subsidy_reserves + ctez2.get_sell_tez_dex().subsidy_reserves
         Q_ctez = ctez2.contract.storage()['context']['_Q']
         Q_tez = floor(Q_ctez * target_price)
-        error_rate = 1.000001 # because of subsidies and rounding
-        assert target_liquidity / error_rate <= Q_tez <= target_liquidity * error_rate
+        assert target_liquidity - 1 <= Q_tez <= target_liquidity # because of rounding
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance + tez_bought
         assert ctez_token.view_balance(sender) == prev_sender_ctez_balance - sent_ctez
-        assert ctez_token.view_balance(ctez2) >= prev_ctez2_ctez_balance + sent_ctez # + subsidies
+        assert ctez_token.view_balance(ctez2) == prev_ctez2_ctez_balance + sent_ctez + subsidies
         
         current_sell_ctez_dex = ctez2.get_sell_ctez_dex()
         current_sell_tez_dex = ctez2.get_sell_tez_dex()

@@ -31,14 +31,26 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
             ctez2.using(sender).tez_to_ctez(receiver, 1_000_000, self.get_future_timestamp()).with_amount(sent_tez).send()
 
     @parameterized.expand(range(0, 2))
-    def test_should_fail_if_sell_token_amount_too_small(self, amount) -> None:
+    def test_should_fail_if_sell_token_amount_too_small(self, sell_amount) -> None:
         ctez2, _, sender, receiver, *_ = self.default_setup(
             ctez_liquidity = 100_000_000_000,
             bootstrap_all_tez_balances = True
         )
 
         with self.raises_michelson_error(Ctez2.Errors.SMALL_SELL_AMOUNT):
-            ctez2.using(sender).tez_to_ctez(receiver, 0, self.get_future_timestamp()).with_amount(amount).send()
+            ctez2.using(sender).tez_to_ctez(receiver, 0, self.get_future_timestamp()).with_amount(sell_amount).send()
+
+    def test_should_not_fail_if_bought_token_amount_is_zero(self) -> None:
+        sell_amount = 3
+        ctez2, _, sender, receiver, *_ = self.default_setup(
+            ctez_liquidity = 100_000_000,
+        )
+
+        prev_receiver_tez_balance = self.get_balance_mutez(receiver)
+        ctez2.using(sender).tez_to_ctez(receiver, 0, self.get_future_timestamp()).with_amount(sell_amount).send()
+        self.bake_block()
+
+        assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance
 
     def test_should_not_fail_if_all_liquidity_removed(self) -> None:
         all_liquidity = 8
@@ -79,8 +91,7 @@ class Ctez2TezToCtezTestCase(Ctez2BaseTestCase):
         self.bake_block()
 
         Q_ctez = ctez2.contract.storage()['context']['_Q']
-        error_rate = 1.000001 # because of subsidies
-        assert target_liquidity / error_rate <= Q_ctez <= target_liquidity * error_rate
+        assert target_liquidity == Q_ctez
 
         assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + ctez_bought
         assert self.get_balance_mutez(ctez2) == prev_ctez2_tez_balance + sent_tez
