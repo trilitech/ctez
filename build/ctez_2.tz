@@ -576,7 +576,8 @@
              IF_NONE { PUSH string "INCORRECT_SUBTRACTION" ; FAILWITH } {} ;
              UPDATE 5 ;
              PUSH string "INCORRECT_SUBTRACTION" ;
-             DUP 6 ;
+             DUP 10 ;
+             GET 3 ;
              DUP 7 ;
              DUP 16 ;
              GET 7 ;

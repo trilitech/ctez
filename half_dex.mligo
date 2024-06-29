@@ -225,7 +225,7 @@ let remove_liquidity
     t with
     total_liquidity_shares = subtract_nat t.total_liquidity_shares liquidity_redeemed Errors.incorrect_subtraction;
     self_reserves = subtract_nat t.self_reserves self_redeemed Errors.incorrect_subtraction;
-    proceeds_debts = subtract_nat (t.proceeds_debts + proceeds_owed) proceeds_owed Errors.incorrect_subtraction;
+    proceeds_debts = subtract_nat (t.proceeds_debts + proceeds_owed) liquidity_owner.proceeds_owed Errors.incorrect_subtraction;
     proceeds_reserves = subtract_nat t.proceeds_reserves d_proceeds Errors.incorrect_subtraction;
     subsidy_debts = subtract_nat (t.subsidy_debts + subsidy_owed) liquidity_owner.subsidy_owed Errors.incorrect_subtraction;
     subsidy_reserves = subtract_nat t.subsidy_reserves d_subsidy Errors.incorrect_subtraction;
