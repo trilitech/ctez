@@ -5,3 +5,4 @@ _build/*
 .ligo/
 .vscode/
 **/__pycache__/**
+.env

@@ -11,7 +11,8 @@
     (pair (big_map %tokens address nat)
           (big_map %allowances (pair (address %owner) (address %spender)) nat)
           (address %admin)
-          (nat %total_supply)) ;
+          (nat %total_supply)
+          (big_map %metadata string bytes)) ;
   code { UNPAIR ;
          PUSH mutez 0 ;
          AMOUNT ;
@@ -146,7 +147,7 @@
                      DUP 2 ;
                      CAR ;
                      DUP 4 ;
-                     GET 6 ;
+                     GET 7 ;
                      ADD ;
                      ABS ;
                      DUP 4 ;
@@ -162,7 +163,7 @@
                      UPDATE ;
                      UPDATE 1 ;
                      SWAP ;
-                     UPDATE 6 ;
+                     UPDATE 7 ;
                      NIL operation }
                    { IF_LEFT
                        { DUP 2 ;
@@ -196,7 +197,7 @@
                              CDR ;
                              PUSH mutez 0 ;
                              DIG 4 ;
-                             GET 6 ;
+                             GET 7 ;
                              TRANSFER_TOKENS } } ;
                      CONS } } } ;
          PAIR } ;
@@ -208,5 +209,5 @@
        address
        nat
        { UNPAIR ; SWAP ; CAR ; SWAP ; GET ; IF_NONE { PUSH nat 0 } {} } ;
-  view "viewTotalSupply" unit nat { CDR ; GET 6 } }
+  view "viewTotalSupply" unit nat { CDR ; GET 7 } }
 

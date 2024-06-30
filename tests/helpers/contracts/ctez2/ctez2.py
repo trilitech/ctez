@@ -3,6 +3,7 @@ from pytezos.contract.call import ContractCall
 from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.contract import ContractHelper
 from tests.helpers.contracts.oven.oven import Oven
+from tests.helpers.metadata import Metadata
 from tests.helpers.utility import (
     NULL_ADDRESS,
     get_build_dir,
@@ -60,8 +61,12 @@ class Ctez2(ContractHelper):
         self,
         client: PyTezosClient,
         last_update: int,
-        target_ctez_price = 1.0
+        target_ctez_price = 1.0,
+        metadata: dict[str, any] = None
     ) -> OperationGroup:
+        metadata = metadata if metadata != None else dict()
+        metadata = Metadata.make(**metadata)
+    
         half_dex_storage = {
             'liquidity_owners': {},
             'total_liquidity_shares': 0,
@@ -76,14 +81,15 @@ class Ctez2(ContractHelper):
         storage = {
             'ovens': {},
             'last_update': last_update,
-            'sell_tez' : half_dex_storage,
-            'sell_ctez' : half_dex_storage,
+            'sell_tez': half_dex_storage,
+            'sell_ctez': half_dex_storage,
             'context': {
                 'target': floor(target_ctez_price * 2**64), 
                 'drift' : 0, 
                 '_Q' : 1,
                 'ctez_fa12_address' : NULL_ADDRESS,
-            }
+            },
+            'metadata': metadata
         }
         
         filename = join(get_build_dir(), 'ctez_2.tz')

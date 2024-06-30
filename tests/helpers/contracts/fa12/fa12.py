@@ -2,6 +2,7 @@ from pytezos.client import PyTezosClient
 from pytezos.contract.call import ContractCall
 from tests.helpers.addressable import Addressable, get_address
 from tests.helpers.contracts.contract import ContractHelper
+from tests.helpers.metadata import Metadata
 from tests.helpers.utility import (
     get_build_dir,
     originate_from_file,
@@ -24,13 +25,17 @@ class Fa12(ContractHelper):
         self,
         client: PyTezosClient,
         admin: Addressable,
-        balances: dict[Addressable, int],
-        allowances: list[tuple[Addressable, Addressable, int]]
+        balances: dict[Addressable, int] = {},
+        allowances: list[tuple[Addressable, Addressable, int]] = [],
+        metadata: dict[str, any] = None
     ) -> OperationGroup:
         allowances_value = {}
         for _from, to, amount in allowances:
             key = (get_address(_from), get_address(to))
             allowances_value[key] = amount
+
+        metadata = metadata if metadata != None else dict()
+        metadata = Metadata.make(**metadata)
 
         storage = {
             'tokens': {
@@ -38,7 +43,8 @@ class Fa12(ContractHelper):
             }, 
             'allowances': allowances_value, 
             'admin': get_address(admin), 
-            'total_supply': sum(balances.values())
+            'total_supply': sum(balances.values()),
+            'metadata': metadata
         }
         
         filename = join(get_build_dir(), 'fa12.tz')

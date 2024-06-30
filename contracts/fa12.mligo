@@ -44,6 +44,7 @@ type storage =
     allowances : allowances;
     admin : address;
     total_supply : nat;
+    metadata : (string, bytes) big_map;
   }
 
 type parameter =

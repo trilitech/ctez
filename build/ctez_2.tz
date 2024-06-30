@@ -74,7 +74,8 @@
              (nat %subsidy_debts)
              (nat %subsidy_reserves)
              (nat %fee_index))
-          (pair %context (nat %target) (int %drift) (nat %_Q) (address %ctez_fa12_address))) ;
+          (pair %context (nat %target) (int %drift) (nat %_Q) (address %ctez_fa12_address))
+          (big_map %metadata string bytes)) ;
   code { LAMBDA
            (pair address nat)
            operation
@@ -1026,7 +1027,8 @@
                  timestamp
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
-                 (pair nat int nat address))
+                 (pair nat int nat address)
+                 (big_map string bytes))
            (pair mutez nat address nat)
            { UNPAIR ;
              DUP 2 ;
@@ -1428,13 +1430,15 @@
                        timestamp
                        (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
-                       (pair nat int nat address)))
+                       (pair nat int nat address)
+                       (big_map string bytes)))
            (pair (list operation)
                  (big_map (pair nat address) (pair mutez nat address nat))
                  timestamp
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
-                 (pair nat int nat address))
+                 (pair nat int nat address)
+                 (big_map string bytes))
            { UNPAIR ;
              UNPAIR 5 ;
              DIG 5 ;
@@ -1450,7 +1454,7 @@
                   SUB ;
                   ABS ;
                   DUP 3 ;
-                  GET 8 ;
+                  GET 9 ;
                   DUP ;
                   DUP 8 ;
                   GET 5 ;
@@ -1506,13 +1510,13 @@
                   LT ;
                   IF { NEG } { INT } ;
                   DUP 4 ;
-                  GET 8 ;
+                  GET 9 ;
                   GET 3 ;
                   SWAP ;
                   DUP 2 ;
                   ADD ;
                   DUP 5 ;
-                  GET 8 ;
+                  GET 9 ;
                   CAR ;
                   DUP ;
                   DUP 5 ;
@@ -1533,7 +1537,7 @@
                        IF_NONE { PUSH string "INCORRECT_SUBTRACTION" ; FAILWITH } {} }
                      { ADD } ;
                   DUP 5 ;
-                  GET 8 ;
+                  GET 9 ;
                   GET 6 ;
                   DUP ;
                   UNIT ;
@@ -1548,7 +1552,7 @@
                   PAIR ;
                   DUP 8 ;
                   DIG 8 ;
-                  GET 8 ;
+                  GET 9 ;
                   DIG 2 ;
                   UNPAIR ;
                   DUP 2 ;
@@ -1557,11 +1561,11 @@
                   GT ;
                   IF { SWAP ; DROP } { DROP } ;
                   UPDATE 5 ;
-                  UPDATE 8 ;
+                  UPDATE 9 ;
                   DUP ;
                   GET 5 ;
                   DUP 2 ;
-                  GET 8 ;
+                  GET 9 ;
                   DIG 10 ;
                   GET 5 ;
                   SWAP ;
@@ -1576,7 +1580,7 @@
                   DUP 3 ;
                   GET 7 ;
                   DUP 4 ;
-                  GET 8 ;
+                  GET 9 ;
                   DIG 12 ;
                   GET 5 ;
                   SWAP ;
@@ -1608,12 +1612,12 @@
                   DIG 5 ;
                   UPDATE 3 ;
                   DIG 2 ;
-                  GET 8 ;
+                  GET 9 ;
                   DIG 4 ;
                   UPDATE 3 ;
                   DIG 3 ;
                   UPDATE 1 ;
-                  UPDATE 8 ;
+                  UPDATE 9 ;
                   NIL operation ;
                   DIG 2 ;
                   CONS }
@@ -1660,7 +1664,7 @@
              PAIR 4 ;
              DIG 4 ;
              DUP 4 ;
-             GET 8 ;
+             GET 9 ;
              DUP 5 ;
              GET 7 ;
              PAIR 4 ;
@@ -1672,7 +1676,7 @@
              SELF_ADDRESS ;
              SENDER ;
              DUP 7 ;
-             GET 8 ;
+             GET 9 ;
              PAIR 4 ;
              DIG 5 ;
              SWAP ;
@@ -1717,7 +1721,7 @@
                  PAIR 4 ;
                  DIG 3 ;
                  DUP 4 ;
-                 GET 8 ;
+                 GET 9 ;
                  DUP 5 ;
                  GET 5 ;
                  PAIR 4 ;
@@ -1761,7 +1765,7 @@
                      DIG 2 ;
                      DIG 3 ;
                      DUP 4 ;
-                     GET 8 ;
+                     GET 9 ;
                      DUP 5 ;
                      GET 5 ;
                      PAIR 4 ;
@@ -1803,7 +1807,7 @@
                          DIG 2 ;
                          DIG 3 ;
                          DUP 4 ;
-                         GET 8 ;
+                         GET 9 ;
                          DUP 5 ;
                          GET 7 ;
                          PAIR 4 ;
@@ -1846,7 +1850,7 @@
                              DIG 2 ;
                              DIG 3 ;
                              DUP 4 ;
-                             GET 8 ;
+                             GET 9 ;
                              DUP 5 ;
                              GET 5 ;
                              PAIR 4 ;
@@ -1888,7 +1892,7 @@
                                  DIG 2 ;
                                  DIG 3 ;
                                  DUP 4 ;
-                                 GET 8 ;
+                                 GET 9 ;
                                  DUP 5 ;
                                  GET 7 ;
                                  PAIR 4 ;
@@ -1942,7 +1946,7 @@
                                      SELF_ADDRESS ;
                                      SENDER ;
                                      DUP 6 ;
-                                     GET 8 ;
+                                     GET 9 ;
                                      PAIR 4 ;
                                      DIG 4 ;
                                      SWAP ;
@@ -2038,7 +2042,7 @@
                                              UPDATE 1 ;
                                              PUSH string "EXCESSIVE_CTEZ_MINTING" ;
                                              DUP 2 ;
-                                             GET 8 ;
+                                             GET 9 ;
                                              CAR ;
                                              DIG 3 ;
                                              PAIR ;
@@ -2048,7 +2052,7 @@
                                              NOT ;
                                              IF { DROP } { FAILWITH } ;
                                              DUP ;
-                                             GET 8 ;
+                                             GET 9 ;
                                              GET 6 ;
                                              DIG 4 ;
                                              SWAP ;
@@ -2087,7 +2091,7 @@
                                                  SWAP ;
                                                  EXEC ;
                                                  DUP 3 ;
-                                                 GET 8 ;
+                                                 GET 9 ;
                                                  CAR ;
                                                  PUSH string "NOT_UNDERCOLLATERALIZED" ;
                                                  DUP 2 ;
@@ -2146,7 +2150,7 @@
                                                  PAIR ;
                                                  TRANSFER_TOKENS ;
                                                  DUP 2 ;
-                                                 GET 8 ;
+                                                 GET 9 ;
                                                  GET 6 ;
                                                  DIG 5 ;
                                                  SWAP ;
@@ -2254,7 +2258,7 @@
                                                          UPDATE 1 ;
                                                          PUSH string "EXCESSIVE_TEZ_WITHDRAWAL" ;
                                                          DUP 2 ;
-                                                         GET 8 ;
+                                                         GET 9 ;
                                                          CAR ;
                                                          DIG 3 ;
                                                          PAIR ;
@@ -2446,19 +2450,19 @@
                                                              IF { DROP } { FAILWITH } ;
                                                              PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
                                                              DUP 3 ;
-                                                             GET 8 ;
+                                                             GET 9 ;
                                                              GET 6 ;
                                                              COMPARE ;
                                                              EQ ;
                                                              IF {} { PUSH string "CTEZ_FA12_ADDRESS_ALREADY_SET" ; FAILWITH } ;
                                                              DUP 2 ;
                                                              DIG 2 ;
-                                                             GET 8 ;
+                                                             GET 9 ;
                                                              DIG 2 ;
                                                              UPDATE 6 ;
-                                                             UPDATE 8 ;
+                                                             UPDATE 9 ;
                                                              NIL operation } } } } } } } } } } } } } ;
          PAIR } ;
-  view "get_target" unit nat { CDR ; GET 8 ; CAR } ;
-  view "get_drift" unit int { CDR ; GET 8 ; GET 3 } }
+  view "get_target" unit nat { CDR ; GET 9 ; CAR } ;
+  view "get_drift" unit int { CDR ; GET 9 ; GET 3 } }
 

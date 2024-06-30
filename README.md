@@ -66,6 +66,25 @@ make compile
 
 ### Test
 The testing stack for the contracts is based on Python and requires [poetry](https://python-poetry.org/), [pytezos](https://pytezos.org/), and [pytest](https://docs.pytest.org/en/7.4.x/) to be installed.
+
+install dependencies
+```
+poetry install
+```
+
+run tests
 ```
 poetry run pytest
+```
+
+### Deploy Ctez contracts
+Deploys ctez and ctez_fa12 contracts with initial storage states. There are two options
+
+1. RPC url and private key are set in the `.env` file. See `example.env`. If some is missed in the `.env` file the script will ask the value further:
+```
+poetry run deploy
+```
+2. RPC url and private key are passed as arguments:
+```
+poetry run deploy --rpc-url <URL> --private-key <KEY>
 ```

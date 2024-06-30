@@ -70,6 +70,7 @@ type storage = {
   sell_ctez : Half_dex.t;
   sell_tez  : Half_dex.t;
   context : Context.t;
+  metadata : (string, bytes) big_map;
 }
 
 type result = storage with_operations
