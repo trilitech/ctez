@@ -1,6 +1,6 @@
-#include "stdctez.mligo"
+#include "../common/stdctez.mligo"
+#import "../common/errors.mligo" "Errors"
 #import "context.mligo" "Context"
-#import "errors.mligo" "Errors"
 
 (** A half dex is defined by:
       - An ordered liquidity share [(tau_0, tau_1)]

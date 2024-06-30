@@ -1,8 +1,8 @@
-#include "stdctez.mligo"
-#import "oven.mligo" "Oven"
+#include "../common/stdctez.mligo"
+#import "../common/errors.mligo" "Errors"
+#import "../oven.mligo" "Oven"
 #import "half_dex.mligo" "Half_dex"
 #import "context.mligo" "Context"
-#import "errors.mligo" "Errors"
 
 type add_tez_liquidity = { 
   owner : address;

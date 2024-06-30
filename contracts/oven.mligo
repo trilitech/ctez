@@ -1,5 +1,5 @@
-#include "stdctez.mligo"
-#import "errors.mligo" "Errors"
+#include "common/stdctez.mligo"
+#import "common/errors.mligo" "Errors"
 
 type edit =
   | Allow_any of bool
