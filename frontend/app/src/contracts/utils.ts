@@ -1,4 +1,9 @@
-import { ContractAbstraction, Wallet, WalletContract } from '@taquito/taquito';
+import {
+  ContractAbstraction,
+  TransactionWalletOperation,
+  Wallet,
+  WalletContract,
+} from '@taquito/taquito';
 import { getTezosInstance } from './client';
 
 export const executeMethod = async (
@@ -8,22 +13,15 @@ export const executeMethod = async (
   confirmation = 0,
   amount = 0,
   mutez = false,
-  onConfirmation?: () => void | Promise<void>,
-): Promise<string> => {
+): Promise<TransactionWalletOperation> => {
   const op = await contract.methods[methodName](...args).send({
     amount: amount > 0 ? amount : undefined,
     mutez,
   });
-  if (confirmation > 0) {
-    op.confirmation(confirmation)
-      .then(() => {
-        onConfirmation && onConfirmation();
-      })
-      .catch(() => {
-        onConfirmation && onConfirmation();
-      });
-  }
-  return op.opHash;
+
+  confirmation && (await op.confirmation(confirmation));
+
+  return op;
 };
 
 export const initContract = async (

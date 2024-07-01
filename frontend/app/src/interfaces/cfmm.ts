@@ -40,10 +40,10 @@ export interface TokenToTokenParams {
 }
 
 export interface CfmmStorage {
-  tezPool: BigNumber;
+  tokenPool: BigNumber;
   cashPool: BigNumber;
-  target: BigNumber;
-  cashAddress: string;
+  pendingPoolUpdates: BigNumber;
+  tokenAddress: string;
   lqtAddress: string;
   lastOracleUpdate: Date;
   consumerEntrypoint: string;

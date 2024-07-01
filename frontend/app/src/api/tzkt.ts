@@ -1,15 +1,14 @@
 import axios from 'axios';
-import { Baker, Block, CTezTzktStorage } from '../interfaces';
-import { TZKT_API, CTEZ_ADDRESS, TZKT_PORT } from '../utils/globals';
-import { getTzKtPort, getTzKtURL } from '../utils/settingUtils';
+import { AllOvenDatum, Baker, Block, CTezTzktStorage } from '../interfaces';
+import { CTEZ_ADDRESS, CTEZ_CONTRACT_BIGMAP, TZKT_API, TZKT_PORT } from '../utils/globals';
 
 const get = async <T, P>(endpoint: string, queryParams?: P, userAddress?: string): Promise<T> => {
-  let tzktUrl = TZKT_API;
-  let tzktPort = TZKT_PORT;
-  if (userAddress) {
-    tzktUrl = getTzKtURL(userAddress) ?? TZKT_API;
-    tzktPort = getTzKtPort(userAddress) ?? TZKT_PORT;
-  }
+  // let tzktUrl = TZKT_API;
+  // let tzktPort = TZKT_PORT;
+  // if (userAddress) {
+  //   tzktUrl = getTzKtURL(userAddress) ?? TZKT_API;
+  //   tzktPort = getTzKtPort(userAddress) ?? TZKT_PORT;
+  // }
   return (await axios.get(`${TZKT_API}:${TZKT_PORT}/v1/${endpoint}`, { params: queryParams })).data;
 };
 
@@ -41,4 +40,29 @@ export const getCTezTzktStorage = async (
     userAddress,
   );
   return storage;
+};
+
+export const getAllOvensAPI = async (): Promise<AllOvenDatum[]> => {
+  const data = await get<AllOvenDatum[], unknown>(
+    `bigmaps/${CTEZ_CONTRACT_BIGMAP}/keys?limit=10000`,
+  );
+  return data;
+};
+
+export const getUserOvensAPI = async (userAddress: string): Promise<AllOvenDatum[]> => {
+  const data = await get<AllOvenDatum[], { 'key.owner': string }>(
+    `bigmaps/${CTEZ_CONTRACT_BIGMAP}/keys`,
+    { 'key.owner': userAddress },
+  );
+  return data;
+};
+
+export const getOvenByAddressAPI = async (ovenAddress: string): Promise<AllOvenDatum> => {
+  const data = await get<AllOvenDatum[], { 'value.address': string }>(
+    `bigmaps/${CTEZ_CONTRACT_BIGMAP}/keys`,
+    {
+      'value.address': ovenAddress,
+    },
+  );
+  return data?.[0];
 };

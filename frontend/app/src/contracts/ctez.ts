@@ -1,19 +1,26 @@
-import { OpKind, WalletContract, WalletParamsWithKind } from '@taquito/taquito';
+import {
+  OpKind,
+  TransactionWalletOperation,
+  WalletContract,
+  WalletParamsWithKind,
+} from '@taquito/taquito';
 import { BigNumber } from 'bignumber.js';
 import {
+  AllOvenDatum,
   CTezStorage,
   Depositor,
   depositors,
   EditDepositorOps,
   ErrorType,
-  OvenStorage,
   Oven,
+  OvenStorage,
 } from '../interfaces';
 import { CTEZ_ADDRESS } from '../utils/globals';
 import { logger } from '../utils/logger';
 import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
 import { getTezosInstance } from './client';
 import { executeMethod, initContract } from './utils';
+import { getAllOvensAPI, getOvenByAddressAPI, getUserOvensAPI } from '../api/tzkt';
 
 let cTez: WalletContract;
 
@@ -40,29 +47,29 @@ export const create = async (
   userAddress: string,
   bakerAddress: string,
   op: Depositor,
+  lastOvenId: number,
   allowedDepositors?: string[],
   amount = 0,
-  confirmation = 0,
-  onConfirmation?: () => void | Promise<void>,
-): Promise<string> => {
-  const newOvenId = getLastOvenId(userAddress, cTez.address) + 1;
-  const hash = await executeMethod(
+): Promise<TransactionWalletOperation> => {
+  const newOvenId = lastOvenId + 1;
+  const operation = await executeMethod(
     cTez,
     'create',
     [newOvenId, bakerAddress, op, allowedDepositors],
-    confirmation,
+    undefined,
     amount,
-    false,
-    onConfirmation,
   );
   saveLastOven(userAddress, cTez.address, newOvenId);
-  return hash;
+  return operation;
 };
 
-export const delegate = async (ovenAddress: string, bakerAddress: string): Promise<string> => {
+export const delegate = async (
+  ovenAddress: string,
+  bakerAddress: string,
+): Promise<TransactionWalletOperation> => {
   const ovenContract = await initContract(ovenAddress);
-  const hash = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
-  return hash;
+  const operation = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
+  return operation;
 };
 
 const prepareOvenAllowAddressCall = (
@@ -85,15 +92,24 @@ const prepareOvenAllowAnyCall = (
     ...ovenContract.methods.allow_any(allow).toTransferParams(),
   };
 };
-
+const getWhiteList = (recvData: any) => {
+  try {
+    const list = Array.prototype.slice.call(recvData.depositors.whitelist);
+    return list;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 export const addRemoveDepositorList = async (
   ovenAddress: string,
   ovenStorage: OvenStorage,
   addList: string[] = [],
   disableList: string[] = [],
-): Promise<string> => {
+): Promise<any> => {
   const tezos = getTezosInstance();
   const ovenContract = await initContract(ovenAddress);
+  const whitelist = getWhiteList(ovenStorage);
   const disableAny =
     !Array.isArray(ovenStorage?.depositors) && Object.keys(ovenStorage?.depositors).includes('any');
   const batchOps: WalletParamsWithKind[] = [];
@@ -101,7 +117,7 @@ export const addRemoveDepositorList = async (
   if (disableAny) {
     batchOps.push(prepareOvenAllowAnyCall(ovenContract, false));
   } else {
-    prevAddresses = ovenStorage?.depositors as string[];
+    prevAddresses = whitelist as string[];
   }
   const newAddresses = addList.filter((o) => !prevAddresses.includes(o));
   newAddresses.forEach((addr) => {
@@ -131,25 +147,32 @@ export const editDepositor = async (
   ops: EditDepositorOps,
   enable: boolean,
   address?: string,
-): Promise<string> => {
+): Promise<TransactionWalletOperation> => {
   const ovenContract = await initContract(ovenAddress);
-  const hash = await executeMethod(ovenContract, 'oven_edit_depositor', [
+  const operation = await executeMethod(ovenContract, 'oven_edit_depositor', [
     ops,
     enable,
     address && address.trim().length > 1 ? address : undefined,
   ]);
-  return hash;
+  return operation;
 };
 
-export const deposit = async (ovenAddress: string, amount: number): Promise<string> => {
+export const deposit = async (
+  ovenAddress: string,
+  amount: number,
+): Promise<TransactionWalletOperation> => {
   const ovenContract = await initContract(ovenAddress);
-  const hash = await executeMethod(ovenContract, 'default', undefined, 0, amount);
-  return hash;
+  const operation = await executeMethod(ovenContract, 'default', undefined, 0, amount);
+  return operation;
 };
 
-export const withdraw = async (ovenId: number, amount: number, to: string): Promise<string> => {
-  const hash = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
-  return hash;
+export const withdraw = async (
+  ovenId: number,
+  amount: number,
+  to: string,
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
+  return operation;
 };
 
 export const liquidate = async (
@@ -157,14 +180,17 @@ export const liquidate = async (
   overOwner: string,
   amount: number,
   to: string,
-): Promise<string> => {
-  const hash = await executeMethod(cTez, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
-  return hash;
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
+  return operation;
 };
 
-export const mintOrBurn = async (ovenId: number, quantity: number): Promise<string> => {
-  const hash = await executeMethod(cTez, 'mint_or_burn', [ovenId, quantity * 1e6]);
-  return hash;
+export const mintOrBurn = async (
+  ovenId: number,
+  quantity: number,
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'mint_or_burn', [ovenId, quantity * 1e6]);
+  return operation;
 };
 
 export const getOvenDelegate = async (userOven: string): Promise<string | null> => {
@@ -214,6 +240,45 @@ export const getOvens = async (userAddress: string): Promise<Oven[] | undefined>
     return allOvenData;
   } catch (error) {
     logger.error(error);
+  }
+};
+
+export const getAllOvens = async (): Promise<AllOvenDatum[] | undefined> => {
+  try {
+    if (!cTez && CTEZ_ADDRESS) {
+      await initCTez(CTEZ_ADDRESS);
+    }
+    const allOvenData = await getAllOvensAPI();
+    return allOvenData;
+  } catch (error) {
+    logger.error(error);
+    return undefined;
+  }
+};
+
+export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] | undefined> => {
+  try {
+    if (!cTez && CTEZ_ADDRESS) {
+      await initCTez(CTEZ_ADDRESS);
+    }
+    const userOvenData = await getUserOvensAPI(userAddress);
+    return userOvenData;
+  } catch (error) {
+    logger.error(error);
+    return undefined;
+  }
+};
+
+export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undefined> => {
+  try {
+    if (!cTez && CTEZ_ADDRESS) {
+      await initCTez(CTEZ_ADDRESS);
+    }
+    const ovenDatum = await getOvenByAddressAPI(ovenAddress);
+    return ovenDatum;
+  } catch (error) {
+    logger.error(error);
+    return undefined;
   }
 };
 
