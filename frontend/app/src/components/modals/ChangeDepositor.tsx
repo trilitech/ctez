@@ -106,7 +106,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
             status: 'success',
           });
         }
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
         const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({
@@ -134,7 +134,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
           userDenyList,
         );
         handleProcessing(result);
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
         const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({

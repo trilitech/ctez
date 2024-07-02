@@ -79,7 +79,7 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
         ctezOutstanding: 0,
       },
     );
-  } catch (error) {
+  } catch (error : any) {
     return {
       tezInOvens: 0,
       ctezOutstanding: 0,

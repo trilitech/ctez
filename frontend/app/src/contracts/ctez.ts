@@ -238,7 +238,7 @@ export const getOvens = async (userAddress: string): Promise<Oven[] | undefined>
     }
     const allOvenData = await Promise.all(ovens);
     return allOvenData;
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
   }
 };
@@ -250,7 +250,7 @@ export const getAllOvens = async (): Promise<AllOvenDatum[] | undefined> => {
     }
     const allOvenData = await getAllOvensAPI();
     return allOvenData;
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
     return undefined;
   }
@@ -263,7 +263,7 @@ export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] 
     }
     const userOvenData = await getUserOvensAPI(userAddress);
     return userOvenData;
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
     return undefined;
   }
@@ -276,7 +276,7 @@ export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undef
     }
     const ovenDatum = await getOvenByAddressAPI(ovenAddress);
     return ovenDatum;
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
     return undefined;
   }
@@ -295,7 +295,7 @@ export const getExternalOvenData = async (
       externalOvens.map((item) => prepareExternalOvenCall(storage, item, userAddress)),
     );
     return allOvenData;
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
   }
 };
@@ -311,7 +311,7 @@ export const isOven = async (ovenAddress: string): Promise<boolean> => {
     const ovenContract = await initContract(ovenAddress);
     const ovenStorage: OvenStorage = await ovenContract.storage();
     return typeof ovenStorage?.handle !== 'undefined' && typeof ovenStorage?.admin !== 'undefined';
-  } catch (error) {
+  } catch (error : any) {
     logger.error(error);
   }
   return false;

@@ -162,7 +162,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
         );
         handleProcessing(result);
         onClose();
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
         const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({

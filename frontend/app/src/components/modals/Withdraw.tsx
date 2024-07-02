@@ -87,7 +87,7 @@ const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
       try {
         const result = await withdraw(Number(oven.key.id), Number(data.amount), data.to);
         handleProcessing(result);
-      } catch (error) {
+      } catch (error : any) {
         const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,

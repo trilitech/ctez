@@ -8,7 +8,7 @@ const getXtzBalance = async (userAddress: string) => {
     const tezos = getTezosInstance();
     const xtz = ((await tezos.tz.getBalance(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
     return xtz;
-  } catch (error) {
+  } catch (error : any) {
     return 0;
   }
 };
@@ -20,7 +20,7 @@ const getCtezBalance = async (userAddress: string) => {
     const ctez =
       ((await ctezFa12Storage.tokens.get(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
     return ctez;
-  } catch (error) {
+  } catch (error : any) {
     return 0;
   }
 };
@@ -36,7 +36,7 @@ export const getUserBalance = async (userAddress: string): Promise<UserBalance> 
       tezInOvens,
       ctezOutstanding,
     };
-  } catch (error) {
+  } catch (error : any) {
     return {
       xtz: 0,
       ctez: 0,

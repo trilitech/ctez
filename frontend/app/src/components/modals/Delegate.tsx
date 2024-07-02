@@ -46,7 +46,7 @@ const Delegate: React.FC<IDelegateProps> = (props) => {
           status: 'success',
         });
       }
-    } catch (error) {
+    } catch (error : any) {
       const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
       toast({
         description: errorText,

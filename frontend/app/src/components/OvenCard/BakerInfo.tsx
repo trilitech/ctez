@@ -73,7 +73,7 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
           setProcessing(false);
         }
       });
-    } catch (error) {
+    } catch (error : any) {
       const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
       toast({
         description: errorText,

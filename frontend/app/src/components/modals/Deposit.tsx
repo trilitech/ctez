@@ -80,7 +80,7 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
       try {
         const result = await deposit(oven.value.address, Number(data.amount));
         handleProcessing(result);
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
         const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({

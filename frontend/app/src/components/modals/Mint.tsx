@@ -112,7 +112,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
         const result = await mintOrBurn(Number(oven.key.id), Number(amount));
         handleProcessing(result);
         onClose();
-      } catch (error) {
+      } catch (error : any) {
         logger.warn(error);
         const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({

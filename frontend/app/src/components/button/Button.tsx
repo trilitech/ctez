@@ -53,7 +53,7 @@ const Button: React.FC<IButtonProps> = (props) => {
       >
         <Box
           as={ChakraButton}
-          {...(props as unknown)}
+          {...(props as any)}
           backgroundColor={background}
           w="100%"
           h="100%"
@@ -80,7 +80,7 @@ const Button: React.FC<IButtonProps> = (props) => {
   return (
     <Box
       as={ChakraButton}
-      {...(props as unknown)}
+      {...(props as any)}
       type={props.type}
       className={props.className}
       py={2}

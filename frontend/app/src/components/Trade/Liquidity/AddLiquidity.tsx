@@ -92,7 +92,7 @@ const AddLiquidity: React.FC = () => {
         };
         const result = await addLiquidity(data);
         handleProcessing(result);
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
         const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
         toast({

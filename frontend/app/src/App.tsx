@@ -39,7 +39,7 @@ const App: React.FC = () => {
         await checkWalletConnection();
         CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
         CFMM_ADDRESS && (await initCfmm(CFMM_ADDRESS));
-      } catch (error) {
+      } catch (error : any) {
         logger.error(error);
       }
     };

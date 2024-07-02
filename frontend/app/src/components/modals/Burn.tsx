@@ -101,7 +101,7 @@ const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
         const amount = -data.amount;
         const result = await mintOrBurn(Number(oven.key.id), amount);
         handleProcessing(result);
-      } catch (error) {
+      } catch (error : any) {
         logger.warn(error);
         const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({

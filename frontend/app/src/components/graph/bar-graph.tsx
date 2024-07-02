@@ -151,7 +151,7 @@ const BarChartAlt = ({
           <Bar
             dataKey="value"
             fill={color}
-            shape={(props) => {
+            shape={(props : any) => {
               return (
                 <CustomBar
                   height={props.height}
