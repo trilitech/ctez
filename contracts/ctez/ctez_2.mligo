@@ -193,9 +193,10 @@ let do_housekeeping (s : storage) : result =
     (* Create the operation to explicitly mint the ctez in the FA12 contract, and credit it to the CFMM *)
     let minted = new_outstanding - outstanding in
     let ctez_mint_or_burn = get_ctez_mint_or_burn ctez_fa12_address in
-    let op_mint_ctez = Tezos.Next.Operation.transaction (minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn in
-
-    ([op_mint_ctez], { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
+    let ops = if minted > 0 
+      then [Tezos.Next.Operation.transaction (minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn] 
+      else [] in
+    (ops, { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
   else
     ([], s)
 

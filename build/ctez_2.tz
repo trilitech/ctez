@@ -1603,11 +1603,19 @@
                   DIG 6 ;
                   SWAP ;
                   EXEC ;
-                  PUSH mutez 0 ;
-                  SELF_ADDRESS ;
-                  DIG 3 ;
-                  PAIR ;
-                  TRANSFER_TOKENS ;
+                  PUSH int 0 ;
+                  DUP 3 ;
+                  COMPARE ;
+                  GT ;
+                  IF { NIL operation ;
+                       SWAP ;
+                       PUSH mutez 0 ;
+                       SELF_ADDRESS ;
+                       DIG 4 ;
+                       PAIR ;
+                       TRANSFER_TOKENS ;
+                       CONS }
+                     { DROP 2 ; NIL operation } ;
                   DUP 2 ;
                   DIG 5 ;
                   UPDATE 3 ;
@@ -1618,9 +1626,7 @@
                   DIG 3 ;
                   UPDATE 1 ;
                   UPDATE 9 ;
-                  NIL operation ;
-                  DIG 2 ;
-                  CONS }
+                  SWAP }
                 { DIG 2 ; DIG 3 ; DIG 4 ; DIG 5 ; DIG 6 ; DROP 6 ; NIL operation } ;
              PAIR } ;
          DUP 9 ;
