@@ -1,11 +1,11 @@
 import { WalletContract } from '@taquito/taquito/dist/types/contract';
-import { CTEZ_FA12_ADDRESS, LQT_FA12_ADDRESS } from '../utils/globals';
+import { CTEZ_FA12_ADDRESS } from '../utils/globals';
 import { initContract } from './utils';
 
 let LQTFa12: WalletContract | null = null;
 let CTezFa12: WalletContract | null = null;
 
-export const getLQTContract = async (address = LQT_FA12_ADDRESS): Promise<WalletContract> => {
+export const getLQTContract = async (address = CTEZ_FA12_ADDRESS): Promise<WalletContract> => {
   if (!LQTFa12) {
     LQTFa12 = await initContract(address);
   }

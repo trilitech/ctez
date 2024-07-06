@@ -15,7 +15,7 @@ import {
   TokenToCashParams,
   TokenToTokenParams,
 } from '../interfaces';
-import { CFMM_ADDRESS } from '../utils/globals';
+import { CTEZ_ADDRESS as CFMM_ADDRESS } from '../utils/globals';
 import { getTezosInstance } from './client';
 import { getCTezFa12Contract, getLQTContract } from './fa12';
 import { executeMethod, initContract } from './utils';

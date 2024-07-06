@@ -5,7 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { WalletProvider } from './wallet/walletContext';
 import { WalletInterface } from './interfaces';
 import { initTezos, setWalletProvider } from './contracts/client';
-import { APP_NAME, NETWORK, RPC_URL, RPC_PORT, CTEZ_ADDRESS, CFMM_ADDRESS } from './utils/globals';
+import { APP_NAME, NETWORK, RPC_URL, RPC_PORT, CTEZ_ADDRESS } from './utils/globals';
 import { getBeaconInstance, isWalletConnected } from './wallet';
 import { AppRouter } from './router';
 import { initCTez } from './contracts/ctez';
@@ -38,7 +38,7 @@ const App: React.FC = () => {
         initTezos(nodeUrl ?? RPC_URL, nodePort ?? RPC_PORT);
         await checkWalletConnection();
         CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
-        CFMM_ADDRESS && (await initCfmm(CFMM_ADDRESS));
+        CTEZ_ADDRESS && (await initCfmm(CTEZ_ADDRESS));
       } catch (error : any) {
         logger.error(error);
       }

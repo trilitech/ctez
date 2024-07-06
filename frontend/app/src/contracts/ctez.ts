@@ -54,7 +54,7 @@ export const create = async (
   const newOvenId = lastOvenId + 1;
   const operation = await executeMethod(
     cTez,
-    'create',
+    'create_oven',
     [newOvenId, bakerAddress, op, allowedDepositors],
     undefined,
     amount,
