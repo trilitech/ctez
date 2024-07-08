@@ -28,18 +28,21 @@ def create_oven(
     print(f'Operation has been completed: {opg.opg_hash}')
 
 @click.command()
-@click.option('--oven-address', required=True)
+@click.option('--ctez-address', required=True)
+@click.option('--oven-id', required=True, type=int)
 @click.option('--deposit', required=True, type=int)
 @click.option('--private-key', default=None, help='Use the provided private key.')
 @click.option('--rpc-url', default=None, help='Tezos RPC URL.')
 def deposit(
-    oven_address: str,
+    ctez_address: str,
+    oven_id: int,
     deposit: int,
     private_key: Optional[str],
     rpc_url: Optional[str],
 ) -> None:
     manager = create_manager(private_key, rpc_url)
-    oven = Oven.from_address(manager, oven_address)
+    ctez2 = Ctez2.from_address(manager, ctez_address)
+    oven = ctez2.get_oven_contract(manager, manager, oven_id)
     print('Depositing to oven...')
     opg = oven.deposit().with_amount(deposit).send()
     manager.wait(opg)

@@ -1,5 +1,5 @@
 poetry run create_oven --ctez-address KT193ERciAqkLJL1QfUnrVDXjMxpJnwqUveX --oven-id 2 --deposit 100
-poetry run deposit --oven-address KT1HjKLWepP6zcAwpDRtf7WX4qEdoXfxuY9u --deposit 50
+poetry run deposit --ctez-address KT193ERciAqkLJL1QfUnrVDXjMxpJnwqUveX --oven-id 5 --deposit 200
 poetry run withdraw --ctez-address KT193ERciAqkLJL1QfUnrVDXjMxpJnwqUveX --oven-id 2 --amount 50
 poetry run mint_or_burn --ctez-address KT193ERciAqkLJL1QfUnrVDXjMxpJnwqUveX --oven-id 2 --quantity 10
 poetry run liquidate --ctez-address KT193ERciAqkLJL1QfUnrVDXjMxpJnwqUveX --oven-owner-address tz1eM1i2eyZUdouDduqNgs2U853FkE3vQiyn --oven-id 2 --quantity 10
