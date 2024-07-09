@@ -93,7 +93,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     const pathName = location.pathname;
     setHeader(pathName);
   }, [location]);
-  const [isBannerOpen, setBannerOpen] = useState(true);
+  const [isBannerOpen, setBannerOpen] = useState(false);
   const closeBanner = () => {
     setBannerOpen(false);
   };

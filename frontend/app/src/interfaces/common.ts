@@ -7,11 +7,11 @@ export type AddressTrimSizeType = 'small' | 'medium' | 'large';
 export interface BaseStats {
   originalTarget: number;
   currentTarget: string;
-  currentPrice: string;
+  currentCtezSellPrice: string;
+  currentCtezBuyPrice: string;
+  currentAvgPrice: string;
   premium: string;
   currentAnnualDrift: string;
-  annualDriftPastWeek: string;
-  totalLiquidity: string;
   drift: number;
   [key: string]: string | number;
 }

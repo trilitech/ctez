@@ -46,13 +46,30 @@ export interface OvenStorage {
   depositors: depositors;
 }
 
+export interface CTezContext {
+  ctez_fa12_address: string;
+  drift: BigNumber;
+  target: BigNumber;
+  _Q: BigNumber;
+}
+
+export interface HalfDex {
+  fee_index: BigNumber;
+  liquidity_owners: MichelsonMap<string, any>; /* TODO: fix types */
+  total_liquidity_shares: BigNumber
+  self_reserves: BigNumber;
+  proceeds_debts: BigNumber;
+  proceeds_reserves: BigNumber
+  subsidy_debts: BigNumber;
+  subsidy_reserves: BigNumber;
+}
+
 export interface CTezStorage {
   ovens: MichelsonMap<oven_handle, OvenStorage>;
-  target: BigNumber;
-  drift: BigNumber;
-  last_drift_update: Date;
-  ctez_fa12_address: string;
-  cfmm_address: string;
+  context: CTezContext;
+  last_update: Date;
+  sell_ctez: HalfDex;
+  sell_tez: HalfDex;
 }
 
 export interface CTezTzktStorage {

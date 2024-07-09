@@ -86,8 +86,8 @@ const Swap: React.FC = () => {
 
   const rate = (): number =>
     formType === FORM_TYPE.CTEZ_TEZ
-      ? formatNumberStandard(baseStats?.currentPrice ?? 1)
-      : formatNumberStandard(1 / Number(baseStats?.currentPrice ?? 1));
+      ? formatNumberStandard(baseStats?.currentAvgPrice ?? 1)
+      : formatNumberStandard(1 / Number(baseStats?.currentAvgPrice ?? 1));
 
   const validationSchema = Yup.object().shape({
     slippage: Yup.number().min(0).optional(),

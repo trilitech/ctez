@@ -57,10 +57,26 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
         </Flex>
         <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Price
+            Current Sell Price
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentPrice}
+            {data?.currentCtezSellPrice}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Current Buy Price
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentCtezBuyPrice}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Current Avg Price
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentAvgPrice}
           </Text>
         </Flex>
         <Flex direction="row">
