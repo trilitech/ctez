@@ -6,6 +6,8 @@ export type AddressTrimSizeType = 'small' | 'medium' | 'large';
 
 export interface BaseStats {
   originalTarget: number;
+  ctezDexFeeIndex: string;
+  tezDexFeeIndex: string;
   currentTarget: string;
   currentCtezSellPrice: string;
   currentCtezBuyPrice: string;
