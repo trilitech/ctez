@@ -60,8 +60,8 @@ export const toOven = (oven: OvenSerializable): Oven => {
 
 export const maxCTez = (tez: number, target: number): number => {
   const newTez = tez * 1e6;
-  const newTarget = target * 2 ** 48;
-  const result = (newTez * 15) / (newTarget / 2 ** 44);
+  const newTarget = target * 2 ** 64;
+  const result = (newTez * 15) / (newTarget / 2 ** 60);
   return Number((Math.floor(result) / 1e6).toFixed(6));
 };
 
@@ -93,7 +93,19 @@ export const getOvenMaxCtez = (
   currentCtez: string | number,
   target: number,
 ) => {
-  const max = maxCTez(new BigNumber(ovenTez).shiftedBy(-6).toNumber(), target / 2 ** 48);
+  const max = maxCTez(new BigNumber(ovenTez).shiftedBy(-6).toNumber(), target / 2 ** 64);
   const remaining = max - new BigNumber(currentCtez).shiftedBy(-6).toNumber();
   return { max, remaining: Number(remaining.toFixed(6)) };
 };
+
+export const getOvenCtezOutstanding = (
+  currentOvenOutstandingCtez: string | number,
+  currentOvenFeeIndex: string | number,
+  sellCtezDexFeeIndex: string | number,
+  sellTezDexFeeIndex: string | number,
+) : number => {
+  const feeIndex = new BigNumber(sellCtezDexFeeIndex).multipliedBy(sellTezDexFeeIndex);
+  const prevCtezOutstanding = new BigNumber(currentOvenOutstandingCtez);
+  const prevFeeIndex = new BigNumber(currentOvenFeeIndex);
+  return prevCtezOutstanding.multipliedBy(feeIndex).dividedToIntegerBy(prevFeeIndex).toNumber(); 
+}

@@ -10,7 +10,7 @@ import {
 import { TransactionWalletOperation, WalletOperation } from '@taquito/taquito';
 import { Flex, Spinner, useColorMode, useToast } from '@chakra-ui/react';
 import { GroupBase, OptionsOrGroups } from 'react-select/dist/declarations/src';
-import { getOvenMaxCtez } from '../utils/ovenUtils';
+import { getOvenCtezOutstanding, getOvenMaxCtez } from '../utils/ovenUtils';
 import { useAppDispatch, useAppSelector } from '../redux/store';
 import { formatNumber } from '../utils/numbers';
 import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
@@ -46,16 +46,21 @@ const useOvenStats: TUseOvenStats = (oven) => {
     const { tezBalance, ctezOutstanding } = (() => {
       return {
         tezBalance: oven?.value.tez_balance,
-        ctezOutstanding: oven?.value.ctez_outstanding,
+        ctezOutstanding: getOvenCtezOutstanding(
+          oven?.value.ctez_outstanding,
+          oven?.value.fee_index,
+          data?.ctezDexFeeIndex || 2 ** 64,
+          data?.tezDexFeeIndex || 2 ** 64
+        )
       };
     })();
 
     const { max, remaining } = currentTargetMintable
       ? getOvenMaxCtez(
-          formatNumber(tezBalance, 0),
-          formatNumber(ctezOutstanding, 0),
-          currentTargetMintable,
-        )
+        formatNumber(tezBalance, 0),
+        formatNumber(ctezOutstanding, 0),
+        currentTargetMintable,
+      )
       : { max: 0, remaining: 0 };
 
     const ovenBalance = formatNumber(tezBalance, -6) ?? 0;
@@ -136,16 +141,21 @@ const useOvenSummary: TUseOvenSummary = (ovens) => {
       const { tezBalance, ctezOutstanding } = (() => {
         return {
           tezBalance: oven?.value.tez_balance,
-          ctezOutstanding: oven?.value.ctez_outstanding,
+          ctezOutstanding: getOvenCtezOutstanding(
+            oven?.value.ctez_outstanding,
+            oven?.value.fee_index,
+            data?.ctezDexFeeIndex || 2 ** 64,
+            data?.tezDexFeeIndex || 2 ** 64
+          )
         };
       })();
 
       const { max, remaining } = currentTargetMintable
         ? getOvenMaxCtez(
-            formatNumber(tezBalance, 0),
-            formatNumber(ctezOutstanding, 0),
-            currentTargetMintable,
-          )
+          formatNumber(tezBalance, 0),
+          formatNumber(ctezOutstanding, 0),
+          currentTargetMintable,
+        )
         : { max: 0, remaining: 0 };
 
       const ovenBalance = formatNumber(tezBalance, -6) ?? 0;
@@ -180,10 +190,10 @@ const useSortedOvensList: TUseSortedOvensList = (ovens) => {
       })();
       const { max } = currentTargetMintable
         ? getOvenMaxCtez(
-            formatNumber(tezBalance, 0),
-            formatNumber(ctezOutstanding, 0),
-            currentTargetMintable,
-          )
+          formatNumber(tezBalance, 0),
+          formatNumber(ctezOutstanding, 0),
+          currentTargetMintable,
+        )
         : { max: 0 };
       const maxMintableCtez = formatNumber(max < 0 ? 0 : max, 0);
       let collateralUtilization = formatNumber(

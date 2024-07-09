@@ -93,6 +93,7 @@ export interface AllOvenDatum {
     address: string;
     tez_balance: string;
     ctez_outstanding: string;
+    fee_index: string;
   };
   firstLevel: number;
   lastLevel: number;
