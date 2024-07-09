@@ -50,8 +50,8 @@
         "paid_storage_size_diff": 0
     },
     "oven_deposit": {
-        "consumed_gas": 6463,
-        "consumed_mutez": 1164,
+        "consumed_gas": 6577,
+        "consumed_mutez": 1175,
         "paid_storage_size_diff": 1
     },
     "remove_ctez_liquidity": {

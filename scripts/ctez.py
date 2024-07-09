@@ -11,19 +11,21 @@ from tests.helpers.contracts.oven.oven import Oven
 @click.option('--ctez-address', required=True)
 @click.option('--oven-id', required=True, type=int)
 @click.option('--deposit', default=0, type=int)
+@click.option('--delegate', default=None)
 @click.option('--private-key', default=None, help='Use the provided private key.')
 @click.option('--rpc-url', default=None, help='Tezos RPC URL.')
 def create_oven(
     ctez_address: str,
     oven_id: int,
     deposit: Optional[str],
+    delegate: Optional[str],
     private_key: Optional[str],
     rpc_url: Optional[str],
 ) -> None:
     manager = create_manager(private_key, rpc_url)
     ctez2 = Ctez2.from_address(manager, ctez_address)
     print('Creating oven...')
-    opg = ctez2.create_oven(oven_id, delegate=None, depositors=None).with_amount(deposit).send()
+    opg = ctez2.create_oven(oven_id, delegate, depositors=None).with_amount(deposit).send()
     manager.wait(opg)
     print(f'Operation has been completed: {opg.opg_hash}')
 

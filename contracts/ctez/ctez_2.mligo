@@ -158,7 +158,7 @@ let update_fee_index
   let minted = outstanding * (new_fee_index - fee_index) / fee_index in
   {dex with fee_index = new_fee_index; subsidy_reserves = clamp_nat (dex.subsidy_reserves + minted) }, clamp_nat (outstanding + minted)
 
-let do_housekeeping (s : storage) : result =
+let get_actual_state (s : storage) : int * storage =
   let now = Tezos.get_now () in
   if s.last_update <> now then
     let delta = abs (now - s.last_update) in
@@ -180,25 +180,27 @@ let do_housekeeping (s : storage) : result =
       then subtract_nat target d_target Errors.incorrect_subtraction 
       else target + d_target in
     (* Compute what the liquidity fee should be, based on the ratio of total outstanding ctez to ctez in dexes *)
-    let ctez_fa12_address = s.context.ctez_fa12_address in
-    let outstanding = match (Tezos.Next.View.call "viewTotalSupply" () ctez_fa12_address) with
+    let outstanding = match (Tezos.Next.View.call "viewTotalSupply" () s.context.ctez_fa12_address) with
       | None -> (failwith Errors.missing_total_supply_view : nat)
       | Some n-> n in
     let _Q = max (outstanding / 20n) 1n in
     let s = { s with context = {s.context with _Q = _Q }} in
     let sell_ctez, new_outstanding = update_fee_index delta outstanding (sell_ctez_env.get_target_self_reserves s.context) s.sell_ctez in
     let sell_tez, new_outstanding = update_fee_index delta new_outstanding (sell_tez_env.get_target_self_reserves s.context) s.sell_tez in
+    let subsidies_minted = new_outstanding - outstanding in
     let s = { s with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
-    
-    (* Create the operation to explicitly mint the ctez in the FA12 contract, and credit it to the CFMM *)
-    let minted = new_outstanding - outstanding in
-    let ctez_mint_or_burn = get_ctez_mint_or_burn ctez_fa12_address in
-    let ops = if minted > 0 
-      then [Tezos.Next.Operation.transaction (minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn] 
-      else [] in
-    (ops, { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
+    (subsidies_minted, { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
   else
-    ([], s)
+    (0, s)
+
+let do_housekeeping (s : storage) : result =
+  let subsidies_minted, s = get_actual_state s in
+  (* Create the operation to explicitly mint the ctez in the FA12 contract, and credit it to the CFMM *)
+  let ctez_mint_or_burn = get_ctez_mint_or_burn s.context.ctez_fa12_address in
+  let ops = if subsidies_minted > 0 
+    then [Tezos.Next.Operation.transaction (subsidies_minted, Tezos.get_self_address ()) 0mutez ctez_mint_or_burn] 
+    else [] in
+  (ops, s)
 
 (* Entrypoint Functions *)
 
@@ -403,8 +405,29 @@ let ctez_to_tez
 
 (* Views *)
 
-[@view]
-let get_target () (storage : storage) : nat = storage.context.target
+let get_half_dex_state (dex: Half_dex.t) = 
+  {
+    total_liquidity_shares = dex.total_liquidity_shares;
+    self_reserves = dex.self_reserves;
+    proceeds_debts = dex.proceeds_debts;
+    proceeds_reserves = dex.proceeds_reserves;
+    subsidy_debts = dex.subsidy_debts;
+    subsidy_reserves = dex.subsidy_reserves;
+    fee_index = dex.fee_index;
+  }
 
 [@view]
-let get_drift () (storage : storage) : int = storage.context.drift
+let get_current_state () (s : storage) = 
+  let _, s = get_actual_state s in
+  {
+    last_update = s.last_update;
+    context = s.context;
+    sell_ctez = get_half_dex_state s.sell_ctez;
+    sell_tez = get_half_dex_state s.sell_tez;
+  }
+
+[@view]
+let get_target () (s : storage) : nat = s.context.target
+
+[@view]
+let get_drift () (s : storage) : int = s.context.drift

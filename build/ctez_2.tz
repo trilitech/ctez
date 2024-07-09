@@ -1539,7 +1539,6 @@
                   DUP 5 ;
                   GET 9 ;
                   GET 6 ;
-                  DUP ;
                   UNIT ;
                   VIEW "viewTotalSupply" nat ;
                   IF_NONE { PUSH string "MISSING_TOTAL_SUPPLY_VIEW" ; FAILWITH } {} ;
@@ -1550,8 +1549,8 @@
                   IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
                   CAR ;
                   PAIR ;
-                  DUP 8 ;
-                  DIG 8 ;
+                  DUP 7 ;
+                  DIG 7 ;
                   GET 9 ;
                   DIG 2 ;
                   UNPAIR ;
@@ -1566,14 +1565,14 @@
                   GET 5 ;
                   DUP 2 ;
                   GET 9 ;
-                  DIG 10 ;
+                  DIG 9 ;
                   GET 5 ;
                   SWAP ;
                   EXEC ;
                   DUP 4 ;
-                  DUP 9 ;
+                  DUP 8 ;
                   PAIR 4 ;
-                  DUP 9 ;
+                  DUP 8 ;
                   SWAP ;
                   EXEC ;
                   UNPAIR ;
@@ -1581,45 +1580,29 @@
                   GET 7 ;
                   DUP 4 ;
                   GET 9 ;
-                  DIG 12 ;
+                  DIG 11 ;
                   GET 5 ;
                   SWAP ;
                   EXEC ;
                   DIG 3 ;
-                  DIG 9 ;
-                  PAIR 4 ;
                   DIG 8 ;
+                  PAIR 4 ;
+                  DIG 7 ;
                   SWAP ;
                   EXEC ;
                   UNPAIR ;
+                  DIG 4 ;
+                  DIG 2 ;
+                  SUB ;
                   DIG 3 ;
                   DIG 3 ;
                   UPDATE 5 ;
-                  SWAP ;
-                  UPDATE 7 ;
-                  DUG 2 ;
-                  SUB ;
                   DIG 2 ;
-                  DIG 6 ;
-                  SWAP ;
-                  EXEC ;
-                  PUSH int 0 ;
-                  DUP 3 ;
-                  COMPARE ;
-                  GT ;
-                  IF { NIL operation ;
-                       SWAP ;
-                       PUSH mutez 0 ;
-                       SELF_ADDRESS ;
-                       DIG 4 ;
-                       PAIR ;
-                       TRANSFER_TOKENS ;
-                       CONS }
-                     { DROP 2 ; NIL operation } ;
-                  DUP 2 ;
+                  UPDATE 7 ;
+                  DUP ;
                   DIG 5 ;
                   UPDATE 3 ;
-                  DIG 2 ;
+                  SWAP ;
                   GET 9 ;
                   DIG 4 ;
                   UPDATE 3 ;
@@ -1627,7 +1610,26 @@
                   UPDATE 1 ;
                   UPDATE 9 ;
                   SWAP }
-                { DIG 2 ; DIG 3 ; DIG 4 ; DIG 5 ; DIG 6 ; DROP 6 ; NIL operation } ;
+                { DIG 2 ; DIG 3 ; DIG 4 ; DIG 6 ; DROP 5 ; PUSH int 0 } ;
+             DUP 2 ;
+             GET 9 ;
+             GET 6 ;
+             DIG 3 ;
+             SWAP ;
+             EXEC ;
+             PUSH int 0 ;
+             DUP 3 ;
+             COMPARE ;
+             GT ;
+             IF { NIL operation ;
+                  SWAP ;
+                  PUSH mutez 0 ;
+                  SELF_ADDRESS ;
+                  DIG 4 ;
+                  PAIR ;
+                  TRANSFER_TOKENS ;
+                  CONS }
+                { DROP 2 ; NIL operation } ;
              PAIR } ;
          DUP 9 ;
          DUP 6 ;
@@ -2469,6 +2471,398 @@
                                                              UPDATE 9 ;
                                                              NIL operation } } } } } } } } } } } } } ;
          PAIR } ;
+  view "get_current_state"
+       unit
+       (pair (pair %context (nat %target) (int %drift) (nat %_Q) (address %ctez_fa12_address))
+             (timestamp %last_update)
+             (pair %sell_ctez
+                (nat %fee_index)
+                (nat %proceeds_debts)
+                (nat %proceeds_reserves)
+                (nat %self_reserves)
+                (nat %subsidy_debts)
+                (nat %subsidy_reserves)
+                (nat %total_liquidity_shares))
+             (pair %sell_tez
+                (nat %fee_index)
+                (nat %proceeds_debts)
+                (nat %proceeds_reserves)
+                (nat %self_reserves)
+                (nat %subsidy_debts)
+                (nat %subsidy_reserves)
+                (nat %total_liquidity_shares)))
+       { PUSH nat 64 ;
+         LAMBDA
+           (pair nat (pair nat int nat address))
+           (lambda nat nat)
+           { UNPAIR ;
+             SWAP ;
+             LAMBDA
+               (pair (pair (pair nat int nat address) nat) nat)
+               nat
+               { UNPAIR ; UNPAIR ; CAR ; DIG 2 ; MUL ; LSR } ;
+             DUP 3 ;
+             DUP 3 ;
+             PAIR ;
+             APPLY ;
+             SWAP ;
+             DIG 2 ;
+             DROP 2 } ;
+         DUP 2 ;
+         APPLY ;
+         LAMBDA
+           (pair nat (pair nat int nat address))
+           nat
+           { UNPAIR ; DUP 2 ; CAR ; DIG 2 ; GET 5 ; MUL ; LSR } ;
+         DUP 3 ;
+         APPLY ;
+         LAMBDA
+           (pair nat int nat address)
+           (lambda address (lambda nat operation))
+           { LAMBDA
+               (pair (pair nat int nat address) address)
+               (lambda nat operation)
+               { UNPAIR ;
+                 SWAP ;
+                 LAMBDA
+                   (pair (pair address (pair nat int nat address)) nat)
+                   operation
+                   { UNPAIR ;
+                     UNPAIR ;
+                     DIG 2 ;
+                     SWAP ;
+                     SELF_ADDRESS ;
+                     DIG 3 ;
+                     GET 6 ;
+                     CONTRACT %transfer (pair (address %from) (address %to) (nat %value)) ;
+                     IF_NONE { PUSH string "bad address for get_entrypoint" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     DIG 4 ;
+                     DIG 4 ;
+                     DIG 4 ;
+                     PAIR 3 ;
+                     TRANSFER_TOKENS } ;
+                 DUP 3 ;
+                 DUP 3 ;
+                 PAIR ;
+                 APPLY ;
+                 SWAP ;
+                 DIG 2 ;
+                 DROP 2 } ;
+             DUP 2 ;
+             APPLY ;
+             SWAP ;
+             DROP } ;
+         LAMBDA
+           (pair nat int nat address)
+           (lambda address (lambda address (lambda nat operation)))
+           { DROP ;
+             LAMBDA
+               address
+               (lambda address (lambda nat operation))
+               { DROP ;
+                 LAMBDA
+                   address
+                   (lambda nat operation)
+                   { LAMBDA
+                       (pair address nat)
+                       operation
+                       { UNPAIR ;
+                         CONTRACT unit ;
+                         IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
+                         PUSH mutez 1 ;
+                         DIG 2 ;
+                         MUL ;
+                         UNIT ;
+                         TRANSFER_TOKENS } ;
+                     DUP 2 ;
+                     APPLY ;
+                     SWAP ;
+                     DROP } } } ;
+         PAIR 4 ;
+         LAMBDA
+           (pair nat
+                 (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
+           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) nat)
+           { UNPAIR ;
+             SWAP ;
+             UNPAIR 4 ;
+             DUP 4 ;
+             GET 5 ;
+             PUSH nat 5845483520 ;
+             DUP 5 ;
+             DUP 3 ;
+             PUSH nat 8 ;
+             MUL ;
+             COMPARE ;
+             LT ;
+             IF { SWAP ; DIG 4 ; DROP 2 }
+                { DUP 5 ;
+                  PUSH nat 7 ;
+                  MUL ;
+                  DUP 3 ;
+                  PUSH nat 8 ;
+                  MUL ;
+                  COMPARE ;
+                  GT ;
+                  IF { SWAP ; DIG 4 ; DROP 3 ; PUSH nat 0 }
+                     { DUP 5 ;
+                       PUSH nat 6 ;
+                       MUL ;
+                       DIG 2 ;
+                       PUSH nat 8 ;
+                       MUL ;
+                       DIG 5 ;
+                       PUSH nat 7 ;
+                       MUL ;
+                       SUB ;
+                       DIG 2 ;
+                       MUL ;
+                       ABS ;
+                       EDIV ;
+                       IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                       CAR } } ;
+             DUP 4 ;
+             GET 14 ;
+             SWAP ;
+             DUP 2 ;
+             DIG 3 ;
+             MUL ;
+             DIG 5 ;
+             DUG 2 ;
+             MUL ;
+             LSR ;
+             DUP 2 ;
+             ADD ;
+             DUP 2 ;
+             DIG 2 ;
+             DUP 3 ;
+             SUB ;
+             DUP 4 ;
+             MUL ;
+             EDIV ;
+             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+             CAR ;
+             DUP ;
+             DIG 3 ;
+             ADD ;
+             ISNAT ;
+             IF_NONE { PUSH nat 0 } {} ;
+             DUP 4 ;
+             DIG 3 ;
+             UPDATE 14 ;
+             DIG 2 ;
+             DIG 3 ;
+             GET 13 ;
+             ADD ;
+             ISNAT ;
+             IF_NONE { PUSH nat 0 } {} ;
+             UPDATE 13 ;
+             PAIR } ;
+         DUP 3 ;
+         APPLY ;
+         LAMBDA
+           (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
+           (pair nat nat nat nat nat nat nat)
+           { DUP ;
+             GET 3 ;
+             DUP 2 ;
+             GET 13 ;
+             DUP 3 ;
+             GET 11 ;
+             DUP 4 ;
+             GET 5 ;
+             DUP 5 ;
+             GET 9 ;
+             DUP 6 ;
+             GET 7 ;
+             DIG 6 ;
+             GET 14 ;
+             PAIR 7 } ;
+         DIG 4 ;
+         CDR ;
+         NOW ;
+         DUP ;
+         DUP 3 ;
+         GET 3 ;
+         COMPARE ;
+         NEQ ;
+         IF { DUP 2 ;
+              GET 3 ;
+              DUP 2 ;
+              SUB ;
+              ABS ;
+              DUP 3 ;
+              GET 9 ;
+              DUP ;
+              DUP 8 ;
+              GET 5 ;
+              SWAP ;
+              EXEC ;
+              DUP 5 ;
+              GET 7 ;
+              GET 5 ;
+              DUP 2 ;
+              DUP 2 ;
+              COMPARE ;
+              LT ;
+              IF {} { DROP ; DUP } ;
+              DUP 3 ;
+              GET 5 ;
+              DUP 7 ;
+              GET 5 ;
+              GET 5 ;
+              DUP 2 ;
+              DUP 2 ;
+              COMPARE ;
+              LT ;
+              IF { SWAP ; DROP } { DROP } ;
+              DIG 3 ;
+              DUP 10 ;
+              GET 6 ;
+              SWAP ;
+              EXEC ;
+              SWAP ;
+              EXEC ;
+              SUB ;
+              DUP 2 ;
+              DUP 3 ;
+              DIG 3 ;
+              MUL ;
+              MUL ;
+              DUP 2 ;
+              DUP 3 ;
+              DUP 4 ;
+              MUL ;
+              MUL ;
+              ABS ;
+              DUP 4 ;
+              PUSH nat 65536 ;
+              MUL ;
+              MUL ;
+              EDIV ;
+              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+              CAR ;
+              PUSH int 0 ;
+              DIG 2 ;
+              COMPARE ;
+              LT ;
+              IF { NEG } { INT } ;
+              DUP 4 ;
+              GET 9 ;
+              GET 3 ;
+              SWAP ;
+              DUP 2 ;
+              ADD ;
+              DUP 5 ;
+              GET 9 ;
+              CAR ;
+              DUP ;
+              DUP 5 ;
+              DUP 5 ;
+              ABS ;
+              MUL ;
+              DIG 11 ;
+              DUG 2 ;
+              MUL ;
+              LSR ;
+              PUSH int 0 ;
+              DIG 4 ;
+              COMPARE ;
+              LT ;
+              IF { SWAP ;
+                   SUB ;
+                   ISNAT ;
+                   IF_NONE { PUSH string "INCORRECT_SUBTRACTION" ; FAILWITH } {} }
+                 { ADD } ;
+              DUP 5 ;
+              GET 9 ;
+              GET 6 ;
+              UNIT ;
+              VIEW "viewTotalSupply" nat ;
+              IF_NONE { PUSH string "MISSING_TOTAL_SUPPLY_VIEW" ; FAILWITH } {} ;
+              PUSH nat 1 ;
+              PUSH nat 20 ;
+              DUP 3 ;
+              EDIV ;
+              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+              CAR ;
+              PAIR ;
+              DUP 7 ;
+              DIG 7 ;
+              GET 9 ;
+              DIG 2 ;
+              UNPAIR ;
+              DUP 2 ;
+              DUP 2 ;
+              COMPARE ;
+              GT ;
+              IF { SWAP ; DROP } { DROP } ;
+              UPDATE 5 ;
+              UPDATE 9 ;
+              DUP ;
+              GET 5 ;
+              DUP 2 ;
+              GET 9 ;
+              GET 5 ;
+              DUP 4 ;
+              DUP 8 ;
+              PAIR 4 ;
+              DUP 9 ;
+              SWAP ;
+              EXEC ;
+              UNPAIR ;
+              DUP 3 ;
+              GET 7 ;
+              DUP 4 ;
+              GET 9 ;
+              DIG 12 ;
+              GET 5 ;
+              SWAP ;
+              EXEC ;
+              DIG 3 ;
+              DIG 8 ;
+              PAIR 4 ;
+              DIG 8 ;
+              SWAP ;
+              EXEC ;
+              UNPAIR ;
+              DIG 4 ;
+              DIG 2 ;
+              SUB ;
+              DIG 3 ;
+              DIG 3 ;
+              UPDATE 5 ;
+              DIG 2 ;
+              UPDATE 7 ;
+              DUP ;
+              DIG 5 ;
+              UPDATE 3 ;
+              SWAP ;
+              GET 9 ;
+              DIG 4 ;
+              UPDATE 3 ;
+              DIG 3 ;
+              UPDATE 1 ;
+              UPDATE 9 ;
+              SWAP }
+            { DIG 3 ; DIG 4 ; DIG 5 ; DROP 4 ; PUSH int 0 } ;
+         DROP ;
+         DUP ;
+         GET 7 ;
+         DUP 3 ;
+         SWAP ;
+         EXEC ;
+         DUP 2 ;
+         GET 5 ;
+         DIG 3 ;
+         SWAP ;
+         EXEC ;
+         DUP 3 ;
+         GET 3 ;
+         DIG 3 ;
+         GET 9 ;
+         PAIR 4 } ;
   view "get_target" unit nat { CDR ; GET 9 ; CAR } ;
   view "get_drift" unit int { CDR ; GET 9 ; GET 3 } }
 
