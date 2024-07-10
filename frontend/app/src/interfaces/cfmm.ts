@@ -50,7 +50,14 @@ export interface CfmmStorage {
   lqtTotal: BigNumber;
 }
 
-export interface UserLQTData {
+export interface HalfDexLQTData {
   lqt: number;
   lqtShare: number;
+}
+
+export interface UserLQTData {
+  ctezDexLqt: number;
+  ctezDexLqtShare: number;
+  tezDexLqt: number;
+  tezDexLqtShare: number;
 }

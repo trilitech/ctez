@@ -131,18 +131,32 @@ const SignIn: React.FC = () => {
                     </Tr>
                   </>
                 )}
-                {typeof userLqtData?.lqt !== 'undefined' && (
+                {typeof userLqtData?.tezDexLqt !== 'undefined' && (
                   <Tr>
-                    <Td>LQT:</Td>
+                    <Td>Tez LQT:</Td>
                     <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(userLqtData?.lqt))}
+                      {formatNumberStandard(formatNumber(userLqtData?.tezDexLqt))}
                     </Td>
                   </Tr>
                 )}
-                {typeof userLqtData?.lqtShare !== 'undefined' && (
+                {typeof userLqtData?.tezDexLqtShare !== 'undefined' && (
                   <Tr>
-                    <Td>LQT Pool share:</Td>
-                    <Td textAlign="right">{userLqtData?.lqtShare}%</Td>
+                    <Td>Tez LQT Pool share:</Td>
+                    <Td textAlign="right">{userLqtData?.tezDexLqtShare}%</Td>
+                  </Tr>
+                )}
+                {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
+                  <Tr>
+                    <Td>Ctez LQT:</Td>
+                    <Td textAlign="right">
+                      {formatNumberStandard(formatNumber(userLqtData?.ctezDexLqt))}
+                    </Td>
+                  </Tr>
+                )}
+                {typeof userLqtData?.ctezDexLqtShare !== 'undefined' && (
+                  <Tr>
+                    <Td>Ctez LQT Pool share:</Td>
+                    <Td textAlign="right">{userLqtData?.ctezDexLqtShare}%</Td>
                   </Tr>
                 )}
               </Tbody>

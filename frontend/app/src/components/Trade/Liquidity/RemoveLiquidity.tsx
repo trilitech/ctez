@@ -67,7 +67,7 @@ const RemoveLiquidity: React.FC = () => {
     slippage: Number(slippage),
   };
 
-  const maxValue = (): number => formatNumber(userLqtData?.lqt || 0.0);
+  const maxValue = (): number => formatNumber(userLqtData?.ctezDexLqt || 0.0);
 
   const validationSchema = object().shape({
     lqtBurned: number()
@@ -145,15 +145,15 @@ const RemoveLiquidity: React.FC = () => {
             type="text"
             lang="en-US"
           />
-          {typeof userLqtData?.lqt !== 'undefined' && (
+          {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
             <Text color={text4} fontSize="xs" mt={1}>
-              Balance: {formatNumberStandard(userLqtData?.lqt / 1e6)}{' '}
+              Balance: {formatNumberStandard(userLqtData?.ctezDexLqt / 1e6)}{' '}
               <Text
                 as="span"
                 cursor="pointer"
                 color={maxColor}
                 onClick={() =>
-                  formik.setFieldValue('lqtBurned', formatNumberStandard(userLqtData?.lqt / 1e6))
+                  formik.setFieldValue('lqtBurned', formatNumberStandard(userLqtData?.ctezDexLqt / 1e6))
                 }
               >
                 (Max)

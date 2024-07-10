@@ -2,9 +2,10 @@ import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { sub, format, differenceInDays } from 'date-fns';
 import { getCfmmStorage, getLQTContractStorage } from '../contracts/cfmm';
-import { getActualCtezStorage, getCtezStorage } from '../contracts/ctez';
+import { getActualCtezStorage, getCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
 import { BaseStats, CTezStorage, CTezTzktStorage, HalfDex, OvenBalance, UserLQTData } from '../interfaces';
 import { CONTRACT_DEPLOYMENT_DATE, RPC_URL } from '../utils/globals';
+import { getOvenCtezOutstanding } from '../utils/ovenUtils';
 import { getCTezTzktStorage, getLastBlockOfTheDay, getUserOvensAPI } from './tzkt';
 
 export const getPrevCTezStorage = async (
@@ -45,7 +46,7 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
 
   const ctezBuyPrice = 1 / getMarginalPrice(
     storage.sell_tez.self_reserves.toNumber(),
-    storage.context._Q.toNumber() * target, 
+    storage.context._Q.toNumber() * target,
     1 / target
   )
 
@@ -69,13 +70,23 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
 };
 
 export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalance> => {
+  const data = await getBaseStats();
   const userOvenData = await getUserOvensAPI(userAddress);
+  
   try {
     return userOvenData.reduce(
-      (acc, cur) => ({
-        tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
-        ctezOutstanding: acc.tezInOvens + Number(cur.value.ctez_outstanding) / 1e6,
-      }),
+      (acc, cur) => {
+        const ctezOutstanding = getOvenCtezOutstanding(
+          cur.value.ctez_outstanding,
+          cur.value.fee_index,
+          data.ctezDexFeeIndex,
+          data.tezDexFeeIndex
+        )
+        return {
+          tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
+          ctezOutstanding: acc.ctezOutstanding + ctezOutstanding / 1e6,
+        }
+      },
       {
         tezInOvens: 0,
         ctezOutstanding: 0,
@@ -90,15 +101,13 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
 };
 
 export const getUserLQTData = async (userAddress: string): Promise<UserLQTData> => {
-  const cfmmStorage = await getCfmmStorage();
-  const lqtTokenStorage = await getLQTContractStorage();
-  const userLqtBalance: BigNumber =
-    (await lqtTokenStorage.tokens.get(userAddress)) ?? new BigNumber(0);
+  const ctezLqtBalances = await getUserHalfDexLqtBalance(userAddress, true);
+  const tezLqtBalances = await getUserHalfDexLqtBalance(userAddress, false);
   return {
-    lqt: userLqtBalance.toNumber(),
-    lqtShare: Number(
-      ((userLqtBalance.toNumber() / cfmmStorage.lqtTotal.toNumber()) * 100).toFixed(6),
-    ),
+    ctezDexLqt: ctezLqtBalances.lqt,
+    ctezDexLqtShare: ctezLqtBalances.lqtShare,
+    tezDexLqt: tezLqtBalances.lqt,
+    tezDexLqtShare: tezLqtBalances.lqtShare,
   };
 };
 

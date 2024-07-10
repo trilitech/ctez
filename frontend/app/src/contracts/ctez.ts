@@ -12,6 +12,7 @@ import {
   depositors,
   EditDepositorOps,
   ErrorType,
+  HalfDexLQTData,
   Oven,
   OvenStorage,
 } from '../interfaces';
@@ -47,6 +48,17 @@ export const getOvenStorage = async (ovenAddress: string): Promise<OvenStorage> 
   const storage: OvenStorage = await ovenContract.storage();
   return storage;
 };
+
+export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boolean): Promise<HalfDexLQTData> => {
+  const storage = await cTez.storage<CTezStorage>();
+  const dex = ctezDex ? storage.sell_ctez : storage.sell_tez;
+  const lqt = (await dex.liquidity_owners.get(userAddress))?.liquidity_shares?.toNumber() ?? 0;
+  const lqtShare = dex.total_liquidity_shares.isZero() 
+    ? 0
+    : Number(((lqt / dex.total_liquidity_shares.toNumber()) * 100).toFixed(6));
+
+  return { lqt, lqtShare }
+}
 
 export const create = async (
   userAddress: string,
@@ -186,7 +198,7 @@ export const liquidate = async (
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cTez, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
+  const operation = await executeMethod(cTez, 'liquidate_oven', [ovenId, overOwner, amount * 1e6, to]);
   return operation;
 };
 
