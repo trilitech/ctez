@@ -73,7 +73,7 @@ export const delegate = async (
   bakerAddress: string,
 ): Promise<TransactionWalletOperation> => {
   const ovenContract = await initContract(ovenAddress);
-  const operation = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
+  const operation = await executeMethod(ovenContract, 'delegate', [bakerAddress]);
   return operation;
 };
 
@@ -176,7 +176,7 @@ export const withdraw = async (
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
+  const operation = await executeMethod(cTez, 'withdraw_from_oven', [ovenId, amount * 1e6, to]);
   return operation;
 };
 

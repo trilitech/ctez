@@ -54,7 +54,7 @@ const DepositorsInput: React.FC<IDepositorsInputProps> = (props) => {
   // };
 
   const onSubmitDepositorInput = () => {
-    const addressValid = depositorInput.match(/^(tz1|tz2)([A-Za-z0-9]{33})$/);
+    const addressValid = depositorInput.match(/^(tz1|tz2|tz3|tz4)([A-Za-z0-9]{33})$/);
     const addressExists = props.depositors.some((x) => x.value === depositorInput);
 
     if (!addressValid) {

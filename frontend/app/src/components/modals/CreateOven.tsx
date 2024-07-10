@@ -137,7 +137,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
 
   const isInputValid = (inputValue: any) => {
     const exists = options?.find((option) => option === inputValue) !== undefined;
-    const valid = inputValue.match(/^(tz1|tz2)([A-Za-z0-9]{33})$/);
+    const valid = inputValue.match(/^(tz1|tz2|tz3|tz4)([A-Za-z0-9]{33})$/);
     // TODO: show validation errors somewhere?
     return valid && !exists;
   };
