@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { validateAddress } from '@taquito/utils';
 import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
-import { cTezError, liquidate } from '../../contracts/ctez';
+import { liquidate } from '../../contracts/ctez';
 import Button from '../button';
 import { AllOvenDatum } from '../../interfaces';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
@@ -68,7 +68,7 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
         );
         handleProcessing(result);
       } catch (error : any) {
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

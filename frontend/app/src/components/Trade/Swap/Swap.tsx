@@ -26,7 +26,7 @@ import {
   TToken,
 } from '../../../constants/swap';
 import { CTezIcon, TezIcon } from '../../icons';
-import { cashToToken, cfmmError, tokenToCash } from '../../../contracts/cfmm';
+import { cashToToken, tokenToCash } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
 import { useAppSelector } from '../../../redux/store';
 import Button from '../../button';
@@ -126,7 +126,7 @@ const Swap: React.FC = () => {
         handleProcessing(result);
       } catch (error : any) {
         logger.warn(error);
-        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           status: 'error',
           description: errorText,

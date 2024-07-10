@@ -21,7 +21,7 @@ import { useFormik } from 'formik';
 
 import { IDepositForm } from '../../constants/oven-operations';
 import { BUTTON_TXT } from '../../constants/swap';
-import { cTezError, deposit } from '../../contracts/ctez';
+import { deposit } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import Button from '../button';
 import { TezIcon } from '../icons';
@@ -82,7 +82,7 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
         handleProcessing(result);
       } catch (error : any) {
         logger.error(error);
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

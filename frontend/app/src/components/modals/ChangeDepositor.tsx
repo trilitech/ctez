@@ -22,7 +22,7 @@ import RadioCard from '../radio';
 import DepositorsInput from '../input';
 import { trimAddress } from '../../utils/addressUtils';
 import { useWallet } from '../../wallet/hooks';
-import { addRemoveDepositorList, cTezError, enableDisableAnyDepositor } from '../../contracts/ctez';
+import { addRemoveDepositorList, enableDisableAnyDepositor } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 
@@ -108,7 +108,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
         }
       } catch (error : any) {
         logger.error(error);
-        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
+        const errorText = error?.data?.[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',
@@ -136,7 +136,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
         handleProcessing(result);
       } catch (error : any) {
         logger.error(error);
-        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
+        const errorText = error?.data?.[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

@@ -24,7 +24,7 @@ import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
 import { useWallet } from '../../wallet/hooks';
 import { IWithdrawForm } from '../../constants/oven-operations';
-import { cTezError, withdraw } from '../../contracts/ctez';
+import { withdraw } from '../../contracts/ctez';
 import Button from '../button';
 import { TezIcon } from '../icons';
 import { BUTTON_TXT } from '../../constants/swap';
@@ -88,7 +88,7 @@ const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
         const result = await withdraw(Number(oven.key.id), Number(data.amount), data.to);
         handleProcessing(result);
       } catch (error : any) {
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

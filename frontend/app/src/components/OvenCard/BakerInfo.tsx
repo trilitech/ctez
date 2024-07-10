@@ -8,7 +8,7 @@ import { validateAddress } from '@taquito/utils';
 import { useDelegates, useOvenDelegate } from '../../api/queries';
 import { useWallet } from '../../wallet/hooks';
 import Button from '../button';
-import { cTezError, delegate } from '../../contracts/ctez';
+import { delegate } from '../../contracts/ctez';
 import Identicon from '../avatar';
 import { AllOvenDatum } from '../../interfaces';
 import SkeletonLayout from '../skeleton';
@@ -74,7 +74,7 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
         }
       });
     } catch (error : any) {
-      const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
+      const errorText = error?.data?.[1].with.string as string || t('txFailed');
       toast({
         description: errorText,
         status: 'error',

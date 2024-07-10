@@ -23,7 +23,7 @@ import { useFormik } from 'formik';
 import { useCallback, useMemo } from 'react';
 import { isMonthFromLiquidation } from '../../api/contracts';
 import { IMintRepayForm } from '../../constants/oven-operations';
-import { cTezError, mintOrBurn } from '../../contracts/ctez';
+import { mintOrBurn } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import Button from '../button';
 import { BUTTON_TXT } from '../../constants/swap';
@@ -114,7 +114,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
         onClose();
       } catch (error : any) {
         logger.warn(error);
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

@@ -10,7 +10,7 @@ import { useCfmmStorage, useUserBalance } from '../../../api/queries';
 
 import { AddLiquidityParams } from '../../../interfaces';
 import { ADD_BTN_TXT, IAddLiquidityForm } from '../../../constants/liquidity';
-import { addLiquidity, cfmmError } from '../../../contracts/cfmm';
+import { addLiquidity } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
 import { BUTTON_TXT } from '../../../constants/swap';
 import Button from '../../button';
@@ -94,7 +94,7 @@ const AddLiquidity: React.FC = () => {
         handleProcessing(result);
       } catch (error : any) {
         logger.error(error);
-        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

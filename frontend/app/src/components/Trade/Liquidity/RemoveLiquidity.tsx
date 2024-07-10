@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { useFormik } from 'formik';
 import { RemoveLiquidityParams } from '../../../interfaces';
-import { cfmmError, removeLiquidity } from '../../../contracts/cfmm';
+import { removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
 import { useCfmmStorage, useUserLqtData } from '../../../api/queries';
@@ -92,7 +92,7 @@ const RemoveLiquidity: React.FC = () => {
         const result = await removeLiquidity(data, userAddress);
         handleProcessing(result);
       } catch (error : any) {
-        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

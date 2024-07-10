@@ -15,7 +15,6 @@ import { useAppDispatch, useAppSelector } from '../redux/store';
 import { formatNumber } from '../utils/numbers';
 import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
 import { logger } from '../utils/logger';
-import { cfmmError } from '../contracts/cfmm';
 import { openTxSubmittedModal } from '../redux/slices/UiSlice';
 import { useCtezBaseStats } from '../api/queries';
 
@@ -289,7 +288,7 @@ const useTxLoader = (): ((
           .catch((error) => {
             logger.warn(error);
             const errorText =
-              cfmmError[error.data?.[1]?.with?.int as number] || 'Transaction Failed';
+              error.data?.[1]?.with?.string as string || 'Transaction Failed';
             toast({
               status: 'error',
               description: errorText,

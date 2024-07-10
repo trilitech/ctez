@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { useDelegates, useUserBalance, useUserOvenData } from '../../api/queries';
 import { Depositor } from '../../interfaces';
-import { create, cTezError } from '../../contracts/ctez';
+import { create } from '../../contracts/ctez';
 import { useWallet } from '../../wallet/hooks';
 import { logger } from '../../utils/logger';
 import RadioCard from '../radio';
@@ -164,7 +164,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
         onClose();
       } catch (error : any) {
         logger.error(error);
-        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
+        const errorText = error?.data?.[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
           status: 'error',
