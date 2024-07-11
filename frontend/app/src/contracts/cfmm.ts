@@ -47,9 +47,8 @@ export const getTokenAllowanceOps = async (
 ): Promise<WalletParamsWithKind[]> => {
   const batchOps: WalletParamsWithKind[] = [];
   const maxTokensDeposited = tokenType === 'ctez' ? newAllowance * 1e6 : newAllowance;
-  const storage: any = await tokenContract.storage();
   const currentAllowance = new BigNumber(
-    (await storage.allowances.get({ owner: userAddress, spender: CFMM_ADDRESS })) ?? 0,
+    (await tokenContract.contractViews.viewAllowance({ owner: userAddress, spender: CFMM_ADDRESS }).executeView({viewCaller: tokenContract.address})) ?? 0,
   )
     .shiftedBy(-6)
     .toNumber();
@@ -68,27 +67,27 @@ export const getTokenAllowanceOps = async (
   return batchOps;
 };
 
-export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+export const addCtezLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
   const tezos = getTezosInstance();
   const CTezFa12 = await getCTezFa12Contract();
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     CTezFa12,
     args.owner,
-    args.maxTokensDeposited,
+    args.amount,
   );
   const batch = tezos.wallet.batch([
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
       ...cfmm.methods
-        .addLiquidity(
+        .add_ctez_liquidity(
           args.owner,
+          args.amount * 1e6,
           args.minLqtMinted,
-          args.maxTokensDeposited * 1e6,
           args.deadline.toISOString(),
         )
         .toTransferParams(),
-      amount: args.amount,
+      amount: 0,
     },
     {
       kind: OpKind.TRANSACTION,
@@ -97,6 +96,19 @@ export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOper
   ]);
   const hash = await batch.send();
   return hash;
+};
+
+export const addTezLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+  const hash = await cfmm.methods.add_tez_liquidity(
+    args.owner,
+    args.minLqtMinted,
+    args.deadline.toISOString(),
+  ).send({amount: args.amount})
+  return hash;
+};
+
+export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+  return args.isCtezSide ? addCtezLiquidity(args) : addTezLiquidity(args);
 };
 
 export const removeLiquidity = async (

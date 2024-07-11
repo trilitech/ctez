@@ -1,4 +1,4 @@
-import { Flex, FormControl, FormLabel, Icon, Input, Stack, Text, useToast } from '@chakra-ui/react';
+import { Flex, FormControl, FormLabel, Icon, Input, Radio, RadioGroup, Stack, Text, useToast } from '@chakra-ui/react';
 import { MdAdd } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -6,9 +6,9 @@ import { number, object } from 'yup';
 import { addMinutes } from 'date-fns/fp';
 import { useFormik } from 'formik';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useUserBalance } from '../../../api/queries';
+import { useCfmmStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
 
-import { AddLiquidityParams } from '../../../interfaces';
+import { AddLiquidityParams, HalfDex } from '../../../interfaces';
 import { ADD_BTN_TXT, IAddLiquidityForm } from '../../../constants/liquidity';
 import { addLiquidity } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
@@ -17,12 +17,20 @@ import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
+import { getCtezStorage } from '../../../contracts/ctez';
+
+const calcLiquidityMinted = (depositAmount: number, dex: HalfDex): number => {
+  const numerator = Math.max(dex.total_liquidity_shares.toNumber(), 1);
+  const denominator = Math.max(dex.self_reserves.toNumber(), 1);
+  return Math.ceil(depositAmount * numerator / denominator)
+}
 
 const AddLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
-  const [minLQT, setMinLQT] = useState(0);
-  const { data: cfmmStorage } = useCfmmStorage();
+  const [minLqt, setMinLqt] = useState(0);
   const { data: balance } = useUserBalance(userAddress);
+  const { data: ctezStorage } = useCtezStorage();
+  const [side, setSide] = React.useState('ctez')
   const { t } = useTranslation(['common']);
   const toast = useToast();
   const [text2, inputbg, text4, maxColor] = useThemeColors([
@@ -33,37 +41,32 @@ const AddLiquidity: React.FC = () => {
   ]);
   const { slippage, deadline: deadlineFromStore } = useAppSelector((state) => state.trade);
   const handleProcessing = useTxLoader();
+  
+  const isCtezSide = side === 'ctez';
+  const tokenBalance = isCtezSide ? balance?.ctez : balance?.xtz;
 
-  const calcMaxToken = useCallback(
-    (cashDeposited: number, setFieldValue) => {
-      if (cfmmStorage) {
-        const { tokenPool, cashPool, lqtTotal } = cfmmStorage;
-        const cash = cashDeposited * 1e6;
-        const max =
-          Math.ceil(((cash * tokenPool.toNumber()) / cashPool.toNumber()) * (1 + slippage * 0.01)) /
-          1e6;
-
-        setFieldValue('ctezAmount', formatNumberStandard(max));
-        const minLQTMinted =
-          ((cash * lqtTotal.toNumber()) / cashPool.toNumber()) * (1 - slippage * 0.01);
-        setMinLQT(Number(Math.floor(minLQTMinted).toFixed()));
-      } else {
-        setFieldValue('ctezAmount', -1);
-        setMinLQT(-1);
+  const calcMinLqt = useCallback(
+    (amountDeposited: number) => {
+      if (ctezStorage) {
+        const dex = isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez;
+        const amountNat = amountDeposited * 1e6;
+        const minLQTMinted = calcLiquidityMinted(amountNat, dex) * (1 - slippage * 0.01);
+        setMinLqt(Number(Math.floor(minLQTMinted).toFixed()));
+      }
+      else {
+        setMinLqt(-1);
       }
     },
-    [cfmmStorage, slippage],
+    [slippage, side],
   );
 
   const initialValues: IAddLiquidityForm = {
     slippage: Number(slippage),
     deadline: Number(deadlineFromStore),
     amount: '',
-    ctezAmount: undefined,
   };
 
-  const maxValue = (): number => balance?.xtz || 0.0;
-  const maxCtezValue = (): number => balance?.ctez || 0.0;
+  const maxValue = (): number => ((isCtezSide ? balance?.ctez : balance?.xtz) || 0.0);
 
   const validationSchema = object().shape({
     slippage: number().min(0).optional(),
@@ -73,26 +76,22 @@ const AddLiquidity: React.FC = () => {
       .max(maxValue(), `${t('insufficientBalance')}`)
       .positive(t('shouldPositive'))
       .required(t('required')),
-    ctezAmount: number()
-      .min(0.000001, `${t('shouldMinimum')} 0.000001`)
-      .max(maxCtezValue(), 'Insufficient ctez Balance')
-      .positive(t('shouldPositive')),
   });
 
   const handleFormSubmit = async (formData: IAddLiquidityForm) => {
-    if (userAddress && formData.amount && formData.ctezAmount) {
+    if (userAddress && formData.amount) {
       try {
         const deadline = addMinutes(deadlineFromStore)(new Date());
         const data: AddLiquidityParams = {
           deadline,
           amount: formData.amount,
           owner: userAddress,
-          maxTokensDeposited: formData.ctezAmount,
-          minLqtMinted: minLQT,
+          minLqtMinted: minLqt,
+          isCtezSide
         };
         const result = await addLiquidity(data);
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error: any) {
         logger.error(error);
         const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
@@ -110,8 +109,8 @@ const AddLiquidity: React.FC = () => {
   });
 
   useEffect(() => {
-    calcMaxToken(Number(values.amount), formik.setFieldValue);
-  }, [calcMaxToken, values.amount, formik.setFieldValue]);
+    calcMinLqt(Number(values.amount));
+  }, [calcMinLqt, values.amount, side]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
@@ -130,7 +129,12 @@ const AddLiquidity: React.FC = () => {
     <form onSubmit={handleSubmit} id="add-liquidity-form">
       <Stack spacing={2}>
         <Text color={text2}>Add liquidity</Text>
-
+        <RadioGroup onChange={setSide} value={side} color={text2}>
+          <Stack direction='row' mb={4} spacing={8}>
+            <Radio value='ctez'>Ctez</Radio>
+            <Radio value='tez'>Tez</Radio>
+          </Stack>
+        </RadioGroup>
         <Flex alignItems="center" justifyContent="space-between">
           <FormControl
             display="flex"
@@ -138,10 +142,10 @@ const AddLiquidity: React.FC = () => {
             id="to-input-amount"
             mt={-2}
             mb={4}
-            w="45%"
+            w="100%"
           >
             <FormLabel color={text2} fontSize="xs">
-              tez to deposit
+              {isCtezSide ? 'ctez' : 'tez'} to deposit
             </FormLabel>
             <Input
               name="amount"
@@ -155,36 +159,15 @@ const AddLiquidity: React.FC = () => {
               lang="en-US"
             />
             <Text color={text4} fontSize="xs" mt={1}>
-              Balance: {formatNumberStandard(balance?.xtz)}{' '}
+              Balance: {formatNumberStandard(tokenBalance)}{' '}
               <Text
                 as="span"
                 cursor="pointer"
                 color={maxColor}
-                onClick={() => formik.setFieldValue('amount', formatNumberStandard(balance?.xtz))}
+                onClick={() => formik.setFieldValue('amount', formatNumberStandard(tokenBalance))}
               >
                 (Max)
               </Text>
-            </Text>
-          </FormControl>
-
-          <Icon as={MdAdd} fontSize="lg" mt={-38} />
-
-          <FormControl id="to-input-amount" mb={8} w="45%">
-            <FormLabel color={text2} fontSize="xs">
-              ctez to deposit(approx)
-            </FormLabel>
-            <Input
-              value={formatNumberStandard(values.ctezAmount)}
-              readOnly
-              border={0}
-              color={text2}
-              placeholder="0.0"
-              type="text"
-              mt={-2}
-              lang="en-US"
-            />
-            <Text color={text4} fontSize="xs" mb={0}>
-              Balance: {formatNumberStandard(balance?.ctez)}
             </Text>
           </FormControl>
         </Flex>

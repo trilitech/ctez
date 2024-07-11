@@ -4,8 +4,8 @@ export interface AddLiquidityParams {
   owner: string;
   deadline: Date;
   minLqtMinted: number;
-  maxTokensDeposited: number;
   amount: number;
+  isCtezSide: boolean;
 }
 
 export interface RemoveLiquidityParams {
