@@ -20,7 +20,12 @@ const Liquidity: React.FC = () => {
         </Text>
       </Flex>
 
-      <AddLiquidity />
+
+      <Collapse in={!isOpen} animateOpacity>
+        <Box>
+          <AddLiquidity />
+        </Box>
+      </Collapse>
 
       <Button
         onClick={onToggle}

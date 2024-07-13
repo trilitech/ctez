@@ -53,9 +53,15 @@ export interface CTezContext {
   _Q: BigNumber;
 }
 
+export interface LiquidityOwner {
+  liquidity_shares : BigNumber;
+  proceeds_owed : BigNumber;
+  subsidy_owed : BigNumber;
+}
+
 export interface HalfDex {
   fee_index: BigNumber;
-  liquidity_owners: MichelsonMap<string, any>; /* TODO: fix types */
+  liquidity_owners: MichelsonMap<string, LiquidityOwner>;
   total_liquidity_shares: BigNumber
   self_reserves: BigNumber;
   proceeds_debts: BigNumber;

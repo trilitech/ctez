@@ -1,15 +1,15 @@
-import { Flex, FormControl, FormLabel, Icon, Input, Stack, useToast, Text } from '@chakra-ui/react';
+import { Flex, FormControl, FormLabel, Icon, Input, Stack, useToast, Text, Radio, RadioGroup } from '@chakra-ui/react';
 import { MdAdd } from 'react-icons/md';
 import { addMinutes } from 'date-fns/fp';
 import { useTranslation } from 'react-i18next';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { useFormik } from 'formik';
-import { RemoveLiquidityParams } from '../../../interfaces';
+import { LiquidityOwner, RemoveLiquidityParams } from '../../../interfaces';
 import { removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useUserLqtData } from '../../../api/queries';
+import { useCfmmStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
@@ -20,14 +20,23 @@ import {
 } from '../../../utils/numbers';
 import { BUTTON_TXT } from '../../../constants/swap';
 
+const calcRedeemedAmount = (liquidityRedeemed: number, reserves: number, totalLiquidityShares: number, debt: number): number => {
+  const denominator = Math.max(totalLiquidityShares, 1);
+  const redeemedAmount = Math.ceil(liquidityRedeemed * reserves / denominator);
+  return Math.max(redeemedAmount - debt, 0);
+}
+
 const RemoveLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
+  const [side, setSide] = React.useState('ctez')
   const [otherValues, setOtherValues] = useState({
-    cashWithdraw: 0,
-    tokenWithdraw: 0,
+    minSelfReceived: 0,
+    minProceedsReceived: 0,
+    minSubsidyReceived: 0,
   });
   const toast = useToast();
-  const { data: cfmmStorage } = useCfmmStorage();
+  const { data: ctezStorage } = useCtezStorage();
+  const { data: actualCtezStorage } = useCtezStorage();
   const { t } = useTranslation(['common']);
   const [text2, inputbg, text4, maxColor] = useThemeColors([
     'text2',
@@ -39,26 +48,35 @@ const RemoveLiquidity: React.FC = () => {
   const handleProcessing = useTxLoader();
   const { data: userLqtData } = useUserLqtData(userAddress);
 
+  const isCtezSide = side === 'ctez';
+  const lqtBalance = isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt;
+
   const calcMinValues = useCallback(
-    (lqtBurned: number) => {
+    async (lqtBurned: number) => {
       if (!lqtBurned) {
         setOtherValues({
-          cashWithdraw: 0,
-          tokenWithdraw: 0,
+          minSelfReceived: 0,
+          minProceedsReceived: 0,
+          minSubsidyReceived: 0,
         });
-      } else if (cfmmStorage) {
-        const { cashPool, tokenPool, lqtTotal } = cfmmStorage;
-        const cashWithdraw =
-          ((lqtBurned * 1e6 * cashPool.toNumber()) / lqtTotal.toNumber()) * (1 - slippage * 0.01);
-        const tokenWithdraw =
-          ((lqtBurned * 1e6 * tokenPool.toNumber()) / lqtTotal.toNumber()) * (1 - slippage * 0.01);
+      } else if (ctezStorage && actualCtezStorage && userAddress) {
+        const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
+        const account: LiquidityOwner = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
+        const lqtBurnedNat = lqtBurned * 1e6;
+        const slippageFactor = (1 - slippage * 0.01)
+        const totalLiquidityShares = dex.total_liquidity_shares.toNumber();
+        const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves.toNumber(), totalLiquidityShares, 0) * slippageFactor;
+        const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account.proceeds_owed.toNumber()) * slippageFactor;
+        const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account.subsidy_owed.toNumber()) * slippageFactor;
+
         setOtherValues({
-          cashWithdraw: formatNumberStandard(cashWithdraw / 1e6),
-          tokenWithdraw: formatNumberStandard(tokenWithdraw / 1e6),
+          minSelfReceived: formatNumberStandard(minSelfReceived / 1e6),
+          minProceedsReceived: formatNumberStandard(minProceedsReceived / 1e6),
+          minSubsidyReceived: formatNumberStandard(minSubsidyReceived / 1e6),
         });
       }
     },
-    [cfmmStorage, slippage],
+    [ctezStorage, slippage, side],
   );
 
   const initialValues: IRemoveLiquidityForm = {
@@ -67,7 +85,7 @@ const RemoveLiquidity: React.FC = () => {
     slippage: Number(slippage),
   };
 
-  const maxValue = (): number => formatNumber(userLqtData?.ctezDexLqt || 0.0);
+  const maxValue = (): number => formatNumber(lqtBalance || 0.0);
 
   const validationSchema = object().shape({
     lqtBurned: number()
@@ -86,12 +104,14 @@ const RemoveLiquidity: React.FC = () => {
           deadline,
           to: userAddress,
           lqtBurned: Number(formData.lqtBurned) * 1e6,
-          minCashWithdrawn: otherValues.cashWithdraw,
-          minTokensWithdrawn: otherValues.tokenWithdraw,
+          minSelfReceived: otherValues.minSelfReceived,
+          minProceedsReceived: otherValues.minProceedsReceived,
+          minSubsidyReceived: otherValues.minSubsidyReceived,
+          isCtezSide,
         };
         const result = await removeLiquidity(data, userAddress);
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error: any) {
         const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
           description: errorText,
@@ -107,9 +127,14 @@ const RemoveLiquidity: React.FC = () => {
     onSubmit: handleFormSubmit,
   });
 
+  const onHandleSideChanged = useCallback((sideValue: string) => {
+    setSide(sideValue);
+    formik.setFieldValue('lqtBurned', 0);
+  }, []);
+
   useEffect(() => {
     calcMinValues(Number(values.lqtBurned));
-  }, [calcMinValues, values.slippage, values.lqtBurned]);
+  }, [calcMinValues, values.slippage, values.lqtBurned, side]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
@@ -130,6 +155,12 @@ const RemoveLiquidity: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
       <Stack colorScheme="gray" spacing={2}>
+        <RadioGroup onChange={onHandleSideChanged} value={side} color={text2}>
+          <Stack direction='row' mb={4} spacing={8}>
+            <Radio value='ctez'>Ctez</Radio>
+            <Radio value='tez'>Tez</Radio>
+          </Stack>
+        </RadioGroup>
         <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
             LQT to burn
@@ -145,15 +176,15 @@ const RemoveLiquidity: React.FC = () => {
             type="text"
             lang="en-US"
           />
-          {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
-            <Text color={text4} fontSize="xs" mt={1}>
-              Balance: {formatNumberStandard(userLqtData?.ctezDexLqt / 1e6)}{' '}
+          {typeof lqtBalance !== 'undefined' && (
+            <Text color={text4} fontSize="xs" mt={1} mb={2}>
+              Balance: {formatNumberStandard(lqtBalance / 1e6)}{' '}
               <Text
                 as="span"
                 cursor="pointer"
                 color={maxColor}
                 onClick={() =>
-                  formik.setFieldValue('lqtBurned', formatNumberStandard(userLqtData?.ctezDexLqt / 1e6))
+                  formik.setFieldValue('lqtBurned', formatNumberStandard(lqtBalance / 1e6))
                 }
               >
                 (Max)
@@ -162,35 +193,52 @@ const RemoveLiquidity: React.FC = () => {
           )}
         </FormControl>
 
-        <Flex alignItems="center" justifyContent="space-between">
-          <FormControl id="to-input-amount" w="45%">
+        <Flex alignItems="center" direction="column" justifyContent="space-between">
+          <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. tez to withdraw
+              Min. self tokens ({isCtezSide ? 'ctez' : 'tez'}) to withdraw
             </FormLabel>
             <Input
               readOnly
-              border={0}
+              mb={2}
+              // border={0}
               placeholder="0.0"
               type="text"
               color={text2}
               lang="en-US"
-              value={otherValues.cashWithdraw}
+              value={otherValues.minSelfReceived}
             />
           </FormControl>
 
-          <Icon as={MdAdd} mb="-25" fontSize="lg" />
-          <FormControl id="to-input-amount" w="45%">
+          <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. ctez to withdraw
+              Min. proceeds ({isCtezSide ? 'tez' : 'ctez'}) to withdraw
             </FormLabel>
             <Input
               readOnly
-              border={0}
+              mb={2}
+              // border={0}
               placeholder="0.0"
               type="text"
               color={text2}
               lang="en-US"
-              value={otherValues.tokenWithdraw}
+              value={otherValues.minProceedsReceived}
+            />
+          </FormControl>
+
+          <FormControl id="to-input-amount">
+            <FormLabel color={text2} fontSize="xs">
+              Min. subsidy (ctez) to withdraw
+            </FormLabel>
+            <Input
+              readOnly
+              mb={2}
+              // border={0}
+              placeholder="0.0"
+              type="text"
+              color={text2}
+              lang="en-US"
+              value={otherValues.minSubsidyReceived}
             />
           </FormControl>
         </Flex>

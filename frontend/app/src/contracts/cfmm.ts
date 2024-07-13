@@ -116,33 +116,15 @@ export const removeLiquidity = async (
   userAddress: string,
 ): Promise<WalletOperation> => {
   const tezos = getTezosInstance();
-  const LQTFa12 = await getLQTContract();
-  const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
-    LQTFa12,
-    userAddress,
+
+  const hash = await cfmm.methods[args.isCtezSide ? 'remove_ctez_liquidity' : 'remove_tez_liquidity'](
+    args.to,
     args.lqtBurned,
-    'lqt',
-  );
-  const batch = tezos.wallet.batch([
-    ...batchOps,
-    {
-      kind: OpKind.TRANSACTION,
-      ...cfmm.methods
-        .removeLiquidity(
-          args.to,
-          args.lqtBurned,
-          args.minCashWithdrawn * 1e6,
-          args.minTokensWithdrawn * 1e6,
-          args.deadline.toISOString(),
-        )
-        .toTransferParams(),
-    },
-    {
-      kind: OpKind.TRANSACTION,
-      ...LQTFa12.methods.approve(CFMM_ADDRESS, 0).toTransferParams(),
-    },
-  ]);
-  const hash = await batch.send();
+    args.minSelfReceived * 1e6,
+    args.minProceedsReceived * 1e6,
+    args.minSubsidyReceived * 1e6,
+    args.deadline.toISOString(),
+  ).send();
   return hash;
 };
 

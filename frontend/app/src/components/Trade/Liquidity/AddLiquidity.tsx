@@ -66,7 +66,7 @@ const AddLiquidity: React.FC = () => {
     amount: '',
   };
 
-  const maxValue = (): number => ((isCtezSide ? balance?.ctez : balance?.xtz) || 0.0);
+  const maxValue = (): number => (tokenBalance || 0.0);
 
   const validationSchema = object().shape({
     slippage: number().min(0).optional(),
@@ -108,6 +108,11 @@ const AddLiquidity: React.FC = () => {
     onSubmit: handleFormSubmit,
   });
 
+  const onHandleSideChanged = useCallback((sideValue: string) => {
+    setSide(sideValue);
+    formik.setFieldValue('amount', 0);
+  }, []);
+
   useEffect(() => {
     calcMinLqt(Number(values.amount));
   }, [calcMinLqt, values.amount, side]);
@@ -129,7 +134,7 @@ const AddLiquidity: React.FC = () => {
     <form onSubmit={handleSubmit} id="add-liquidity-form">
       <Stack spacing={2}>
         <Text color={text2}>Add liquidity</Text>
-        <RadioGroup onChange={setSide} value={side} color={text2}>
+        <RadioGroup onChange={onHandleSideChanged} value={side} color={text2}>
           <Stack direction='row' mb={4} spacing={8}>
             <Radio value='ctez'>Ctez</Radio>
             <Radio value='tez'>Tez</Radio>

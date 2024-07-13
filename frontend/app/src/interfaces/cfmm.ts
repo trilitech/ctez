@@ -12,8 +12,10 @@ export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;
   lqtBurned: number;
-  minTokensWithdrawn: number;
-  minCashWithdrawn: number;
+  minSelfReceived : number;
+  minProceedsReceived: number;
+  minSubsidyReceived: number;
+  isCtezSide: boolean;
 }
 
 export interface CashToTokenParams {

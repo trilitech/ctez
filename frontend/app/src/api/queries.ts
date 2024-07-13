@@ -89,6 +89,19 @@ export const useCtezStorage = () => {
   );
 };
 
+export const useActualCtezStorage = () => {
+  return useQuery<CTezStorage, AxiosError, CTezStorage>(
+    ['actualCtezStorage'],
+    async () => {
+      return getActualCtezStorage();
+    },
+    {
+      refetchInterval: 30000,
+      staleTime: 3000,
+    },
+  );
+};
+
 export const useOvenData = (userAddress?: string, externalOvens: string[] = []) => {
   return useQuery<Oven[], AxiosError, Oven[]>(
     ['ovenData', userAddress, externalOvens.join()],
