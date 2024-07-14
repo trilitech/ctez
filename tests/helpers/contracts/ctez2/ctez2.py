@@ -83,7 +83,7 @@ class Ctez2(ContractHelper):
             'proceeds_reserves': 0,
             'subsidy_debts': 0,
             'subsidy_reserves': 0,
-            'fee_index' : 2**64,
+            'fee_index' : 1 * Ctez2.FLOAT_DENOMINATOR,
         }
 
         storage = {
@@ -92,7 +92,7 @@ class Ctez2(ContractHelper):
             'sell_tez': half_dex_storage,
             'sell_ctez': half_dex_storage,
             'context': {
-                'target': floor(target_ctez_price * 2**64), 
+                'target': floor(target_ctez_price * Ctez2.FLOAT_DENOMINATOR), 
                 'drift' : 0, 
                 '_Q' : 1,
                 'ctez_fa12_address' : NULL_ADDRESS,
