@@ -8,11 +8,11 @@ import {
 import BigNumber from 'bignumber.js';
 import {
   AddLiquidityParams,
-  CashToTokenParams,
+  TezToCtezParams,
   CfmmStorage,
   ErrorType,
   RemoveLiquidityParams,
-  TokenToCashParams,
+  ctezToTezParams,
   TokenToTokenParams,
 } from '../interfaces';
 import { CTEZ_ADDRESS as CFMM_ADDRESS } from '../utils/globals';
@@ -128,20 +128,20 @@ export const removeLiquidity = async (
   return hash;
 };
 
-export const cashToToken = async (args: CashToTokenParams): Promise<TransactionWalletOperation> => {
+export const tezToCtez = async (args: TezToCtezParams): Promise<TransactionWalletOperation> => {
   const operation = await executeMethod(
     cfmm,
-    'cashToToken',
-    [args.to, Math.floor(args.minTokensBought * 1e6), args.deadline.toISOString()],
+    'tez_to_ctez',
+    [args.to, Math.floor(args.minCtezBought * 1e6), args.deadline.toISOString()],
     undefined,
-    args.amount * 1e6,
+    args.tezSold * 1e6,
     true,
   );
   return operation;
 };
 
-export const tokenToCash = async (
-  args: TokenToCashParams,
+export const ctezToTez = async (
+  args: ctezToTezParams,
   userAddress: string,
 ): Promise<WalletOperation> => {
   const tezos = getTezosInstance();
@@ -149,7 +149,7 @@ export const tokenToCash = async (
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     CTezFa12,
     userAddress,
-    args.tokensSold,
+    args.ctezSold,
   );
 
   const batch = tezos.wallet.batch([
@@ -157,10 +157,10 @@ export const tokenToCash = async (
     {
       kind: OpKind.TRANSACTION,
       ...cfmm.methods
-        .tokenToCash(
+        .ctez_to_tez(
           args.to,
-          args.tokensSold * 1e6,
-          Math.floor(args.minCashBought * 1e6),
+          args.ctezSold * 1e6,
+          Math.floor(args.minTezBought * 1e6),
           args.deadline.toISOString(),
         )
         .toTransferParams(),

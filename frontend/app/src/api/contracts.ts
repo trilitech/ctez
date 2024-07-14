@@ -43,12 +43,14 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
     storage.context._Q.toNumber(),
     target
   );
+  const tezBuyPrice = 1 / ctezSellPrice;
 
-  const ctezBuyPrice = 1 / getMarginalPrice(
+  const tezSellPrice =  getMarginalPrice(
     storage.sell_tez.self_reserves.toNumber(),
     storage.context._Q.toNumber() * target,
     1 / target
   )
+  const ctezBuyPrice = 1 / tezSellPrice;
 
   const currentAvgPrice = (ctezSellPrice + ctezBuyPrice) / 2
   const premium = currentAvgPrice === target ? 0 : currentAvgPrice / target - 1.0;
@@ -59,7 +61,9 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
     originalTarget: storage.context.target.toNumber(),
     currentTarget: target.toFixed(6),
     currentCtezSellPrice: ctezSellPrice.toFixed(6),
+    currentTezSellPrice: tezSellPrice.toFixed(6),
     currentCtezBuyPrice: ctezBuyPrice.toFixed(6),
+    currentTezBuyPrice: tezBuyPrice.toFixed(6),
     currentAvgPrice: currentAvgPrice.toFixed(6),
     premium: (premium * 100).toFixed(2),
     currentAnnualDrift: (currentAnnualDrift * 100).toFixed(2),

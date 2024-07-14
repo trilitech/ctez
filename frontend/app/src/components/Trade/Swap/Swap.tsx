@@ -16,7 +16,7 @@ import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
+import { useCfmmStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
   ConversionFormParams,
@@ -26,18 +26,21 @@ import {
   TToken,
 } from '../../../constants/swap';
 import { CTezIcon, TezIcon } from '../../icons';
-import { cashToToken, tokenToCash } from '../../../contracts/cfmm';
+import { tezToCtez, ctezToTez } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
 import { useAppSelector } from '../../../redux/store';
 import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
+import { calcSelfTokensToSell } from '../../../contracts/ctez';
 
 const Swap: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
   const { data: cfmmStorage } = useCfmmStorage();
+  const { data: ctezStorage } = useCtezStorage();
+
   const { data: balance } = useUserBalance(userAddress);
   const { t } = useTranslation(['common', 'header']);
   const toast = useToast();
@@ -52,7 +55,7 @@ const Swap: React.FC = () => {
 
   const { slippage, deadline: deadlineFromStore } = useAppSelector((state) => state.trade);
   const [minReceived, setMinReceived] = useState(0);
-  const [priceImpact, setpriceImpact] = useState(0);
+  const [priceImpact, setPriceImpact] = useState(0);
 
   const getRightElement = useCallback((token: TToken) => {
     if (token === TOKEN.Tez) {
@@ -86,8 +89,8 @@ const Swap: React.FC = () => {
 
   const rate = (): number =>
     formType === FORM_TYPE.CTEZ_TEZ
-      ? formatNumberStandard(baseStats?.currentAvgPrice ?? 1)
-      : formatNumberStandard(1 / Number(baseStats?.currentAvgPrice ?? 1));
+      ? formatNumberStandard(baseStats?.currentTezSellPrice ?? 1)
+      : formatNumberStandard(baseStats?.currentCtezSellPrice ?? 1);
 
   const validationSchema = Yup.object().shape({
     slippage: Yup.number().min(0).optional(),
@@ -108,23 +111,23 @@ const Swap: React.FC = () => {
         const deadline = addMinutes(deadlineFromStore)(new Date());
         const result =
           formType === FORM_TYPE.TEZ_CTEZ
-            ? await cashToToken({
-                amount: formData.amount,
+            ? await tezToCtez({
+              tezSold: formData.amount,
+              deadline,
+              minCtezBought: minReceived,
+              to: userAddress,
+            })
+            : await ctezToTez(
+              {
                 deadline,
-                minTokensBought: minReceived,
+                minTezBought: minReceived,
                 to: userAddress,
-              })
-            : await tokenToCash(
-                {
-                  deadline,
-                  minCashBought: minReceived,
-                  to: userAddress,
-                  tokensSold: formData.amount,
-                },
-                userAddress,
-              );
+                ctezSold: formData.amount,
+              },
+              userAddress,
+            );
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error: any) {
         logger.warn(error);
         const errorText = error.data[1].with.string as string || t('txFailed');
         toast({
@@ -139,41 +142,37 @@ const Swap: React.FC = () => {
   });
 
   useEffect(() => {
-    if (cfmmStorage && values.amount) {
-      const { tokenPool, cashPool } = cfmmStorage;
-      const invariant = Number(cashPool) * Number(tokenPool);
-      let initialPrice: number;
-      const SwapAmount = values.amount * 1e6;
-      let recievedPrice: number;
-      if (formType === FORM_TYPE.CTEZ_TEZ) {
-        // 1 ctez = 11 tez
-        initialPrice = Number(cashPool) / Number(tokenPool);
-        const newTokenPool = Number(tokenPool) + SwapAmount * 0.9995;
-        const newCashPool = invariant / newTokenPool;
-        const difference = Number(cashPool) - newCashPool;
-        recievedPrice = difference / SwapAmount;
+    const calc = async () => {
+      if (cfmmStorage && values.amount) {
+        let initialPrice: number;
+        const swapAmount = values.amount * 1e6;
+        const tokWithoutSlippage = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmount)) / 1e6;
+        const receivedPrice = Number((values.amount / tokWithoutSlippage).toFixed(6));
+        console.log('values.amount', values.amount);
+        console.log('tokWithoutSlippage', tokWithoutSlippage);
+        console.log('receivedPrice', receivedPrice);
+
+        if (formType === FORM_TYPE.CTEZ_TEZ) {
+          initialPrice = Number(baseStats?.currentCtezSellPrice) || 1;
+        } else {
+          initialPrice = (Number(baseStats?.currentTezSellPrice) || 1);
+        }
+        const priceImpact1 = ((receivedPrice - initialPrice) * 100) / initialPrice;
+        console.log('initialPrice', initialPrice);
+        console.log('priceImpact1', priceImpact1);
+
+        setPriceImpact(priceImpact1);
+        setMinBuyValue(formatNumberStandard(tokWithoutSlippage.toFixed(6)));
+        const minRece = tokWithoutSlippage - (tokWithoutSlippage * slippage) / 100;
+        setMinReceived(minRece);
       } else {
-        initialPrice = Number(tokenPool) / Number(cashPool);
-        const newCashPool = Number(cashPool) + SwapAmount * 0.9995;
-        const newTokenPool = invariant / newCashPool;
-        const difference = Number(tokenPool) - newTokenPool;
-        recievedPrice = difference / SwapAmount;
-      }
-      const priceImpact1 = ((initialPrice - recievedPrice) * 100) / initialPrice;
-      setpriceImpact(priceImpact1);
-      const cashSold = values.amount * 1e6;
-      const [aPool, bPool] =
-        formType === FORM_TYPE.TEZ_CTEZ ? [tokenPool, cashPool] : [cashPool, tokenPool];
-      const tokWithoutSlippage =
-        (cashSold * 9995 * aPool.toNumber()) / (bPool.toNumber() * 10000 + cashSold * 9995) / 1e6;
-      setMinBuyValue(formatNumberStandard(tokWithoutSlippage.toFixed(6)));
-      const minRece = tokWithoutSlippage - (tokWithoutSlippage * slippage) / 100;
-      setMinReceived(minRece);
-    } else {
-      setMinBuyValue(0);
-      setMinReceived(0);
-      setpriceImpact(0);
+        setMinBuyValue(0);
+        setMinReceived(0);
+        setPriceImpact(0);
+      };
     }
+
+    calc();
   }, [cfmmStorage, formType, values.amount, slippage]);
 
   const { buttonText, errorList } = useMemo(() => {

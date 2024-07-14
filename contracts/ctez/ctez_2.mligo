@@ -64,6 +64,11 @@ type withdraw = {
   to_ : unit contract 
 }
 
+type calc_sell_amount = { 
+  is_sell_ctez_dex : bool; 
+  proceeds_amount : nat;
+}
+
 type storage = { 
   ovens : (Oven.handle, oven) big_map;
   last_update : timestamp;
@@ -427,7 +432,13 @@ let get_current_state () (s : storage) =
   }
 
 [@view]
-let get_target () (s : storage) : nat = s.context.target
+let calc_sell_amount 
+    ({ is_sell_ctez_dex ; proceeds_amount } : calc_sell_amount) 
+    (s : storage) 
+    : nat =
+  let _, s = get_actual_state s in
+  let dex, env = if is_sell_ctez_dex 
+    then (s.sell_ctez, sell_ctez_env) 
+    else (s.sell_tez, sell_tez_env) in
+  Half_dex.calc_self_tokens_to_sell dex s.context env proceeds_amount
 
-[@view]
-let get_drift () (s : storage) : int = s.context.drift

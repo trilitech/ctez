@@ -53,12 +53,22 @@ export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boo
   const storage = await cTez.storage<CTezStorage>();
   const dex = ctezDex ? storage.sell_ctez : storage.sell_tez;
   const lqt = (await dex.liquidity_owners.get(userAddress))?.liquidity_shares?.toNumber() ?? 0;
-  const lqtShare = dex.total_liquidity_shares.isZero() 
+  const lqtShare = dex.total_liquidity_shares.isZero()
     ? 0
     : Number(((lqt / dex.total_liquidity_shares.toNumber()) * 100).toFixed(6));
 
   return { lqt, lqtShare }
 }
+
+export const calcSelfTokensToSell = async (isSellCtezDex: boolean, proceedsAmount: number): Promise<number> => {
+  try {
+    const amount: BigNumber = await cTez.contractViews.calc_sell_amount({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount })
+      .executeView({ viewCaller: cTez.address });
+    return amount.toNumber();
+  } catch {
+    return 0;
+  }
+};
 
 export const create = async (
   userAddress: string,

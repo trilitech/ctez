@@ -9,7 +9,7 @@ import { LiquidityOwner, RemoveLiquidityParams } from '../../../interfaces';
 import { removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
+import { useActualCtezStorage, useCfmmStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
@@ -36,7 +36,7 @@ const RemoveLiquidity: React.FC = () => {
   });
   const toast = useToast();
   const { data: ctezStorage } = useCtezStorage();
-  const { data: actualCtezStorage } = useCtezStorage();
+  const { data: actualCtezStorage } = useActualCtezStorage();
   const { t } = useTranslation(['common']);
   const [text2, inputbg, text4, maxColor] = useThemeColors([
     'text2',
@@ -61,13 +61,13 @@ const RemoveLiquidity: React.FC = () => {
         });
       } else if (ctezStorage && actualCtezStorage && userAddress) {
         const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
-        const account: LiquidityOwner = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
+        const account = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
         const lqtBurnedNat = lqtBurned * 1e6;
         const slippageFactor = (1 - slippage * 0.01)
         const totalLiquidityShares = dex.total_liquidity_shares.toNumber();
         const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves.toNumber(), totalLiquidityShares, 0) * slippageFactor;
-        const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account.proceeds_owed.toNumber()) * slippageFactor;
-        const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account.subsidy_owed.toNumber()) * slippageFactor;
+        const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account?.proceeds_owed.toNumber() || 0) * slippageFactor;
+        const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account?.subsidy_owed.toNumber() || 0) * slippageFactor;
 
         setOtherValues({
           minSelfReceived: formatNumberStandard(minSelfReceived / 1e6),

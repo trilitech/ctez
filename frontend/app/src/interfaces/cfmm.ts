@@ -18,18 +18,18 @@ export interface RemoveLiquidityParams {
   isCtezSide: boolean;
 }
 
-export interface CashToTokenParams {
+export interface TezToCtezParams {
   to: string;
-  minTokensBought: number;
+  tezSold: number;
+  minCtezBought: number;
   deadline: Date;
-  amount: number;
   // cashSold: number; # For !CASH_IS_TEZ
 }
 
-export interface TokenToCashParams {
+export interface ctezToTezParams {
   to: string;
-  tokensSold: number;
-  minCashBought: number;
+  ctezSold: number;
+  minTezBought: number;
   deadline: Date;
 }
 

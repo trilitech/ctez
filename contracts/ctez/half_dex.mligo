@@ -256,6 +256,15 @@ type swap = {
   deadline : timestamp; (** deadline for the transaction *)
 }
 
+let calc_self_tokens_to_sell
+    (t : t) 
+    (ctxt : Context.t) 
+    (env : environment) 
+    (proceeds_amount : nat)
+    : nat =
+  let trade_amount = env.multiply_by_target ctxt proceeds_amount in
+  Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt)
+
 let swap 
     (t : t) 
     (ctxt : Context.t) 
@@ -263,8 +272,7 @@ let swap
     ({ to_; proceeds_amount; min_self; deadline } : swap)
     : t with_operations =
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let trade_amount = env.multiply_by_target ctxt proceeds_amount in
-  let self_to_sell = Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt) in
+  let self_to_sell = calc_self_tokens_to_sell t ctxt env proceeds_amount in
   let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
   let () = Assert.Error.assert (self_to_sell <= t.self_reserves) Errors.insufficient_tokens_liquidity in
   let t = { 

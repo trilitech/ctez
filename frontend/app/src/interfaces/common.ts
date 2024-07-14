@@ -10,7 +10,9 @@ export interface BaseStats {
   tezDexFeeIndex: string;
   currentTarget: string;
   currentCtezSellPrice: string;
+  currentTezSellPrice: string;
   currentCtezBuyPrice: string;
+  currentTezBuyPrice: string;
   currentAvgPrice: string;
   premium: string;
   currentAnnualDrift: string;
