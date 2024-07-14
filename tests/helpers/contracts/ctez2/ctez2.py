@@ -15,6 +15,8 @@ from math import floor
 from typing import NamedTuple, Optional
 
 class Ctez2(ContractHelper):
+    FLOAT_DENOMINATOR = 2**64
+
     class Errors:
         TEZ_IN_TRANSACTION_DISALLOWED = 'TEZ_IN_TRANSACTION_DISALLOWED'
         DEADLINE_HAS_PASSED = 'DEADLINE_HAS_PASSED'
@@ -34,6 +36,12 @@ class Ctez2(ContractHelper):
         EXCESSIVE_CTEZ_BURNING = 'EXCESSIVE_CTEZ_BURNING'
         EXCESSIVE_CTEZ_MINTING = 'EXCESSIVE_CTEZ_MINTING'
         NOT_UNDERCOLLATERALIZED = 'NOT_UNDERCOLLATERALIZED'
+
+    class Context(NamedTuple):
+        target: int
+        drift: int 
+        Q: int
+        ctez_fa12_address: str
 
     class HalfDex(NamedTuple):
         liquidity_owners: int
@@ -96,11 +104,12 @@ class Ctez2(ContractHelper):
 
         return originate_from_file(filename, client, storage)
 
-    def set_ctez_fa12_address(self, address : Addressable) -> ContractCall:
-        return self.contract.set_ctez_fa12_address(get_address(address))
+    def get_context(self) -> Context:
+        context = self.contract.storage()['context']
+        return Ctez2.Context(context['target'], context['drift'], context['_Q'], context['ctez_fa12_address'])
 
     def get_ctez_fa12_address(self) -> str:
-        return self.contract.storage()['context']['ctez_fa12_address']
+        return self.get_context().ctez_fa12_address
     
     def get_sell_ctez_dex(self) -> HalfDex:
         return Ctez2.HalfDex(**self.contract.storage()['sell_ctez']) 
@@ -122,6 +131,9 @@ class Ctez2(ContractHelper):
     def get_oven_contract(self, client: PyTezosClient, owner: Addressable, oven_id: int) -> Oven:
         oven_record = self.get_oven(owner, oven_id)
         return Oven.from_address(client, oven_record.address)
+
+    def set_ctez_fa12_address(self, address : Addressable) -> ContractCall:
+        return self.contract.set_ctez_fa12_address(get_address(address))
 
     def create_oven(
         self, 

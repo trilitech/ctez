@@ -109,7 +109,7 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
-  get_target_self_reserves = fun (c) -> Float64.mul c._Q c.target;
+  get_target_self_reserves = fun (c) -> max (Float64.mul c._Q c.target) 1n;
   multiply_by_target = fun (c) (amt) -> Float64.mul amt c.target;
 }
 

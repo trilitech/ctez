@@ -2,6 +2,7 @@ from math import floor
 from tests.ctez2.base import Ctez2BaseTestCase
 from parameterized import parameterized
 from tests.ctez2.test_cases import drift_and_target
+from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 
 class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
     @parameterized.expand(drift_and_target)
@@ -53,6 +54,32 @@ class Ctez2DriftAndTargetTestCase(Ctez2BaseTestCase):
         context = ctez2.contract.storage()['context']
         d_target = context['target'] - prev_target
         assert d_target == (prev_target * abs(new_drift) * delta // 2**64) * (-1 if new_drift < 0 else 1) # to check that drift applied correctly
+
+    def test_should_not_fail_when_target_lt_1_and_Q_is_1(self) -> None:
+        ctez2, ctez_token, sender, _, *_ = self.default_setup()
+        
+        # provide only tez liquidity which should make negative drift in next block
+        ctez2.add_tez_liquidity(sender, 0, self.get_future_timestamp()).with_amount(100_000_000).send()
+        self.bake_block()
+
+        # update drift to negative value by any action (just to call housekeeping)
+        ctez2.collect_from_tez_liquidity(sender).send()
+        self.bake_block()
+        context = ctez2.get_context()
+        prev_drift = context.drift
+        prev_target = context.target
+        assert prev_drift < (1 * Ctez2.FLOAT_DENOMINATOR)
+
+        # update target to the value less then 1. target += drift) by any action (just to call housekeeping)
+        ctez2.collect_from_tez_liquidity(sender).send()
+        self.bake_block()
+        context = ctez2.get_context()
+        assert context.target == prev_target + prev_drift
+        assert context.target < (1 * Ctez2.FLOAT_DENOMINATOR)
+
+        # check that housekeeping does not fail
+        ctez2.collect_from_tez_liquidity(sender).send()
+        self.bake_block()
 
     # def test_drift_and_target_calc(self) -> None:
     #     self.manager.context.now
