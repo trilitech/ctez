@@ -14,6 +14,7 @@ import {
   RemoveLiquidityParams,
   ctezToTezParams,
   TokenToTokenParams,
+  CollectFromLiquidityParams,
 } from '../interfaces';
 import { CTEZ_ADDRESS as CFMM_ADDRESS } from '../utils/globals';
 import { getTezosInstance } from './client';
@@ -124,6 +125,15 @@ export const removeLiquidity = async (
     args.minProceedsReceived * 1e6,
     args.minSubsidyReceived * 1e6,
     args.deadline.toISOString(),
+  ).send();
+  return hash;
+};
+
+export const collectFromLiquidity = async (
+  args: CollectFromLiquidityParams,
+): Promise<WalletOperation> => {
+  const hash = await cfmm.methods[args.isCtezSide ? 'collect_from_ctez_liquidity' : 'collect_from_tez_liquidity'](
+    args.to,
   ).send();
   return hash;
 };

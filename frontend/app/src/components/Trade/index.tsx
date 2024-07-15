@@ -13,6 +13,7 @@ import Liquidity from './Liquidity';
 import { ReactComponent as tune } from '../../assets/images/sidebar/tune_settings.svg';
 import Settings from './Settings';
 import { useThemeColors } from '../../hooks/utilHooks';
+import CollectFromLiquidity from './Liquidity/CollectFromLiquidity';
 
 const Trade: React.FC = () => {
   const [tabcolor, background] = useThemeColors(['tradebg', 'cardbg']);
@@ -35,7 +36,8 @@ const Trade: React.FC = () => {
         <TabList>
           <Tab>Swap</Tab>
           <Tab>Liquidity</Tab>
-          <Tab position="relative" left="147">
+          <Tab>Redeem</Tab>
+          <Tab position="relative" left="61">
             <Icon w={6} h={6} color="light.tradebg" as={tune} />
           </Tab>
         </TabList>
@@ -46,6 +48,9 @@ const Trade: React.FC = () => {
           </TabPanel>
           <TabPanel>
             <Liquidity />
+          </TabPanel>
+          <TabPanel>
+            <CollectFromLiquidity />
           </TabPanel>
           <TabPanel>
             <Settings />

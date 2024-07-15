@@ -8,6 +8,11 @@ export interface AddLiquidityParams {
   isCtezSide: boolean;
 }
 
+export interface CollectFromLiquidityParams {
+  to: string;
+  isCtezSide: boolean;
+}
+
 export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;

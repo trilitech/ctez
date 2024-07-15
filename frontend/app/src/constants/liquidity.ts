@@ -26,4 +26,10 @@ export const REMOVE_BTN_TXT = {
   REMOVE_LIQ: 'Remove Liquidity',
 } as const;
 
+export const COLLECT_BTN_TXT = {
+  CONNECT: 'Connect Wallet',
+  ENTER_AMT: 'Enter an amount',
+  Redeem: 'Redeem',
+} as const;
+
 export type TRemoveBtnTxt = ValueOf<typeof REMOVE_BTN_TXT>;

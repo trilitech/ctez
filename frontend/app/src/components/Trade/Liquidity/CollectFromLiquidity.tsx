@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { useFormik } from 'formik';
-import { LiquidityOwner, RemoveLiquidityParams } from '../../../interfaces';
-import { removeLiquidity } from '../../../contracts/cfmm';
-import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
+import { CollectFromLiquidityParams, LiquidityOwner, RemoveLiquidityParams } from '../../../interfaces';
+import { collectFromLiquidity, removeLiquidity } from '../../../contracts/cfmm';
+import { COLLECT_BTN_TXT, IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
 import { useActualCtezStorage, useCfmmStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
@@ -21,11 +21,10 @@ import {
 import { BUTTON_TXT } from '../../../constants/swap';
 import { calcRedeemedAmount } from './utlils';
 
-const RemoveLiquidity: React.FC = () => {
+const CollectFromLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [side, setSide] = React.useState('ctez')
   const [otherValues, setOtherValues] = useState({
-    minSelfReceived: 0,
     minProceedsReceived: 0,
     minSubsidyReceived: 0,
   });
@@ -50,7 +49,6 @@ const RemoveLiquidity: React.FC = () => {
     async (lqtBurned: number) => {
       if (!lqtBurned) {
         setOtherValues({
-          minSelfReceived: 0,
           minProceedsReceived: 0,
           minSubsidyReceived: 0,
         });
@@ -60,12 +58,10 @@ const RemoveLiquidity: React.FC = () => {
         const lqtBurnedNat = lqtBurned * 1e6;
         const slippageFactor = (1 - slippage * 0.01)
         const totalLiquidityShares = dex.total_liquidity_shares.toNumber();
-        const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves.toNumber(), totalLiquidityShares, 0) * slippageFactor;
         const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account?.proceeds_owed.toNumber() || 0) * slippageFactor;
         const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account?.subsidy_owed.toNumber() || 0) * slippageFactor;
 
         setOtherValues({
-          minSelfReceived: formatNumberStandard(minSelfReceived / 1e6),
           minProceedsReceived: formatNumberStandard(minProceedsReceived / 1e6),
           minSubsidyReceived: formatNumberStandard(minSubsidyReceived / 1e6),
         });
@@ -94,17 +90,11 @@ const RemoveLiquidity: React.FC = () => {
   const handleFormSubmit = async (formData: IRemoveLiquidityForm) => {
     if (userAddress) {
       try {
-        const deadline = addMinutes(deadlineFromStore)(new Date());
-        const data: RemoveLiquidityParams = {
-          deadline,
+        const data: CollectFromLiquidityParams = {
           to: userAddress,
-          lqtBurned: Number(formData.lqtBurned) * 1e6,
-          minSelfReceived: otherValues.minSelfReceived,
-          minProceedsReceived: otherValues.minProceedsReceived,
-          minSubsidyReceived: otherValues.minSubsidyReceived,
           isCtezSide,
         };
-        const result = await removeLiquidity(data, userAddress);
+        const result = await collectFromLiquidity(data);
         handleProcessing(result);
       } catch (error: any) {
         const errorText = error.data[1].with.string as string || t('txFailed');
@@ -141,7 +131,7 @@ const RemoveLiquidity: React.FC = () => {
         return { buttonText: errorListLocal[0], errorList: errorListLocal };
       }
 
-      return { buttonText: REMOVE_BTN_TXT.REMOVE_LIQ, errorList: errorListLocal };
+      return { buttonText: COLLECT_BTN_TXT.Redeem, errorList: errorListLocal };
     }
 
     return { buttonText: BUTTON_TXT.ENTER_AMT, errorList: errorListLocal };
@@ -191,22 +181,6 @@ const RemoveLiquidity: React.FC = () => {
         <Flex alignItems="center" direction="column" justifyContent="space-between">
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. self tokens ({isCtezSide ? 'ctez' : 'tez'}) to withdraw
-            </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.minSelfReceived}
-            />
-          </FormControl>
-
-          <FormControl id="to-input-amount">
-            <FormLabel color={text2} fontSize="xs">
               Min. proceeds ({isCtezSide ? 'tez' : 'ctez'}) to withdraw
             </FormLabel>
             <Input
@@ -251,4 +225,4 @@ const RemoveLiquidity: React.FC = () => {
   );
 };
 
-export default RemoveLiquidity;
+export default CollectFromLiquidity;
