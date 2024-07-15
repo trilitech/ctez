@@ -76,7 +76,7 @@ const RemoveLiquidity: React.FC = () => {
         });
       }
     },
-    [ctezStorage, slippage, side],
+    [ctezStorage, actualCtezStorage, slippage, side],
   );
 
   const initialValues: IRemoveLiquidityForm = {

@@ -57,7 +57,7 @@ const AddLiquidity: React.FC = () => {
         setMinLqt(-1);
       }
     },
-    [slippage, side],
+    [slippage, side, ctezStorage],
   );
 
   const initialValues: IAddLiquidityForm = {

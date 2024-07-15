@@ -38,7 +38,6 @@ const Swap: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
-  const { data: cfmmStorage } = useCfmmStorage();
   const { data: ctezStorage } = useCtezStorage();
 
   const { data: balance } = useUserBalance(userAddress);
@@ -54,6 +53,7 @@ const Swap: React.FC = () => {
   const handleProcessing = useTxLoader();
 
   const { slippage, deadline: deadlineFromStore } = useAppSelector((state) => state.trade);
+  const [received, setReceived] = useState(0);
   const [minReceived, setMinReceived] = useState(0);
   const [priceImpact, setPriceImpact] = useState(0);
 
@@ -91,6 +91,14 @@ const Swap: React.FC = () => {
     formType === FORM_TYPE.CTEZ_TEZ
       ? formatNumberStandard(baseStats?.currentTezSellPrice ?? 1)
       : formatNumberStandard(baseStats?.currentCtezSellPrice ?? 1);
+
+  const getDexLiquidity = useCallback((): number => {
+    const dex = formType === FORM_TYPE.CTEZ_TEZ
+      ? ctezStorage?.sell_tez
+      : ctezStorage?.sell_ctez;
+
+    return (dex?.self_reserves.toNumber() || 0) / 1e6
+  }, [formType, ctezStorage]);
 
   const validationSchema = Yup.object().shape({
     slippage: Yup.number().min(0).optional(),
@@ -143,28 +151,24 @@ const Swap: React.FC = () => {
 
   useEffect(() => {
     const calc = async () => {
-      if (cfmmStorage && values.amount) {
+      if (values.amount) {
         let initialPrice: number;
         const swapAmount = values.amount * 1e6;
-        const tokWithoutSlippage = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmount)) / 1e6;
-        const receivedPrice = Number((values.amount / tokWithoutSlippage).toFixed(6));
-        console.log('values.amount', values.amount);
-        console.log('tokWithoutSlippage', tokWithoutSlippage);
-        console.log('receivedPrice', receivedPrice);
+        const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmount)) / 1e6;
+        const receivedPrice = Number((values.amount / receivedLocal).toFixed(6));
 
-        if (formType === FORM_TYPE.CTEZ_TEZ) {
+        if (formType === FORM_TYPE.TEZ_CTEZ) {
           initialPrice = Number(baseStats?.currentCtezSellPrice) || 1;
         } else {
-          initialPrice = (Number(baseStats?.currentTezSellPrice) || 1);
+          initialPrice = Number(baseStats?.currentTezSellPrice) || 1;
         }
-        const priceImpact1 = ((receivedPrice - initialPrice) * 100) / initialPrice;
-        console.log('initialPrice', initialPrice);
-        console.log('priceImpact1', priceImpact1);
+        const priceImpactLocal = ((receivedPrice - initialPrice) * 100) / initialPrice;
 
-        setPriceImpact(priceImpact1);
-        setMinBuyValue(formatNumberStandard(tokWithoutSlippage.toFixed(6)));
-        const minRece = tokWithoutSlippage - (tokWithoutSlippage * slippage) / 100;
-        setMinReceived(minRece);
+        setPriceImpact(priceImpactLocal);
+        setMinBuyValue(formatNumberStandard(receivedLocal.toFixed(6)));
+        const minReceivedLocal = receivedLocal - (receivedLocal * slippage) / 100;
+        setReceived(receivedLocal);
+        setMinReceived(minReceivedLocal);
       } else {
         setMinBuyValue(0);
         setMinReceived(0);
@@ -173,23 +177,28 @@ const Swap: React.FC = () => {
     }
 
     calc();
-  }, [cfmmStorage, formType, values.amount, slippage]);
+  }, [formType, values.amount, slippage]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
     if (!userAddress) {
       return { buttonText: BUTTON_TXT.CONNECT, errorList: errorListLocal };
     }
+
     if (values.amount) {
       if (errorListLocal.length > 0) {
         return { buttonText: errorListLocal[0], errorList: errorListLocal };
+      }
+  
+      if (received > getDexLiquidity()) {
+        return { buttonText: BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY, errorList: [BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY] };
       }
 
       return { buttonText: BUTTON_TXT.SWAP, errorList: errorListLocal };
     }
 
     return { buttonText: BUTTON_TXT.ENTER_AMT, errorList: errorListLocal };
-  }, [errors, userAddress, values.amount]);
+  }, [errors, userAddress, values.amount, minReceived, getDexLiquidity]);
 
   return (
     <form autoComplete="off" onSubmit={handleSubmit}>
@@ -279,6 +288,13 @@ const Swap: React.FC = () => {
         </Text>
       </FormControl>
 
+      <Flex justifyContent="space-between">
+        <Text fontSize="xs">Dex liquidity</Text>
+        <Text color={text2} fontSize="xs">
+          {getDexLiquidity()}{' '}
+          {formType === FORM_TYPE.CTEZ_TEZ ? 'tez' : 'ctez'}
+        </Text>
+      </Flex>
       <Flex justifyContent="space-between">
         <Text fontSize="xs">Rate</Text>
         <Text color={text2} fontSize="xs">

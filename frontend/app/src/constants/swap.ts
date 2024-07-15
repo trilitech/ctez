@@ -16,6 +16,7 @@ export const BUTTON_TXT = {
   MINT: 'Mint',
   CREATE_OVEN: 'Create Oven',
   CONFIRM: 'confirm',
+  INSUFFICIENT_DEX_LIQUIDITY: 'Insufficient dex liquidity',
 } as const;
 
 export type TButtonText = ValueOf<typeof BUTTON_TXT>;
