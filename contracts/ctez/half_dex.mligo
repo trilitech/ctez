@@ -285,6 +285,22 @@ let swap
 
 type collect_proceeds_and_subsidy = { to_: address }
 
+[@inline]
+let calc_amounts_after_collect 
+    (liquidity_shares : nat)
+    (dex_reserves : nat)
+    (total_liquidity_shares: nat)
+    (dex_total_debts : nat)
+    (owed_by_owner: nat): nat * nat * nat =
+  let share_of_reserves = redeem_amount
+    liquidity_shares
+    dex_reserves
+    total_liquidity_shares
+  in
+  let amount_to_withdrawn = clamp_nat (share_of_reserves - owed_by_owner) in
+  let new_dex_total_debts = dex_total_debts + amount_to_withdrawn in
+  (share_of_reserves, amount_to_withdrawn, new_dex_total_debts)
+
 let collect_proceeds_and_subsidy
     (t : t)
     (ctxt : Context.t)
@@ -293,29 +309,21 @@ let collect_proceeds_and_subsidy
     : t with_operations =
   let owner = Tezos.get_sender () in
   let liquidity_owner = find_liquidity_owner t owner in
-  (* compute withdrawable amount of proceeds *)
-  let share_of_proceeds = redeem_amount
-    liquidity_owner.liquidity_shares
-    t.proceeds_reserves
-    t.total_liquidity_shares
-  in
-  let amount_proceeds_withdrawn = clamp_nat (share_of_proceeds - liquidity_owner.proceeds_owed) in
-  (* compute withdrawable amount of subsidy *)
-  let share_of_subsidy = redeem_amount
-    liquidity_owner.liquidity_shares
-    t.subsidy_reserves
-    t.total_liquidity_shares
-  in
-  let amount_subsidy_withdrawn = clamp_nat (share_of_subsidy - liquidity_owner.subsidy_owed) in
+  let liquidity_shares = liquidity_owner.liquidity_shares in
+  let total_liquidity_shares = t.total_liquidity_shares in
+  let proceeds_owed, amount_proceeds_withdrawn, proceeds_debts = calc_amounts_after_collect 
+    liquidity_shares t.proceeds_reserves total_liquidity_shares t.proceeds_debts liquidity_owner.proceeds_owed in
+  let subsidy_owed, amount_subsidy_withdrawn, subsidy_debts = calc_amounts_after_collect 
+    liquidity_shares t.subsidy_reserves total_liquidity_shares t.subsidy_debts liquidity_owner.subsidy_owed in
   let t = {
     t with
-    proceeds_debts = subtract_nat (t.proceeds_debts + liquidity_owner.proceeds_owed) share_of_proceeds Errors.incorrect_subtraction;
-    subsidy_debts = subtract_nat (t.subsidy_debts + liquidity_owner.subsidy_owed) share_of_subsidy Errors.incorrect_subtraction
+    proceeds_debts = proceeds_debts;
+    subsidy_debts = subsidy_debts
   } in
   let t = set_liquidity_owner t owner { 
     liquidity_owner with
-    proceeds_owed = share_of_proceeds;
-    subsidy_owed = share_of_subsidy;
+    proceeds_owed = proceeds_owed;
+    subsidy_owed = subsidy_owed;
   }
   in
   let ops = [] in
