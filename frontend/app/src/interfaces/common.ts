@@ -6,18 +6,23 @@ export type AddressTrimSizeType = 'small' | 'medium' | 'large';
 
 export interface BaseStats {
   originalTarget: number;
-  ctezDexFeeIndex: string;
-  tezDexFeeIndex: string;
-  currentTarget: string;
-  currentCtezSellPrice: string;
-  currentTezSellPrice: string;
-  currentCtezBuyPrice: string;
-  currentTezBuyPrice: string;
-  currentAvgPrice: string;
-  premium: string;
-  currentAnnualDrift: string;
+  ctezDexFeeIndex: number;
+  tezDexFeeIndex: number;
+  currentTarget: number;
+  currentCtezSellPrice: number;
+  currentTezSellPrice: number;
+  currentCtezBuyPrice: number;
+  currentTezBuyPrice: number;
+  currentAvgPrice: number;
+  premium: number;
+  currentAnnualDrift: number;
   drift: number;
-  [key: string]: string | number;
+  ctezDexSelfTokens: number;
+  ctezDexProceeds: number;
+  ctezDexSubsidy: number;
+  tezDexSelfTokens: number;
+  tezDexProceeds: number;
+  tezDexSubsidy: number;
 }
 
 export interface UserOvenStats {

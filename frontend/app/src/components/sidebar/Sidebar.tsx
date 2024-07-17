@@ -47,20 +47,28 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
   const stats = () => {
     return (
       <Flex direction="column">
-        <Flex direction="row">
+        <Flex direction="row" fontWeight="bold">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Current Target
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentTarget}
+            {data?.currentTarget.toFixed(6)}
           </Text>
         </Flex>
-        <Flex direction="row">
+        <Flex direction="row"  mt={2}>
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Current Sell Price
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezSellPrice}
+            {data?.currentCtezSellPrice.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row" fontWeight="bold">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Current Avg Price
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentAvgPrice.toFixed(6)}
           </Text>
         </Flex>
         <Flex direction="row">
@@ -68,23 +76,15 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
             Current Buy Price
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezBuyPrice}
+            {data?.currentCtezBuyPrice.toFixed(6)}
           </Text>
         </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Avg Price
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAvgPrice}
-          </Text>
-        </Flex>
-        <Flex direction="row">
+        <Flex direction="row" mt={2}>
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Premium
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.premium}%
+            {data?.premium.toFixed(2)}%
           </Text>
         </Flex>
         <Flex direction="row">
@@ -92,7 +92,61 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
             Current Annual Drift
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAnnualDrift}%
+            {data?.currentAnnualDrift.toFixed(2)}%
+          </Text>
+        </Flex>
+        <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
+            Sell Ctez Dex:
+        </Text>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Self tokens
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.ctezDexSelfTokens.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Proceeds
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.ctezDexProceeds.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Subsidy
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.ctezDexSubsidy.toFixed(6)}
+          </Text>
+        </Flex>
+        <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
+            Sell Tez Dex:
+        </Text>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Self tokens
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.tezDexSelfTokens.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Proceeds
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.tezDexProceeds.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Subsidy
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.tezDexSubsidy.toFixed(6)}
           </Text>
         </Flex>
         {/* <Flex direction="row">

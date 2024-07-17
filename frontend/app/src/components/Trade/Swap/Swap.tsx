@@ -16,7 +16,7 @@ import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
+import { useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
   ConversionFormParams,
@@ -158,9 +158,9 @@ const Swap: React.FC = () => {
         const receivedPrice = Number((values.amount / receivedLocal).toFixed(6));
 
         if (formType === FORM_TYPE.TEZ_CTEZ) {
-          initialPrice = Number(baseStats?.currentCtezSellPrice) || 1;
+          initialPrice = baseStats?.currentCtezSellPrice ?? 1;
         } else {
-          initialPrice = Number(baseStats?.currentTezSellPrice) || 1;
+          initialPrice = baseStats?.currentTezSellPrice ?? 1;
         }
         const priceImpactLocal = ((receivedPrice - initialPrice) * 100) / initialPrice;
 

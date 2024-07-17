@@ -55,10 +55,10 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
   const result = useMemo(
     () =>
       isMonthFromLiquidation(
-        Number(stats?.outStandingCtez),
-        Number(data?.currentTarget),
-        Number(stats?.ovenBalance ?? 0),
-        Number(data?.currentAnnualDrift),
+        stats?.outStandingCtez ?? 0,
+        data?.currentTarget ?? 0,
+        stats?.ovenBalance ?? 0,
+        data?.currentAnnualDrift ?? 0,
         true,
       ),
     [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance],

@@ -6,7 +6,7 @@ import { number, object } from 'yup';
 import { addMinutes } from 'date-fns/fp';
 import { useFormik } from 'formik';
 import { useWallet } from '../../../wallet/hooks';
-import { useCfmmStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
+import { useCtezStorage, useUserBalance } from '../../../api/queries';
 
 import { AddLiquidityParams, HalfDex } from '../../../interfaces';
 import { ADD_BTN_TXT, IAddLiquidityForm } from '../../../constants/liquidity';
