@@ -1,5 +1,4 @@
-import { Flex, FormControl, FormLabel, Icon, Input, Radio, RadioGroup, Stack, Text, useToast } from '@chakra-ui/react';
-import { MdAdd } from 'react-icons/md';
+import { Flex, FormControl, FormLabel, Input, InputGroup, Stack, Text, useToast } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
@@ -12,12 +11,13 @@ import { AddLiquidityParams, HalfDex } from '../../../interfaces';
 import { ADD_BTN_TXT, IAddLiquidityForm } from '../../../constants/liquidity';
 import { addLiquidity } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
-import { BUTTON_TXT } from '../../../constants/swap';
+import { BUTTON_TXT, TOKEN } from '../../../constants/swap';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
-import { getCtezStorage } from '../../../contracts/ctez';
+import DexSideSelector, { DexSide } from './DexSideSelector';
+import TokenInputIcon from '../TokenInputIcon';
 
 const calcLiquidityMinted = (depositAmount: number, dex: HalfDex): number => {
   const numerator = Math.max(dex.total_liquidity_shares.toNumber(), 1);
@@ -30,7 +30,7 @@ const AddLiquidity: React.FC = () => {
   const [minLqt, setMinLqt] = useState(0);
   const { data: balance } = useUserBalance(userAddress);
   const { data: ctezStorage } = useCtezStorage();
-  const [side, setSide] = React.useState('ctez')
+  const [side, setSide] = React.useState<DexSide>('ctez')
   const { t } = useTranslation(['common']);
   const toast = useToast();
   const [text2, inputbg, text4, maxColor] = useThemeColors([
@@ -41,7 +41,7 @@ const AddLiquidity: React.FC = () => {
   ]);
   const { slippage, deadline: deadlineFromStore } = useAppSelector((state) => state.trade);
   const handleProcessing = useTxLoader();
-  
+
   const isCtezSide = side === 'ctez';
   const tokenBalance = isCtezSide ? balance?.ctez : balance?.xtz;
 
@@ -108,7 +108,7 @@ const AddLiquidity: React.FC = () => {
     onSubmit: handleFormSubmit,
   });
 
-  const onHandleSideChanged = useCallback((sideValue: string) => {
+  const onHandleSideChanged = useCallback((sideValue: DexSide) => {
     setSide(sideValue);
     formik.setFieldValue('amount', 0);
   }, []);
@@ -134,12 +134,7 @@ const AddLiquidity: React.FC = () => {
     <form onSubmit={handleSubmit} id="add-liquidity-form">
       <Stack spacing={2}>
         <Text color={text2}>Add liquidity</Text>
-        <RadioGroup onChange={onHandleSideChanged} value={side} color={text2}>
-          <Stack direction='row' mb={4} spacing={8}>
-            <Radio value='ctez'>Ctez</Radio>
-            <Radio value='tez'>Tez</Radio>
-          </Stack>
-        </RadioGroup>
+        <DexSideSelector onChange={onHandleSideChanged} value={side} />
         <Flex alignItems="center" justifyContent="space-between">
           <FormControl
             display="flex"
@@ -150,19 +145,22 @@ const AddLiquidity: React.FC = () => {
             w="100%"
           >
             <FormLabel color={text2} fontSize="xs">
-              {isCtezSide ? 'ctez' : 'tez'} to deposit
+              Deposit
             </FormLabel>
-            <Input
-              name="amount"
-              id="amount"
-              placeholder="0.0"
-              color={text2}
-              bg={inputbg}
-              value={inputFormatNumberStandard(values.amount)}
-              onChange={handleChange}
-              type="text"
-              lang="en-US"
-            />
+            <InputGroup>
+              <Input
+                name="amount"
+                id="amount"
+                placeholder="0.0"
+                color={text2}
+                bg={inputbg}
+                value={inputFormatNumberStandard(values.amount)}
+                onChange={handleChange}
+                type="text"
+                lang="en-US"
+              />
+              <TokenInputIcon token={isCtezSide ? TOKEN.CTez : TOKEN.Tez} />
+            </InputGroup>
             <Text color={text4} fontSize="xs" mt={1}>
               Balance: {formatNumberStandard(tokenBalance)}{' '}
               <Text

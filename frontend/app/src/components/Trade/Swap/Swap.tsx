@@ -5,7 +5,6 @@ import {
   IconButton,
   Input,
   InputGroup,
-  InputRightElement,
   Text,
   useToast,
 } from '@chakra-ui/react';
@@ -23,9 +22,7 @@ import {
   FORM_TYPE,
   TFormType,
   TOKEN,
-  TToken,
 } from '../../../constants/swap';
-import { CTezIcon, TezIcon } from '../../icons';
 import { tezToCtez, ctezToTez } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
 import { useAppSelector } from '../../../redux/store';
@@ -33,6 +30,7 @@ import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
 import { calcSelfTokensToSell } from '../../../contracts/ctez';
+import TokenInputIcon from '../TokenInputIcon';
 
 const Swap: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
@@ -56,24 +54,6 @@ const Swap: React.FC = () => {
   const [received, setReceived] = useState(0);
   const [minReceived, setMinReceived] = useState(0);
   const [priceImpact, setPriceImpact] = useState(0);
-
-  const getRightElement = useCallback((token: TToken) => {
-    if (token === TOKEN.Tez) {
-      return (
-        <InputRightElement backgroundColor="transparent" w={24}>
-          <TezIcon height={28} width={28} />
-          <Text mx={1}>tez</Text>
-        </InputRightElement>
-      );
-    }
-
-    return (
-      <InputRightElement backgroundColor="transparent" w={24}>
-        <CTezIcon height={28} width={28} />
-        <Text mx={1}>ctez</Text>
-      </InputRightElement>
-    );
-  }, []);
 
   const initialValues = useMemo<ConversionFormParams>(
     () => ({
@@ -218,7 +198,7 @@ const Swap: React.FC = () => {
             onChange={handleChange}
             lang="en-US"
           />
-          {getRightElement(formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.CTez : TOKEN.Tez)}
+          <TokenInputIcon token={formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.CTez : TOKEN.Tez} />
         </InputGroup>
         <Text color={text4} fontSize="xs" mt={1}>
           Balance:{' '}
@@ -278,7 +258,7 @@ const Swap: React.FC = () => {
             type="text"
             lang="en-US"
           />
-          {getRightElement(formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez)}
+          <TokenInputIcon token={formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez} />
         </InputGroup>
         <Flex justifyContent="space-between" fontSize="xs" mt={1}>
           <Text color={text4} fontSize="xs">

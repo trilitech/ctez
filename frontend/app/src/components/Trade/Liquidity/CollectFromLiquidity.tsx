@@ -1,4 +1,4 @@
-import { Flex, FormControl, FormLabel, Input, Stack, useToast, Radio, RadioGroup } from '@chakra-ui/react';
+import { Flex, FormControl, FormLabel, Input, Stack, useToast, InputGroup } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
@@ -14,10 +14,13 @@ import {
   inputFormatNumberStandard,
 } from '../../../utils/numbers';
 import { calcRedeemedAmount } from './utlils';
+import DexSideSelector, { DexSide } from './DexSideSelector';
+import TokenInputIcon from '../TokenInputIcon';
+import { TOKEN } from '../../../constants/swap';
 
 const CollectFromLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
-  const [side, setSide] = React.useState('ctez')
+  const [side, setSide] = React.useState<DexSide>('ctez')
   const [otherValues, setOtherValues] = useState({
     proceedsReceived: 0,
     subsidyReceived: 0,
@@ -85,7 +88,7 @@ const CollectFromLiquidity: React.FC = () => {
     onSubmit: handleFormSubmit,
   });
 
-  const onHandleSideChanged = useCallback((sideValue: string) => {
+  const onHandleSideChanged = useCallback((sideValue: DexSide) => {
     setSide(sideValue);
   }, []);
 
@@ -110,12 +113,7 @@ const CollectFromLiquidity: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
       <Stack colorScheme="gray" spacing={2}>
-        <RadioGroup onChange={onHandleSideChanged} value={side} color={text2}>
-          <Stack direction='row' mb={4} spacing={8}>
-            <Radio value='ctez'>Ctez</Radio>
-            <Radio value='tez'>Tez</Radio>
-          </Stack>
-        </RadioGroup>
+        <DexSideSelector onChange={onHandleSideChanged} value={side} />
         <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
             LQT Balance
@@ -136,34 +134,38 @@ const CollectFromLiquidity: React.FC = () => {
         <Flex alignItems="center" direction="column" justifyContent="space-between">
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Proceeds ({isCtezSide ? 'tez' : 'ctez'}) to withdraw
+              Proceeds to withdraw
             </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.proceedsReceived}
-            />
+            <InputGroup>
+              <Input
+                readOnly
+                mb={2}
+                placeholder="0.0"
+                type="text"
+                color={text2}
+                lang="en-US"
+                value={otherValues.proceedsReceived}
+              />
+              <TokenInputIcon token={isCtezSide ? TOKEN.Tez : TOKEN.CTez} />
+            </InputGroup>
           </FormControl>
 
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Subsidy (ctez) to withdraw
+              Subsidy to withdraw
             </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.subsidyReceived}
-            />
+            <InputGroup>
+              <Input
+                readOnly
+                mb={2}
+                placeholder="0.0"
+                type="text"
+                color={text2}
+                lang="en-US"
+                value={otherValues.subsidyReceived}
+              />
+              <TokenInputIcon token={TOKEN.CTez} />
+            </InputGroup>
           </FormControl>
         </Flex>
         <Button

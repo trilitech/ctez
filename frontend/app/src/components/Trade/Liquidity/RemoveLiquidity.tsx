@@ -1,15 +1,14 @@
-import { Flex, FormControl, FormLabel, Icon, Input, Stack, useToast, Text, Radio, RadioGroup } from '@chakra-ui/react';
-import { MdAdd } from 'react-icons/md';
+import { Flex, FormControl, FormLabel, Input, Stack, useToast, Text, InputGroup } from '@chakra-ui/react';
 import { addMinutes } from 'date-fns/fp';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { useFormik } from 'formik';
-import { LiquidityOwner, RemoveLiquidityParams } from '../../../interfaces';
+import { RemoveLiquidityParams } from '../../../interfaces';
 import { removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
-import { useActualCtezStorage, useCfmmStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
+import { useActualCtezStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
@@ -18,12 +17,14 @@ import {
   formatNumberStandard,
   inputFormatNumberStandard,
 } from '../../../utils/numbers';
-import { BUTTON_TXT } from '../../../constants/swap';
+import { BUTTON_TXT, TOKEN } from '../../../constants/swap';
 import { calcRedeemedAmount } from './utlils';
+import DexSideSelector, { DexSide } from './DexSideSelector';
+import TokenInputIcon from '../TokenInputIcon';
 
 const RemoveLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
-  const [side, setSide] = React.useState('ctez')
+  const [side, setSide] = React.useState<DexSide>('ctez')
   const [otherValues, setOtherValues] = useState({
     minSelfReceived: 0,
     minProceedsReceived: 0,
@@ -122,7 +123,7 @@ const RemoveLiquidity: React.FC = () => {
     onSubmit: handleFormSubmit,
   });
 
-  const onHandleSideChanged = useCallback((sideValue: string) => {
+  const onHandleSideChanged = useCallback((sideValue: DexSide) => {
     setSide(sideValue);
     formik.setFieldValue('lqtBurned', 0);
   }, []);
@@ -150,12 +151,7 @@ const RemoveLiquidity: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
       <Stack colorScheme="gray" spacing={2}>
-        <RadioGroup onChange={onHandleSideChanged} value={side} color={text2}>
-          <Stack direction='row' mb={4} spacing={8}>
-            <Radio value='ctez'>Ctez</Radio>
-            <Radio value='tez'>Tez</Radio>
-          </Stack>
-        </RadioGroup>
+        <DexSideSelector onChange={onHandleSideChanged} value={side} />
         <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
             LQT to burn
@@ -191,50 +187,56 @@ const RemoveLiquidity: React.FC = () => {
         <Flex alignItems="center" direction="column" justifyContent="space-between">
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. self tokens ({isCtezSide ? 'ctez' : 'tez'}) to withdraw
+              Min. self tokens to withdraw
             </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.minSelfReceived}
-            />
+            <InputGroup>
+              <Input
+                readOnly
+                mb={2}
+                placeholder="0.0"
+                type="text"
+                color={text2}
+                lang="en-US"
+                value={otherValues.minSelfReceived}
+              />
+              <TokenInputIcon token={isCtezSide ? TOKEN.CTez : TOKEN.Tez} />
+            </InputGroup>
           </FormControl>
 
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. proceeds ({isCtezSide ? 'tez' : 'ctez'}) to withdraw
+              Min. proceeds to withdraw
             </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.minProceedsReceived}
-            />
+            <InputGroup>
+              <Input
+                readOnly
+                mb={2}
+                placeholder="0.0"
+                type="text"
+                color={text2}
+                lang="en-US"
+                value={otherValues.minProceedsReceived}
+              />
+              <TokenInputIcon token={isCtezSide ? TOKEN.Tez : TOKEN.CTez} />
+            </InputGroup>
           </FormControl>
 
           <FormControl id="to-input-amount">
             <FormLabel color={text2} fontSize="xs">
-              Min. subsidy (ctez) to withdraw
+              Min. subsidy to withdraw
             </FormLabel>
-            <Input
-              readOnly
-              mb={2}
-              // border={0}
-              placeholder="0.0"
-              type="text"
-              color={text2}
-              lang="en-US"
-              value={otherValues.minSubsidyReceived}
-            />
+            <InputGroup>
+              <Input
+                readOnly
+                mb={2}
+                placeholder="0.0"
+                type="text"
+                color={text2}
+                lang="en-US"
+                value={otherValues.minSubsidyReceived}
+              />
+              <TokenInputIcon token={TOKEN.CTez} />
+            </InputGroup>
           </FormControl>
         </Flex>
         <Button
