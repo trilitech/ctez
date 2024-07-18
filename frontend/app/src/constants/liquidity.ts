@@ -29,7 +29,9 @@ export const REMOVE_BTN_TXT = {
 export const COLLECT_BTN_TXT = {
   CONNECT: 'Connect Wallet',
   ENTER_AMT: 'Enter an amount',
-  Redeem: 'Redeem',
+  REDEEM: 'Redeem',
+  NO_SHARE: 'You have no share in the dex',
+  NO_WITHDRAWS: 'There is nothing to withdraw',
 } as const;
 
 export type TRemoveBtnTxt = ValueOf<typeof REMOVE_BTN_TXT>;

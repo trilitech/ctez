@@ -189,7 +189,7 @@ const Swap: React.FC = () => {
       if (errorListLocal.length > 0) {
         return { buttonText: errorListLocal[0], errorList: errorListLocal };
       }
-  
+
       if (received > getDexLiquidity()) {
         return { buttonText: BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY, errorList: [BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY] };
       }
@@ -280,21 +280,20 @@ const Swap: React.FC = () => {
           />
           {getRightElement(formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez)}
         </InputGroup>
-        <Text color={text4} fontSize="xs" mt={1}>
-          Balance:{' '}
-          {formType === FORM_TYPE.CTEZ_TEZ
-            ? formatNumberStandard(balance?.xtz)
-            : formatNumberStandard(balance?.ctez)}
-        </Text>
+        <Flex justifyContent="space-between" fontSize="xs" mt={1}>
+          <Text color={text4} fontSize="xs">
+            Balance:{' '}
+            {formType === FORM_TYPE.CTEZ_TEZ
+              ? formatNumberStandard(balance?.xtz)
+              : formatNumberStandard(balance?.ctez)}
+          </Text>
+          <Text color={text4} >
+            Dex liquidity:{' '}
+            {getDexLiquidity()}{' '}
+          </Text>
+        </Flex>
       </FormControl>
 
-      <Flex justifyContent="space-between">
-        <Text fontSize="xs">Dex liquidity</Text>
-        <Text color={text2} fontSize="xs">
-          {getDexLiquidity()}{' '}
-          {formType === FORM_TYPE.CTEZ_TEZ ? 'tez' : 'ctez'}
-        </Text>
-      </Flex>
       <Flex justifyContent="space-between">
         <Text fontSize="xs">Rate</Text>
         <Text color={text2} fontSize="xs">
