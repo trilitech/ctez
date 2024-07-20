@@ -127,7 +127,7 @@ const OvenStats: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
         <Stack w="70%" textAlign="right">
           <Skeleton isLoaded={stats?.collateralUtilization != null}>
             <ProgressPill
-              value={Number(stats?.collateralUtilization)}
+              value={stats?.collateralUtilization ?? 0}
               oven={null}
               type={null}
               warning={null}

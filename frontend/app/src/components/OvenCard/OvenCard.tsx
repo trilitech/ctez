@@ -217,7 +217,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
         ))}
         <Box id="oven-card-item-6">
           <ProgressPill
-            value={Number(stats?.collateralUtilization ?? 0)}
+            value={stats?.collateralUtilization ?? 0}
             type={props.type}
             oven={props.oven}
             warning={result}
@@ -276,7 +276,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     </div>
   );
 
-  if (stats?.collateralUtilization === 'Infinity') {
+  if (stats?.collateralUtilization === Infinity) {
     return <SkeletonLayout count={1} component="OvenCard" />;
   }
 

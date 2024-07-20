@@ -67,7 +67,7 @@ const ProgressPill: React.FC<IProgressPill> = ({ value, oven, type, warning }) =
             backgroundColor={value > 100 ? '#CC3936' : value > 80 ? '#F3DD63' : '#38CB89'}
           />
         </Box>
-        <Text maxWidth={40}>{value}%</Text>
+        <Text maxWidth={40}>{value.toFixed(2)}%</Text>
         {modals}
       </Stack>
       {value > 100 && type === 'AllOvens' && (

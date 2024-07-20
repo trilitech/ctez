@@ -17,6 +17,7 @@ import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
 import { logger } from '../utils/logger';
 import { openTxSubmittedModal } from '../redux/slices/UiSlice';
 import { useCtezBaseStats } from '../api/queries';
+import { calcSelfTokensToSell } from '../contracts/ctez';
 
 type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
   stats: null | {
@@ -24,7 +25,7 @@ type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
     outStandingCtez: number;
     maxMintableCtez: number;
     remainingMintableCtez: number;
-    collateralUtilization: string;
+    collateralUtilization: number;
     collateralRatio: string;
     reqTezBalance: number;
     withdrawableTez: number;
@@ -67,12 +68,10 @@ const useOvenStats: TUseOvenStats = (oven) => {
     const maxMintableCtez = formatNumber(max < 0 ? 0 : max, 0);
     const remainingMintableCtez = remaining < 0 ? 0 : remaining;
 
-    let collateralUtilization = formatNumber(
-      (formatNumber(ctezOutstanding, 0) / maxMintableCtez) * 100,
-    ).toFixed(2);
+    let collateralUtilization = formatNumber((formatNumber(ctezOutstanding, 0) / maxMintableCtez) * 100);
 
-    if (collateralUtilization === 'NaN') {
-      collateralUtilization = '0';
+    if (Number.isNaN(collateralUtilization)) {
+      collateralUtilization = 0;
     }
 
     const collateralRatio = (100 * (100 / Number(collateralUtilization))).toFixed(1);
