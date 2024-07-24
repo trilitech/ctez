@@ -49,6 +49,9 @@ const ProgressPill: React.FC<IProgressPill> = ({ value, oven, type, warning }) =
     );
   }, [cardbg, text4]);
 
+  const isLiquidateButtonShown = type === 'AllOvens' && value > 100;
+  const isActionRequiredTextShown = type === 'MyOvens' && warning && value <= 100;
+
   return (
     <div>
       <Stack
@@ -56,7 +59,7 @@ const ProgressPill: React.FC<IProgressPill> = ({ value, oven, type, warning }) =
         backgroundColor={value > 100 ? '#FFE3E2AA' : value > 80 ? '#F6F5E5AA' : '#E5F6EFAA'}
         borderRadius={16}
         px={4}
-        pb={value > 100 || warning ? '4' : '0'}
+        pb={isLiquidateButtonShown || isActionRequiredTextShown ? '4' : '0'}
         w="100%"
       >
         <Box h={2} borderRadius={4} w="100%" my="auto" backgroundColor={progressPillBg}>
@@ -70,7 +73,7 @@ const ProgressPill: React.FC<IProgressPill> = ({ value, oven, type, warning }) =
         <Text maxWidth={40}>{value.toFixed(2)}%</Text>
         {modals}
       </Stack>
-      {value > 100 && type === 'AllOvens' && (
+      {isLiquidateButtonShown && (
         <Text
           color={red}
           position="relative"
@@ -86,7 +89,7 @@ const ProgressPill: React.FC<IProgressPill> = ({ value, oven, type, warning }) =
           <Icon ml={1} as={BsArrowRight} />
         </Text>
       )}
-      {type === 'AllOvens' && warning && value < 100 && (
+      {isActionRequiredTextShown && (
         <Text
           color={orange}
           position="relative"

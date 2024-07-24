@@ -121,6 +121,8 @@ const prepareOvenAllowAnyCall = (
 };
 const getWhiteList = (recvData: any) => {
   try {
+    if (!recvData?.depositors?.whitelist)
+      return [];
     const list = Array.prototype.slice.call(recvData.depositors.whitelist);
     return list;
   } catch (err) {

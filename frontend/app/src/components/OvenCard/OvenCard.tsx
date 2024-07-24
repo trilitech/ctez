@@ -58,7 +58,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
         stats?.outStandingCtez ?? 0,
         data?.currentTarget ?? 0,
         stats?.ovenBalance ?? 0,
-        data?.currentAnnualDrift ?? 0,
+        data?.drift ?? 0,
         true,
       ),
     [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance],

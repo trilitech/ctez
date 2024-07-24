@@ -89,9 +89,10 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
             const tez = Number(tez_balance);
             const result = isMonthFromLiquidation(
               newOutstanding,
-              Number(baseStats?.currentTarget),
+              baseStats?.currentTarget,
               tez,
               baseStats?.drift,
+              true
             );
             return !result;
           }

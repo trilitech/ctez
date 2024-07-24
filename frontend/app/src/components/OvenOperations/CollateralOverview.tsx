@@ -206,7 +206,7 @@ const CollateralOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported:
           <Stack>
             <Skeleton isLoaded={stats?.withdrawableTez != null}>
               <Text color="4E5D78" fontWeight="600" fontSize="lg">
-                {formatNumberStandard(Math.abs(stats?.withdrawableTez ?? 0))} tez
+                {formatNumberStandard(Math.max(stats?.withdrawableTez ?? 0, 0))} tez
               </Text>
             </Skeleton>
 

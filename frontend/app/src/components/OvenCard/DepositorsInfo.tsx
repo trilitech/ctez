@@ -43,6 +43,8 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
   }, [cardbg, text4]);
   const getWhiteList = (recvData: any) => {
     try {
+      if (!recvData?.depositors?.whitelist)
+        return [];
       const list = Array.prototype.slice.call(recvData.depositors.whitelist);
       return list;
     } catch (err) {

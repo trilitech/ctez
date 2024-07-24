@@ -96,8 +96,8 @@ const OvenSummary: React.FC<IOvenCardProps> = (props) => {
       },
       {
         label: 'Withdrawable ',
-        value: `${formatNumberStandard(stats?.totalWithdrawableTez)} tez`,
-        displayValue: `${formatNumberStandard(stats?.totalWithdrawableTez)} tez`,
+        value: `${formatNumberStandard(Math.max(stats?.totalWithdrawableTez ?? 0, 0))} tez`,
+        displayValue: `${formatNumberStandard(Math.max(stats?.totalWithdrawableTez ?? 0, 0))} tez`,
       },
     ]
       .filter((x): x is { label: string; value: string; displayValue: string } => !!x)

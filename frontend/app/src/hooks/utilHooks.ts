@@ -12,7 +12,7 @@ import { Flex, Spinner, useColorMode, useToast } from '@chakra-ui/react';
 import { GroupBase, OptionsOrGroups } from 'react-select/dist/declarations/src';
 import { getOvenCtezOutstanding, getOvenMaxCtez } from '../utils/ovenUtils';
 import { useAppDispatch, useAppSelector } from '../redux/store';
-import { formatNumber } from '../utils/numbers';
+import { formatNumber, roundUpToNDecimals } from '../utils/numbers';
 import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
 import { logger } from '../utils/logger';
 import { openTxSubmittedModal } from '../redux/slices/UiSlice';
@@ -78,9 +78,10 @@ const useOvenStats: TUseOvenStats = (oven) => {
 
     const reqTezBalance = (() => {
       if (currentTarget) {
-        return ovenBalance * currentTarget > outStandingCtez
-          ? 0
-          : outStandingCtez / currentTarget - ovenBalance;
+        const requiredTezBalance = roundUpToNDecimals(outStandingCtez * currentTarget * 16/15, 6);
+        return requiredTezBalance > ovenBalance
+          ? requiredTezBalance - ovenBalance
+          : 0;
       }
       return 0;
     })();

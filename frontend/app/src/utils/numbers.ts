@@ -21,3 +21,7 @@ export const inputFormatNumberStandard = (value: number | string | null | undefi
   }
   return value.toLocaleString('en-US', { maximumFractionDigits: 6, useGrouping: false });
 };
+
+export const roundUpToNDecimals = (value: number, decimals: number): number => {
+  return Math.ceil(value * 10 ** decimals) / 10 ** decimals;
+};

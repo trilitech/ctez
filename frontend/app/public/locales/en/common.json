@@ -121,7 +121,7 @@
   "withdrawTezos": "Withdraw Tezos",
   "copiedtoclipboard": "Copied to clipboard.",
   "collateralOverview": "Collateral Overview",
-  "tez collateral": "tez collateral",
-  "requiredtezcollateral": "required tez collateral",
+  "tezcollateral": "Tez collateral",
+  "requiredtezcollateral": "Required tez collateral",
   "withdrawtez": "Withdraw tez"
 }

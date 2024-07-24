@@ -59,6 +59,8 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
 
   const getWhiteList = (recvData: any) => {
     try {
+      if (!recvData?.depositors?.whitelist)
+        return [];
       const list = Array.prototype.slice.call(recvData.depositors.whitelist);
       return list;
     } catch (err) {
@@ -77,9 +79,9 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
         },
         ...(!props.canAnyoneDeposit
           ? (whitelist as string[])?.map((dep) => ({
-              label: trimAddress(dep),
-              value: dep,
-            }))
+            label: trimAddress(dep),
+            value: dep,
+          }))
           : []),
       ]);
       setDepType(props.canAnyoneDeposit ? options[1] : options[0]);
@@ -106,7 +108,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
             status: 'success',
           });
         }
-      } catch (error : any) {
+      } catch (error: any) {
         logger.error(error);
         const errorText = error?.data?.[1].with.string as string || t('txFailed');
         toast({
@@ -134,7 +136,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
           userDenyList,
         );
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error: any) {
         logger.error(error);
         const errorText = error?.data?.[1].with.string as string || t('txFailed');
         toast({
