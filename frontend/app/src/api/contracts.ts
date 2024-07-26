@@ -1,11 +1,9 @@
 import axios from 'axios';
-import BigNumber from 'bignumber.js';
-import { sub, format, differenceInDays } from 'date-fns';
-import { getCfmmStorage, getLQTContractStorage } from '../contracts/cfmm';
-import { getActualCtezStorage, getCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
-import { BaseStats, CTezStorage, CTezTzktStorage, HalfDex, OvenBalance, UserLQTData } from '../interfaces';
-import { CONTRACT_DEPLOYMENT_DATE, RPC_URL } from '../utils/globals';
-import { getOvenCtezOutstanding } from '../utils/ovenUtils';
+import { sub, format } from 'date-fns';
+import { getActualCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
+import { BaseStats, CTezStorage, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
+import { RPC_URL } from '../utils/globals';
+import { getOvenCtezOutstandingAndFeeIndex, getUpdatedDexFeeIndex } from '../utils/ovenUtils';
 import { getCTezTzktStorage, getLastBlockOfTheDay, getUserOvensAPI } from './tzkt';
 
 export const getPrevCTezStorage = async (
@@ -89,12 +87,12 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
   try {
     return userOvenData.reduce(
       (acc, cur) => {
-        const ctezOutstanding = getOvenCtezOutstanding(
+        const ctezOutstanding = getOvenCtezOutstandingAndFeeIndex(
           cur.value.ctez_outstanding,
           cur.value.fee_index,
           data.ctezDexFeeIndex,
           data.tezDexFeeIndex
-        )
+        ).ctezOutstanding
         return {
           tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
           ctezOutstanding: acc.ctezOutstanding + ctezOutstanding / 1e6,
@@ -129,14 +127,34 @@ export const isMonthFromLiquidation = (
   target: number,
   tezBalance: number,
   currentDrift: number,
-  noTargetScale?: boolean,
+  ovenFeeIndex: number,
+  storage: CTezStorage,
 ): boolean => {
-  const scaledTarget = noTargetScale ? target : target / 2 ** 64;
+  const secondsInMonth = (365.25 * 24 * 3600) / 12;
+  const sellCtezDexFeeIndex = getUpdatedDexFeeIndex(
+    secondsInMonth,
+    storage.context._Q.toNumber(),
+    storage.sell_ctez.fee_index.toNumber(),
+    storage.sell_ctez.self_reserves.toNumber(),
+  );
+  const sellTezDexFeeIndex = getUpdatedDexFeeIndex(
+    secondsInMonth,
+    Math.max(storage.context._Q.multipliedBy(storage.context.target).dividedBy(2 ** 64).toNumber(), 1),
+    storage.sell_tez.fee_index.toNumber(),
+    storage.sell_tez.self_reserves.toNumber(),
+  );
+  
+  const updatedOutstandingCtez = getOvenCtezOutstandingAndFeeIndex(outstandingCtez * 1e6, ovenFeeIndex, sellCtezDexFeeIndex, sellTezDexFeeIndex).ctezOutstanding / 1e6;
+  
+  // const futureFees = updatedOutstandingCtez - outstandingCtez;
+  // console.log('outstandingCtez', outstandingCtez);
+  // console.log('updatedOutstandingCtez', updatedOutstandingCtez);
+  // console.log('futureFees', futureFees.toFixed(6), ' at ', new Date(Date.now() + secondsInMonth*1000).toLocaleString());
 
   return (
-    outstandingCtez *
-    scaledTarget *
-    (1 + currentDrift / 2 ** 64) ** ((365.25 * 24 * 3600) / 12) *
+    updatedOutstandingCtez *
+    target *
+    (1 + currentDrift / 2 ** 64) ** secondsInMonth *
     (16 / 15) >
     tezBalance
   );

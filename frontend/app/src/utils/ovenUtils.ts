@@ -98,14 +98,39 @@ export const getOvenMaxCtez = (
   return { max, remaining: Number(remaining.toFixed(6)) };
 };
 
-export const getOvenCtezOutstanding = (
+export const getOvenCtezOutstandingAndFeeIndex = (
   currentOvenOutstandingCtez: string | number,
   currentOvenFeeIndex: string | number,
   sellCtezDexFeeIndex: string | number,
   sellTezDexFeeIndex: string | number,
-) : number => {
-  const feeIndex = new BigNumber(sellCtezDexFeeIndex).multipliedBy(sellTezDexFeeIndex);
+): { ctezOutstanding: number, feeIndex: number } => {
+  const dexFeeIndex = new BigNumber(sellCtezDexFeeIndex).multipliedBy(sellTezDexFeeIndex);
   const prevCtezOutstanding = new BigNumber(currentOvenOutstandingCtez);
   const prevFeeIndex = new BigNumber(currentOvenFeeIndex);
-  return prevCtezOutstanding.multipliedBy(feeIndex).dividedToIntegerBy(prevFeeIndex).toNumber(); 
+  const ctezOutstanding = prevCtezOutstanding.multipliedBy(dexFeeIndex).dividedToIntegerBy(prevFeeIndex);
+
+  const feeIndex = prevCtezOutstanding.isGreaterThan(0)
+    ? ctezOutstanding.multipliedBy(prevFeeIndex).dividedBy(prevCtezOutstanding)
+    : dexFeeIndex;
+
+  return { ctezOutstanding: ctezOutstanding.toNumber(), feeIndex: Math.ceil(feeIndex.toNumber()) }
+}
+
+export const getFeeRate = (q: number, Q: number): number => {
+  const maxRate = 5845483520;
+  if (8 * q < Q)
+    return maxRate;
+  if (8 * q > 7 * Q)
+    return 0;
+  return Math.abs(maxRate * (7 * Q - 8 * q)) / (6 * Q);
+}
+
+export const getUpdatedDexFeeIndex = (
+  delta: number,
+  Q: number,
+  dexFeeIndex: number,
+  dexSelfReserves: number
+): number => {
+  const rate = getFeeRate(dexSelfReserves, Q);
+  return dexFeeIndex + delta * dexFeeIndex * rate / 2 ** 64;
 }

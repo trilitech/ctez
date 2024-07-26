@@ -10,7 +10,7 @@ import {
 import { TransactionWalletOperation, WalletOperation } from '@taquito/taquito';
 import { Flex, Spinner, useColorMode, useToast } from '@chakra-ui/react';
 import { GroupBase, OptionsOrGroups } from 'react-select/dist/declarations/src';
-import { getOvenCtezOutstanding, getOvenMaxCtez } from '../utils/ovenUtils';
+import { getOvenCtezOutstandingAndFeeIndex, getOvenMaxCtez } from '../utils/ovenUtils';
 import { useAppDispatch, useAppSelector } from '../redux/store';
 import { formatNumber, roundUpToNDecimals } from '../utils/numbers';
 import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
@@ -29,6 +29,7 @@ type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
     collateralRatio: string;
     reqTezBalance: number;
     withdrawableTez: number;
+    feeIndex: number;
   };
   baseStats: BaseStats | undefined;
 };
@@ -43,15 +44,17 @@ const useOvenStats: TUseOvenStats = (oven) => {
       return null;
     }
 
-    const { tezBalance, ctezOutstanding } = (() => {
+    const { tezBalance, ctezOutstanding, feeIndex } = (() => {
+      const info = getOvenCtezOutstandingAndFeeIndex(
+        oven?.value.ctez_outstanding,
+        oven?.value.fee_index,
+        data?.ctezDexFeeIndex ?? 2 ** 64,
+        data?.tezDexFeeIndex ?? 2 ** 64
+      );
       return {
         tezBalance: oven?.value.tez_balance,
-        ctezOutstanding: getOvenCtezOutstanding(
-          oven?.value.ctez_outstanding,
-          oven?.value.fee_index,
-          data?.ctezDexFeeIndex || 2 ** 64,
-          data?.tezDexFeeIndex || 2 ** 64
-        )
+        ctezOutstanding: info.ctezOutstanding,
+        feeIndex: info.feeIndex
       };
     })();
 
@@ -98,6 +101,7 @@ const useOvenStats: TUseOvenStats = (oven) => {
       collateralRatio,
       reqTezBalance,
       withdrawableTez,
+      feeIndex
     };
   }, [currentTarget, currentTargetMintable, oven]);
 
@@ -138,14 +142,15 @@ const useOvenSummary: TUseOvenSummary = (ovens) => {
 
     ovens.forEach((oven) => {
       const { tezBalance, ctezOutstanding } = (() => {
+        const info = getOvenCtezOutstandingAndFeeIndex(
+          oven?.value.ctez_outstanding,
+          oven?.value.fee_index,
+          data?.ctezDexFeeIndex ?? 2 ** 64,
+          data?.tezDexFeeIndex ?? 2 ** 64
+        );
         return {
           tezBalance: oven?.value.tez_balance,
-          ctezOutstanding: getOvenCtezOutstanding(
-            oven?.value.ctez_outstanding,
-            oven?.value.fee_index,
-            data?.ctezDexFeeIndex || 2 ** 64,
-            data?.tezDexFeeIndex || 2 ** 64
-          )
+          ctezOutstanding: info.ctezOutstanding
         };
       })();
 

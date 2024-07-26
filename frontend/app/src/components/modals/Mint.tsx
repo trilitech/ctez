@@ -31,6 +31,7 @@ import { CTezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useOvenStats, useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../utils/numbers';
+import { useActualCtezStorage } from '../../api/queries';
 
 interface IMintProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ interface IMintProps {
 
 const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
   const { t } = useTranslation(['common']);
+  const { data: storage } = useActualCtezStorage();
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'tooltipbg',
@@ -63,15 +65,6 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
     );
   }, [text2]);
 
-  const { tez_balance, ctez_outstanding } = useMemo(
-    () =>
-      oven?.value ?? {
-        tez_balance: '0',
-        ctez_outstanding: '0',
-      },
-    [oven],
-  );
-
   const maxValue = (): number => stats?.remainingMintableCtez ?? 0;
 
   const validationSchema = Yup.object().shape({
@@ -85,14 +78,16 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
             baseStats?.drift !== undefined &&
             baseStats?.currentTarget !== undefined
           ) {
-            const newOutstanding = Number(ctez_outstanding) + value * 1e6;
-            const tez = Number(tez_balance);
-            const result = isMonthFromLiquidation(
+            const newOutstanding = (stats?.outStandingCtez ?? 0) + value;
+            const tez = stats?.ovenBalance ?? 0;
+
+            const result = !!storage && isMonthFromLiquidation(
               newOutstanding,
               baseStats?.currentTarget,
               tez,
               baseStats?.drift,
-              true
+              stats?.feeIndex ?? 2 ** 64,
+              storage
             );
             return !result;
           }

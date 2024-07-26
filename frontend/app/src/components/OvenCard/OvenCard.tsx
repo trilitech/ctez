@@ -20,7 +20,7 @@ import { AllOvenDatum } from '../../interfaces';
 import ProgressPill from './ProgressPill';
 import { useOvenStats, useThemeColors } from '../../hooks/utilHooks';
 import CopyAddress from '../CopyAddress';
-import { useCtezBaseStats } from '../../api/queries';
+import { useActualCtezStorage, useCtezBaseStats } from '../../api/queries';
 import { isMonthFromLiquidation } from '../../api/contracts';
 import SkeletonLayout from '../skeleton';
 import { trimAddress } from '../../utils/addressUtils';
@@ -43,6 +43,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
   const { t } = useTranslation(['common']);
   const { stats } = useOvenStats(props.oven);
   const { data } = useCtezBaseStats();
+  const { data: storage } = useActualCtezStorage();
   const dispatch = useAppDispatch();
 
   const [largerScreen] = useMediaQuery(['(min-width: 800px)']);
@@ -52,16 +53,19 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     dispatch(setRemoveOven(address));
   };
 
-  const result = useMemo(
-    () =>
-      isMonthFromLiquidation(
+  const showMonthFromLiquidationWarning = useMemo(
+    () => {
+      console.log('storage', storage);
+      return !!storage && isMonthFromLiquidation(
         stats?.outStandingCtez ?? 0,
         data?.currentTarget ?? 0,
         stats?.ovenBalance ?? 0,
         data?.drift ?? 0,
-        true,
-      ),
-    [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance],
+        stats?.feeIndex ?? 2 ** 64,
+        storage
+      )
+    },
+    [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance, stats?.feeIndex, storage],
   );
 
   // ? Used for changing layout between Mobile and Desktop view
@@ -220,7 +224,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
             value={stats?.collateralUtilization ?? 0}
             type={props.type}
             oven={props.oven}
-            warning={result}
+            warning={showMonthFromLiquidationWarning}
           />
           <Text color={text4} fontSize="xs">
             {t('collateralUtilization')}
@@ -235,7 +239,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     stats?.outStandingCtez,
     stats?.maxMintableCtez,
     stats?.collateralUtilization,
-    result,
+    showMonthFromLiquidationWarning,
     textcolor,
   ]);
 
