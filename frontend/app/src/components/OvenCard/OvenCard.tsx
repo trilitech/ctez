@@ -54,17 +54,14 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
   };
 
   const showMonthFromLiquidationWarning = useMemo(
-    () => {
-      console.log('storage', storage);
-      return !!storage && isMonthFromLiquidation(
-        stats?.outStandingCtez ?? 0,
-        data?.currentTarget ?? 0,
-        stats?.ovenBalance ?? 0,
-        data?.drift ?? 0,
-        stats?.feeIndex ?? 2 ** 64,
-        storage
-      )
-    },
+    () => !!storage && isMonthFromLiquidation(
+      stats?.outStandingCtez ?? 0,
+      data?.currentTarget ?? 0,
+      stats?.ovenBalance ?? 0,
+      data?.drift ?? 0,
+      stats?.feeIndex ?? 2 ** 64,
+      storage
+    ),
     [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance, stats?.feeIndex, storage],
   );
 

@@ -264,22 +264,22 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
                     Info
                   </Text>
                 </MenuItem>
-                <MenuItem
+                {/* <MenuItem
                   className={clsx({
                     highlight: location.pathname === '/analytics',
                   })}
                   icon={<Analytics />}
                 >
                   <Link to="/analytics">Analytics</Link>
-                </MenuItem>
-                <MenuItem
+                </MenuItem> */}
+                {/* <MenuItem
                   className={clsx({
                     highlight: location.pathname === '/faq',
                   })}
                   icon={<Faq />}
                 >
                   <Link to="/faq">FAQ</Link>
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem icon={<Github />}>
                   <a href="https://github.com/Tezsure/ctez" target="_blank" rel="noreferrer">
                     GitHub
