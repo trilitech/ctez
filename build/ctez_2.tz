@@ -2877,6 +2877,409 @@
          DIG 3 ;
          GET 9 ;
          PAIR 4 } ;
+  view "get_oven_state"
+       (pair (nat %id) (address %owner))
+       (pair (mutez %tez_balance)
+             (nat %ctez_outstanding)
+             (address %address)
+             (nat %fee_index))
+       { LAMBDA
+           (pair nat nat)
+           nat
+           { UNPAIR ;
+             DUP 2 ;
+             DUP 2 ;
+             COMPARE ;
+             GT ;
+             IF { SWAP ; DROP } { DROP } } ;
+         PUSH nat 64 ;
+         LAMBDA
+           (pair nat (pair nat int nat address))
+           (lambda nat nat)
+           { UNPAIR ;
+             SWAP ;
+             LAMBDA
+               (pair (pair (pair nat int nat address) nat) nat)
+               nat
+               { UNPAIR ; UNPAIR ; CAR ; DIG 2 ; MUL ; LSR } ;
+             DUP 3 ;
+             DUP 3 ;
+             PAIR ;
+             APPLY ;
+             SWAP ;
+             DIG 2 ;
+             DROP 2 } ;
+         DUP 2 ;
+         APPLY ;
+         LAMBDA
+           (pair (pair nat (lambda (pair nat nat) nat)) (pair nat int nat address))
+           nat
+           { UNPAIR ;
+             UNPAIR ;
+             DIG 2 ;
+             PUSH nat 1 ;
+             DIG 2 ;
+             DUP 3 ;
+             CAR ;
+             DIG 3 ;
+             GET 5 ;
+             MUL ;
+             LSR ;
+             PAIR ;
+             EXEC } ;
+         DUP 4 ;
+         DUP 4 ;
+         PAIR ;
+         APPLY ;
+         LAMBDA
+           (pair nat int nat address)
+           (lambda address (lambda nat operation))
+           { LAMBDA
+               (pair (pair nat int nat address) address)
+               (lambda nat operation)
+               { UNPAIR ;
+                 SWAP ;
+                 LAMBDA
+                   (pair (pair address (pair nat int nat address)) nat)
+                   operation
+                   { UNPAIR ;
+                     UNPAIR ;
+                     DIG 2 ;
+                     SWAP ;
+                     SELF_ADDRESS ;
+                     DIG 3 ;
+                     GET 6 ;
+                     CONTRACT %transfer (pair (address %from) (address %to) (nat %value)) ;
+                     IF_NONE { PUSH string "bad address for get_entrypoint" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     DIG 4 ;
+                     DIG 4 ;
+                     DIG 4 ;
+                     PAIR 3 ;
+                     TRANSFER_TOKENS } ;
+                 DUP 3 ;
+                 DUP 3 ;
+                 PAIR ;
+                 APPLY ;
+                 SWAP ;
+                 DIG 2 ;
+                 DROP 2 } ;
+             DUP 2 ;
+             APPLY ;
+             SWAP ;
+             DROP } ;
+         LAMBDA
+           (pair nat int nat address)
+           (lambda address (lambda address (lambda nat operation)))
+           { DROP ;
+             LAMBDA
+               address
+               (lambda address (lambda nat operation))
+               { DROP ;
+                 LAMBDA
+                   address
+                   (lambda nat operation)
+                   { LAMBDA
+                       (pair address nat)
+                       operation
+                       { UNPAIR ;
+                         CONTRACT unit ;
+                         IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
+                         PUSH mutez 1 ;
+                         DIG 2 ;
+                         MUL ;
+                         UNIT ;
+                         TRANSFER_TOKENS } ;
+                     DUP 2 ;
+                     APPLY ;
+                     SWAP ;
+                     DROP } } } ;
+         PAIR 4 ;
+         LAMBDA
+           (pair nat
+                 (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
+           (pair (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat) nat)
+           { UNPAIR ;
+             SWAP ;
+             UNPAIR 4 ;
+             DUP 4 ;
+             GET 5 ;
+             PUSH nat 5845483520 ;
+             DUP 5 ;
+             DUP 3 ;
+             PUSH nat 8 ;
+             MUL ;
+             COMPARE ;
+             LT ;
+             IF { SWAP ; DIG 4 ; DROP 2 }
+                { DUP 5 ;
+                  PUSH nat 7 ;
+                  MUL ;
+                  DUP 3 ;
+                  PUSH nat 8 ;
+                  MUL ;
+                  COMPARE ;
+                  GT ;
+                  IF { SWAP ; DIG 4 ; DROP 3 ; PUSH nat 0 }
+                     { DUP 5 ;
+                       PUSH nat 6 ;
+                       MUL ;
+                       DIG 2 ;
+                       PUSH nat 8 ;
+                       MUL ;
+                       DIG 5 ;
+                       PUSH nat 7 ;
+                       MUL ;
+                       SUB ;
+                       DIG 2 ;
+                       MUL ;
+                       ABS ;
+                       EDIV ;
+                       IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                       CAR } } ;
+             DUP 4 ;
+             GET 14 ;
+             SWAP ;
+             DUP 2 ;
+             DIG 3 ;
+             MUL ;
+             DIG 5 ;
+             DUG 2 ;
+             MUL ;
+             LSR ;
+             DUP 2 ;
+             ADD ;
+             DUP 2 ;
+             DIG 2 ;
+             DUP 3 ;
+             SUB ;
+             DUP 4 ;
+             MUL ;
+             EDIV ;
+             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+             CAR ;
+             DUP ;
+             DIG 3 ;
+             ADD ;
+             ISNAT ;
+             IF_NONE { PUSH nat 0 } {} ;
+             DUP 4 ;
+             DIG 3 ;
+             UPDATE 14 ;
+             DIG 2 ;
+             DIG 3 ;
+             GET 13 ;
+             ADD ;
+             ISNAT ;
+             IF_NONE { PUSH nat 0 } {} ;
+             UPDATE 13 ;
+             PAIR } ;
+         DUP 3 ;
+         APPLY ;
+         DIG 4 ;
+         UNPAIR ;
+         NOW ;
+         DUP ;
+         DUP 4 ;
+         GET 3 ;
+         COMPARE ;
+         NEQ ;
+         IF { DUP 3 ;
+              GET 3 ;
+              DUP 2 ;
+              SUB ;
+              ABS ;
+              DUP 4 ;
+              GET 9 ;
+              DUP ;
+              DUP 8 ;
+              GET 5 ;
+              SWAP ;
+              EXEC ;
+              DUP 6 ;
+              GET 7 ;
+              GET 5 ;
+              DUP 2 ;
+              DUP 2 ;
+              COMPARE ;
+              LT ;
+              IF {} { DROP ; DUP } ;
+              DUP 10 ;
+              DUP 4 ;
+              CAR ;
+              DIG 4 ;
+              GET 5 ;
+              DUP 9 ;
+              GET 5 ;
+              GET 5 ;
+              DUP 2 ;
+              DUP 2 ;
+              COMPARE ;
+              LT ;
+              IF { SWAP ; DROP } { DROP } ;
+              MUL ;
+              LSR ;
+              SUB ;
+              DUP 2 ;
+              DUP 3 ;
+              DIG 3 ;
+              MUL ;
+              MUL ;
+              DUP 2 ;
+              DUP 3 ;
+              DIG 3 ;
+              DUP 5 ;
+              PUSH nat 65536 ;
+              MUL ;
+              MUL ;
+              MUL ;
+              MUL ;
+              EDIV ;
+              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+              CAR ;
+              DUP 5 ;
+              GET 9 ;
+              GET 3 ;
+              SWAP ;
+              DUP 2 ;
+              ADD ;
+              DUP 6 ;
+              GET 9 ;
+              CAR ;
+              DUP ;
+              DUP 5 ;
+              DUP 5 ;
+              ABS ;
+              MUL ;
+              DIG 11 ;
+              DUG 2 ;
+              MUL ;
+              LSR ;
+              PUSH int 0 ;
+              DIG 4 ;
+              COMPARE ;
+              LT ;
+              IF { SWAP ;
+                   SUB ;
+                   ISNAT ;
+                   IF_NONE { PUSH string "INCORRECT_SUBTRACTION" ; FAILWITH } {} }
+                 { ADD } ;
+              DUP 6 ;
+              GET 9 ;
+              GET 6 ;
+              UNIT ;
+              VIEW "viewTotalSupply" nat ;
+              IF_NONE { PUSH string "MISSING_TOTAL_SUPPLY_VIEW" ; FAILWITH } {} ;
+              PUSH nat 1 ;
+              PUSH nat 20 ;
+              DUP 3 ;
+              EDIV ;
+              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+              CAR ;
+              PAIR ;
+              DIG 10 ;
+              SWAP ;
+              EXEC ;
+              DUP 8 ;
+              DIG 8 ;
+              GET 9 ;
+              DIG 2 ;
+              UPDATE 5 ;
+              UPDATE 9 ;
+              DUP ;
+              GET 5 ;
+              DUP 2 ;
+              GET 9 ;
+              GET 5 ;
+              DUP 4 ;
+              DUP 8 ;
+              PAIR 4 ;
+              DUP 9 ;
+              SWAP ;
+              EXEC ;
+              UNPAIR ;
+              DUP 3 ;
+              GET 7 ;
+              DUP 4 ;
+              GET 9 ;
+              DIG 12 ;
+              GET 5 ;
+              SWAP ;
+              EXEC ;
+              DIG 3 ;
+              DIG 8 ;
+              PAIR 4 ;
+              DIG 8 ;
+              SWAP ;
+              EXEC ;
+              UNPAIR ;
+              DIG 4 ;
+              DIG 2 ;
+              SUB ;
+              DUP 4 ;
+              DIG 7 ;
+              UPDATE 3 ;
+              DIG 3 ;
+              UPDATE 5 ;
+              DIG 2 ;
+              UPDATE 7 ;
+              DIG 2 ;
+              GET 9 ;
+              DIG 4 ;
+              UPDATE 3 ;
+              DIG 3 ;
+              UPDATE 1 ;
+              UPDATE 9 ;
+              SWAP }
+            { DIG 3 ; DIG 4 ; DIG 5 ; DIG 6 ; DROP 5 ; SWAP ; PUSH int 0 } ;
+         DROP ;
+         DUP ;
+         CAR ;
+         DIG 2 ;
+         GET ;
+         IF_NONE
+           { DROP ; PUSH string "OVEN_NOT_EXISTS" ; FAILWITH }
+           { DUP 2 ;
+             GET 7 ;
+             GET 14 ;
+             DIG 2 ;
+             GET 5 ;
+             GET 14 ;
+             MUL ;
+             DUP 2 ;
+             GET 3 ;
+             DUP 3 ;
+             GET 6 ;
+             DUP ;
+             DUP 4 ;
+             DUP 4 ;
+             MUL ;
+             EDIV ;
+             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+             CAR ;
+             PUSH nat 0 ;
+             DUP 4 ;
+             COMPARE ;
+             GT ;
+             IF { DIG 3 ;
+                  DROP ;
+                  DUG 2 ;
+                  DUP 3 ;
+                  MUL ;
+                  SWAP ;
+                  INT ;
+                  SWAP ;
+                  NEG ;
+                  EDIV ;
+                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                  CAR ;
+                  ABS }
+                { SWAP ; DIG 2 ; DROP 2 ; SWAP } ;
+             DIG 2 ;
+             SWAP ;
+             UPDATE 6 ;
+             SWAP ;
+             UPDATE 3 } } ;
   view "calc_sell_amount"
        (pair (bool %is_sell_ctez_dex) (nat %proceeds_amount))
        nat

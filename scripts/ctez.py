@@ -299,7 +299,6 @@ def tez_to_ctez(
     manager = create_manager(private_key, rpc_url)
     to_address = to_address if to_address is not None else get_address(manager)
     ctez2 = Ctez2.from_address(manager, ctez_address)
-    ctez_token = Fa12.from_address(manager, ctez2.get_ctez_fa12_address())
     deadline = manager.now() + 1000
     print('Swapping tez to ctez...')
     

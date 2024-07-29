@@ -431,6 +431,11 @@ let get_current_state () (s : storage) =
   }
 
 [@view]
+let get_oven_state (handle : Oven.handle) (s : storage) : oven =
+  let _, s = get_actual_state s in
+  get_oven handle s
+
+[@view]
 let calc_sell_amount 
     ({ is_sell_ctez_dex ; proceeds_amount } : calc_sell_amount) 
     (s : storage) 
