@@ -133,12 +133,11 @@ let drift_adjustment
     (s : storage) 
     : int = // Float64
   let ctxt = s.context in
-  let tQ = sell_tez_env.get_target_self_reserves ctxt in
+  let _Qt = sell_tez_env.get_target_self_reserves ctxt in
   let qc = min s.sell_ctez.self_reserves ctxt._Q in
-  let qt = min s.sell_tez.self_reserves tQ in
-  let tqc_m_qt = (sell_tez_env.multiply_by_target ctxt qc) - qt in
-  let d_drift = 65536n * delta * abs(tqc_m_qt * tqc_m_qt * tqc_m_qt) / (tQ * tQ * tQ) in
-  if tqc_m_qt < 0 then -d_drift else int d_drift 
+  let qt = min s.sell_tez.self_reserves _Qt in
+  let tqc_m_qt = (Float64.mul qc ctxt.target) - qt in
+  65536n * delta * tqc_m_qt * tqc_m_qt * tqc_m_qt / (_Qt * _Qt * _Qt)
 
 let fee_rate (q : nat) (_Q : nat) : Float64.t =
   let max_rate = 5845483520n in 
@@ -193,8 +192,8 @@ let get_actual_state (s : storage) : int * storage =
     let sell_ctez, new_outstanding = update_fee_index delta outstanding (sell_ctez_env.get_target_self_reserves s.context) s.sell_ctez in
     let sell_tez, new_outstanding = update_fee_index delta new_outstanding (sell_tez_env.get_target_self_reserves s.context) s.sell_tez in
     let subsidies_minted = new_outstanding - outstanding in
-    let s = { s with sell_ctez = sell_ctez ; sell_tez = sell_tez } in
-    (subsidies_minted, { s with last_update = now ; context = { s.context with drift = new_drift ; target = new_target }})
+    let context = { s.context with drift = new_drift ; target = new_target } in
+    (subsidies_minted, { s with last_update = now ; sell_ctez = sell_ctez ; sell_tez = sell_tez ; context = context })
   else
     (0, s)
 
@@ -406,7 +405,7 @@ let ctez_to_tez
   let (ops, sell_tez) = Half_dex.swap s.sell_tez s.context sell_tez_env p in
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) ctez_sold in
   let ops = transfer_ctez_op :: ops in 
-  List.append house_ops ops, { s with sell_tez = sell_tez }
+  List.append house_ops ops, { s with sell_tez }
 
 (* Views *)
 
