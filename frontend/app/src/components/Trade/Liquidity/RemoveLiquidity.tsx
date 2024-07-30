@@ -99,7 +99,7 @@ const RemoveLiquidity: React.FC = () => {
         const data: RemoveLiquidityParams = {
           deadline,
           to: userAddress,
-          lqtBurned: Number(formData.lqtBurned) * 1e6,
+          lqtBurned: formatNumberStandard(Number(formData.lqtBurned) * 1e6) ,
           minSelfReceived: otherValues.minSelfReceived,
           minProceedsReceived: otherValues.minProceedsReceived,
           minSubsidyReceived: otherValues.minSubsidyReceived,
