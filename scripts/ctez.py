@@ -396,3 +396,15 @@ def execute_every_entrypoint(
     opg = ctez2.remove_tez_liquidity(sender_address, add_tez_liquidity_amount, 0, 0, 0, deadline).send()
     manager.wait(opg)
     print(f'Operation has been completed: {opg.opg_hash}')
+
+    burn_amount = floor((mint_amount - add_ctez_liquidity_amount) / 2)
+    print(f'Burning {burn_amount} muctez')
+    opg = ctez2.mint_or_burn(oven_id, -burn_amount).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    withdraw_amount = floor(initial_deposit / 2)
+    print(f'Withdraw {withdraw_amount} mutez from oven ...')
+    opg = ctez2.withdraw_from_oven(oven_id, withdraw_amount, sender_address).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
