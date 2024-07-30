@@ -131,6 +131,10 @@ class Ctez2(ContractHelper):
     def get_oven_contract(self, client: PyTezosClient, owner: Addressable, oven_id: int) -> Oven:
         oven_record = self.get_oven(owner, oven_id)
         return Oven.from_address(client, oven_record.address)
+    
+    def get_target(self) -> int:
+        storage = self.contract.get_current_state().run_view()
+        return storage['context']['target']
 
     def set_ctez_fa12_address(self, address : Addressable) -> ContractCall:
         return self.contract.set_ctez_fa12_address(get_address(address))

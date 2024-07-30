@@ -1,3 +1,4 @@
+from math import floor
 from typing import Optional
 import click
 
@@ -5,7 +6,7 @@ from scripts.helpers import create_manager
 from tests.helpers.addressable import get_address
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
-from tests.helpers.contracts.oven.oven import Oven
+from random import randrange, uniform
 
 @click.command()
 @click.option('--ctez-address', required=True)
@@ -303,5 +304,95 @@ def tez_to_ctez(
     print('Swapping tez to ctez...')
     
     opg = ctez2.tez_to_ctez(to_address, 0, deadline).with_amount(tez_amount).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+@click.command()
+@click.option('--ctez-address', required=True)
+@click.option('--delegate', default=None)
+@click.option('--private-key', default=None, help='Use the provided private key.')
+@click.option('--rpc-url', default=None, help='Tezos RPC URL.')
+def execute_every_entrypoint(
+    ctez_address: str,
+    delegate: Optional[str],
+    private_key: Optional[str],
+    rpc_url: Optional[str],
+) -> None:
+    manager = create_manager(private_key, rpc_url)
+    ctez2 = Ctez2.from_address(manager, ctez_address)
+    sender_address = get_address(manager)
+    oven_id = randrange(100_000_000_000)
+    initial_deposit = randrange(1_000_000, 100_000_000)
+    deadline = manager.now() + 100_000_000
+    print(f'Creating oven #{oven_id} with deposit {initial_deposit} mutez ...')
+    opg = ctez2.create_oven(oven_id, delegate, depositors=None).with_amount(initial_deposit).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+    
+    deposit = randrange(1_000_000, 100_000_000)
+    print(f'Depositing {deposit} mutez...')
+    oven = ctez2.get_oven_contract(manager, sender_address, oven_id)
+    opg = oven.deposit().with_amount(deposit).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+    
+    target = ctez2.get_target() / 2**64
+    mint_amount = floor(deposit * 15 / (target * 16))
+    print(f'Minting {mint_amount} muctez')
+    opg = ctez2.mint_or_burn(oven_id, mint_amount).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    add_ctez_liquidity_amount = floor(mint_amount / 2)
+    print(f'Adding {add_ctez_liquidity_amount} to ctez liquidity...')
+    ctez_token = Fa12.from_address(manager, ctez2.get_ctez_fa12_address())
+    opg = manager.bulk(
+        ctez_token.approve(ctez2, 0),
+        ctez_token.approve(ctez2, add_ctez_liquidity_amount),
+        ctez2.add_ctez_liquidity(sender_address, add_ctez_liquidity_amount, 0, deadline)
+    ).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    add_tez_liquidity_amount = floor(add_ctez_liquidity_amount * target * uniform(0, 2))
+    print(f'Adding {add_tez_liquidity_amount} to tez liquidity...')
+    ctez_token = Fa12.from_address(manager, ctez2.get_ctez_fa12_address())
+    opg = ctez2.add_tez_liquidity(sender_address, 0, deadline).with_amount(add_tez_liquidity_amount).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    ctez_amount_to_swap = floor(add_tez_liquidity_amount / (target * 1.06))
+    print(f'Swapping {ctez_amount_to_swap} ctez to tez...')
+    opg = manager.bulk(
+        ctez_token.approve(ctez2, 0),
+        ctez_token.approve(ctez2, ctez_amount_to_swap),
+        ctez2.ctez_to_tez(sender_address, ctez_amount_to_swap, 0, deadline)
+    ).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    tez_amount_to_swap = floor(add_ctez_liquidity_amount * target / 1.06)
+    print(f'Swapping {tez_amount_to_swap} tez to ctez...')
+    opg = ctez2.tez_to_ctez(sender_address, 0, deadline).with_amount(tez_amount_to_swap).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    print('Collecting from ctez liquidity...')
+    opg = ctez2.collect_from_ctez_liquidity(sender_address).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    print('Collecting from tez liquidity...')
+    opg = ctez2.collect_from_tez_liquidity(sender_address).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    print('Removing ctez liquidity...')
+    opg = ctez2.remove_ctez_liquidity(sender_address, add_ctez_liquidity_amount, 0, 0, 0, deadline).send()
+    manager.wait(opg)
+    print(f'Operation has been completed: {opg.opg_hash}')
+
+    print('Removing tez liquidity...')
+    opg = ctez2.remove_tez_liquidity(sender_address, add_tez_liquidity_amount, 0, 0, 0, deadline).send()
     manager.wait(opg)
     print(f'Operation has been completed: {opg.opg_hash}')
