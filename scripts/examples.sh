@@ -13,4 +13,4 @@ poetry run remove_tez_liquidity --ctez-address KT1QKABh1kxfppucfKZSeNvfn4wMeMLTX
 poetry run ctez_to_tez --ctez-address KT1QKABh1kxfppucfKZSeNvfn4wMeMLTXZVo --ctez_amount 5
 poetry run tez_to_ctez --ctez-address KT1QKABh1kxfppucfKZSeNvfn4wMeMLTXZVo --tez_amount 5
 
-poetry run execute_every_entrypoint --ctez-address KT1K2NcHDRotF9q52e37RSt6e3BegDQM6iss --delegate tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP
+poetry run execute_every_entrypoint --ctez-address KT1LnE2GDxdKwpG31hAdhUFrbTh5dcaTmDxZ --delegate tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP
