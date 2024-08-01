@@ -1,3 +1,4 @@
+name: 'Execute every entrypoint'
 on:
   workflow_dispatch:
   
