@@ -23,3 +23,6 @@ jobs:
         run: poetry install
       - name: Run the automated tests
         run: poetry run execute_every_entrypoint --ctez-address KT1LnE2GDxdKwpG31hAdhUFrbTh5dcaTmDxZ --delegate tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          RPC_URL: ${{ secrets.RPC_URL }}
