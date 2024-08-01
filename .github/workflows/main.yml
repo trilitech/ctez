@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   
 jobs:
-  ci:
+  execute_every_entrypoint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
