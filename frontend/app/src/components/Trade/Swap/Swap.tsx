@@ -69,8 +69,8 @@ const Swap: React.FC = () => {
 
   const rate = (): number =>
     formType === FORM_TYPE.CTEZ_TEZ
-      ? formatNumberStandard(baseStats?.currentTezSellPrice ?? 1)
-      : formatNumberStandard(baseStats?.currentCtezSellPrice ?? 1);
+      ? formatNumberStandard(baseStats?.currentCtezSellPrice ?? 1)
+      : formatNumberStandard(baseStats?.currentTezSellPrice ?? 1);
 
   const getDexLiquidity = useCallback((): number => {
     const dex = formType === FORM_TYPE.CTEZ_TEZ
@@ -132,17 +132,15 @@ const Swap: React.FC = () => {
   useEffect(() => {
     const calc = async () => {
       if (values.amount) {
-        let initialPrice: number;
-        const swapAmount = values.amount * 1e6;
-        const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmount)) / 1e6;
-        const receivedPrice = Number((values.amount / receivedLocal).toFixed(6));
+        const swapAmountNat = values.amount * 1e6;
+        const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
+        const receivedPrice = Number((receivedLocal / values.amount).toFixed(6));
+        
+        const initialPrice = rate()
+        const priceImpactLocal = ((initialPrice - receivedPrice) * 100) / initialPrice;
 
-        if (formType === FORM_TYPE.TEZ_CTEZ) {
-          initialPrice = baseStats?.currentCtezSellPrice ?? 1;
-        } else {
-          initialPrice = baseStats?.currentTezSellPrice ?? 1;
-        }
-        const priceImpactLocal = ((receivedPrice - initialPrice) * 100) / initialPrice;
+        console.log('initialPrice', initialPrice)
+        console.log('receivedPrice', receivedPrice)
 
         setPriceImpact(priceImpactLocal);
         setMinBuyValue(formatNumberStandard(receivedLocal.toFixed(6)));
@@ -157,7 +155,7 @@ const Swap: React.FC = () => {
     }
 
     calc();
-  }, [formType, values.amount, slippage]);
+  }, [formType, values.amount, slippage, rate]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
