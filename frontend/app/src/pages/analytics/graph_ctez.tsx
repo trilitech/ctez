@@ -2,7 +2,7 @@ import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery 
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
-import { useCtezGraphctez1m, useCtezGraphctezall } from "../../api/analytics";
+import { useCtezGraphctez1m, useCtezGraphctezall, useCtezGraphGQL } from "../../api/analytics";
 import { TextWithCircleColor } from "../../components/analytics/TTextWithColorCircle";
 import TwoLineChart from "../../components/graph/two-line-chart";
 import { useThemeColors } from "../../hooks/utilHooks";
@@ -21,12 +21,12 @@ const GraphCtez: React.FC = () => {
     'text4',
   ]);
   const { data: mainDatatarget1m = false } = useCtezGraphctez1m();
-  const { data: mainDatatargetall = false } = useCtezGraphctezall();
+  const { data: mainDatatargetall = false } = useCtezGraphGQL();
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
   const [activeTab, setActiveTab] = useState('1m');
-  const data = activeTab === '1m' ? mainDatatarget1m : mainDatatargetall;
+  const data = mainDatatargetall;
 
   // graph options
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
@@ -35,14 +35,14 @@ const GraphCtez: React.FC = () => {
   const option: React.ComponentProps<typeof ChartPure>['option'] = {
     dataset: [{
       dimensions: [
-        { name: 'time', displayName: '' },
-        { name: 'data1', displayName: 'Current Price' },
+        { name: 'timestamp', displayName: '' },
+        { name: 'current_avg_price', displayName: 'Current Price' },
       ],
       source: data || []
     }, {
       dimensions: [
-        { name: 'time', displayName: '' },
-        { name: 'data2', displayName: 'Target Price' },
+        { name: 'timestamp', displayName: '' },
+        { name: 'target_price', displayName: 'Target Price' },
       ],
       source: data || []
     }],
