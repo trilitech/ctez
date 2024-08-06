@@ -17,6 +17,7 @@
     "blockies-ts": "^1.0.0",
     "chakra-paginator": "^0.7.3",
     "date-fns": "^2.19.0",
+    "echarts": "^5.5.1",
     "formik": "^2.2.6",
     "framer-motion": "^4.1.17",
     "i18next": "^20.1.0",

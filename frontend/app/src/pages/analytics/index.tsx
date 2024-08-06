@@ -6,6 +6,7 @@ import { numberToMillionOrBillionFormate } from '../../utils/numberFormate';
 import './analytics.css';
 import GraphAMMTVL from './graph_amm_tvl';
 import GraphAMMVolume from './graph_amm_volume';
+import GraphCtezOld from './graph_ctez_old';
 import GraphCtez from './graph_ctez';
 import GraphDrift from './graph_drift';
 import OvenPiChart from './graph_oven_pi';
@@ -67,6 +68,7 @@ const AnaluticsPage: React.FC = () => {
                     Protocol
                 </Text>
                 <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
+                    {/* <GraphCtezOld /> */}
                     <GraphCtez />
                     <GraphDrift />
                 </Flex>

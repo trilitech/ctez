@@ -139,9 +139,6 @@ const Swap: React.FC = () => {
         const initialPrice = rate()
         const priceImpactLocal = ((initialPrice - receivedPrice) * 100) / initialPrice;
 
-        console.log('initialPrice', initialPrice)
-        console.log('receivedPrice', receivedPrice)
-
         setPriceImpact(priceImpactLocal);
         setMinBuyValue(formatNumberStandard(receivedLocal.toFixed(6)));
         const minReceivedLocal = receivedLocal - (receivedLocal * slippage) / 100;
