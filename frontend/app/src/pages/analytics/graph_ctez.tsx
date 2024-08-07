@@ -2,7 +2,7 @@ import { Button, ButtonGroup, Flex, SkeletonText, Text, useMediaQuery } from "@c
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
-import { useCtezGraphGQL } from "../../api/analytics";
+import { useCtezGraphGql } from "../../api/analytics";
   import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
@@ -18,7 +18,7 @@ const GraphCtez: React.FC = () => {
     'imported',
     'text4',
   ]);
-  const { data: chartData = false } = useCtezGraphGQL();
+  const { data: chartData = false } = useCtezGraphGql();
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();

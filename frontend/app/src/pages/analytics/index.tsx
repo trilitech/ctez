@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, Center, Flex, Skeleton, SkeletonText, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useColorMode, useMediaQuery } from '@chakra-ui/react';
+import { Box, Center, Flex, Skeleton, Text, useColorMode, useMediaQuery } from '@chakra-ui/react';
 import React from 'react';
 import { useMainHeader } from '../../api/analytics';
 import { useThemeColors } from '../../hooks/utilHooks';
@@ -6,7 +6,6 @@ import { numberToMillionOrBillionFormate } from '../../utils/numberFormate';
 import './analytics.css';
 import GraphAMMTVL from './graph_amm_tvl';
 import GraphAMMVolume from './graph_amm_volume';
-import GraphCtezOld from './graph_ctez_old';
 import GraphCtez from './graph_ctez';
 import GraphDrift from './graph_drift';
 import OvenPiChart from './graph_oven_pi';

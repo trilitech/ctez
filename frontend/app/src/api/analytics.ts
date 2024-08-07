@@ -1,11 +1,11 @@
 import axios from "axios";
 import { useQuery } from "react-query";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGQL, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
-export const useCtezGraphGQL = () => {
-  return useQuery<CtezStatsGQL[], Error>(
+export const useCtezGraphGql = () => {
+  return useQuery<CtezStatsGql[], Error>(
     'ctez_graph_gql',
     async () => {
       const response = await axios({
@@ -23,11 +23,38 @@ export const useCtezGraphGQL = () => {
                 ctez_sell_price
                 ctez_buy_price
               }
-          }`
+            }
+          `
         }
       });
 
-      return response.data.data.router_stats.map((s: CtezStatsGQL) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 }));
+      return response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 }));
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useTvlGraphGql = () => {
+  return useQuery<OvenTvlGql[], Error>(
+    'oven_tvl_gql',
+    async () => {
+      const response = await axios({
+        url: GQL_API_URL,
+        method: "POST",
+        data: {
+          query: `
+            query {
+              tvl_history(order_by: {timestamp: asc}) {
+                total_supply
+                timestamp
+                id: timestamp
+              }
+            }
+          `
+        }
+      });
+
+      return response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 }));
     },
     { refetchInterval: 30_000 },
   );

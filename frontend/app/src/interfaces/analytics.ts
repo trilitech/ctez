@@ -42,7 +42,7 @@ export interface ctezGraphctez {
     current_target: number;
     premium: number;
     timestamp: Date;
-    epoch_timestamp:number;
+    epoch_timestamp: number;
 }
 export interface ctezGraphctezDateRange {
     id: number;
@@ -109,32 +109,32 @@ export interface Ovendata {
     percentage: string;
 }
 export interface TwoLineGraph {
-    data1:number | string;
-    data2:number | string;
-    value:number | string;
-    time:number | string | Date;
-    premium?:number | string,
+    data1: number | string;
+    data2: number | string;
+    value: number | string;
+    time: number | string | Date;
+    premium?: number | string,
 }
 export interface TwoLineGraphWithoutValue {
-    data1:number | string;
-    data2:number | string;
-    value:number | string;
-    time:number | string | Date;
+    data1: number | string;
+    data2: number | string;
+    value: number | string;
+    time: number | string | Date;
 }
 export interface OneLineGraph {
-    value:number | string;
-    time:number | string | Date;
+    value: number | string;
+    time: number | string | Date;
 }
 export interface PiGraphOven {
-    id:number;
-    value:number | string;
-    address:number |string;
-    time:number | string | Date;
+    id: number;
+    value: number | string;
+    address: number | string;
+    time: number | string | Date;
     ctez_standing: any;
 }
 export interface PiGraph {
-    value:number | string;
-    time:number | string | Date;
+    value: number | string;
+    time: number | string | Date;
 }
 
 export interface ctezGraphOvendata {
@@ -205,7 +205,7 @@ export interface OvenTransactionTable {
     timestamp: Date;
 }
 
-export interface CtezStatsGQL {
+export interface CtezStatsGql {
     id: string;
     timestamp: number;
     current_avg_price: number;
@@ -213,4 +213,10 @@ export interface CtezStatsGQL {
     current_annual_drift: number;
     ctez_sell_price: number;
     ctez_buy_price: number;
+}
+
+export interface OvenTvlGql {
+    id: string;
+    total_supply: number;
+    timestamp: string;
 }

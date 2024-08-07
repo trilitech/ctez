@@ -1,11 +1,10 @@
-import { Button, ButtonGroup, Flex, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
+import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
-import { graphic } from "echarts";
+import { useCtezGraphTVL, useCtezGraphTVLAll } from "../../api/analytics";
+import LineChart from "../../components/graph/line-chart";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
-import { ChartPure } from "./chart";
-import { useTvlGraphGql } from "../../api/analytics";
 
 const GraphTVL: React.FC = () => {
     const [textcolor] = useThemeColors(['homeTxt']);
@@ -16,7 +15,8 @@ const GraphTVL: React.FC = () => {
         'imported',
         'text4',
     ]);
-    const { data:chartData = false } = useTvlGraphGql();
+    const { data:data1m = false } = useCtezGraphTVL();
+    const { data:dataAll = false } = useCtezGraphTVLAll();
 
     const [value, setValue] = useState<number | undefined>();
     const [time, setTime] = useState<number | undefined>();
@@ -25,47 +25,6 @@ const GraphTVL: React.FC = () => {
     // graph options
     const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
     const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);
-
-    const option: React.ComponentProps<typeof ChartPure>['option'] = {
-        dataset: [{
-          dimensions: [
-            { name: 'timestamp', displayName: '' },
-            { name: 'total_supply', displayName: 'TVL' },
-          ],
-          source: chartData || []
-        }],
-        tooltip: {
-          trigger: 'axis'
-        },
-        xAxis: {
-          type: 'time',
-        },
-        yAxis: {
-          type: 'value',
-          scale: true,
-        },
-        series: [{
-          type: 'line',
-          symbol: 'none',
-          areaStyle: {
-            color: new graphic.LinearGradient(0, 0, 1, 0, [
-              {
-                offset: 0,
-                color: '#3260EF4D',
-              },
-              {
-                offset: 1,
-                color: '#3560ED14',
-              }
-            ])
-          }, 
-          color: '#0F62FF',
-          datasetIndex: 0,
-          smooth: true
-        }]
-      };
-    
-      const lastValue = chartData && chartData[chartData.length - 1].total_supply;
 
     return (<Flex direction='column'
         borderRadius={16}
@@ -93,7 +52,7 @@ const GraphTVL: React.FC = () => {
             lineHeight="29px"
             fontWeight={600}
             >
-            {(lastValue && !value)?`$${numberToMillionOrBillionFormate(lastValue)}`:value?`$${numberToMillionOrBillionFormate(value)}`:<SkeletonText pr={6} noOfLines={1} spacing="1" />}
+            {(data1m && !value && data1m[data1m.length-1].value )?`$${numberToMillionOrBillionFormate(data1m[data1m.length-1].value)}`:value?`$${numberToMillionOrBillionFormate(value)}`:<SkeletonText pr={6} noOfLines={1} spacing="1" />}
             </Text>
             {time ? <Text fontSize='12px' >{activeTab==='1m'?dateFormat(time ):dateFormat2(time)}</Text>:<Text fontSize='12px'  opacity={0}>Time</Text>}
             </Flex>
@@ -104,7 +63,15 @@ const GraphTVL: React.FC = () => {
             </ButtonGroup>
 
         </Flex>
-        <ChartPure option={option} loading={!chartData} showZoom style={{ height: 300 }} />
+        {activeTab==='1m' ? data1m?<LineChart
+         data={data1m}  setValue={setValue} setLabel={setTime}
+        />:<Skeleton height='300px' minWidth='20px' />
+:
+        dataAll?<LineChart
+         data={dataAll} isShowMonth setValue={setValue} setLabel={setTime}
+        />:<Skeleton height='300px' minWidth='20px' />
+
+        }
     </Flex>)
 }
 export default GraphTVL;

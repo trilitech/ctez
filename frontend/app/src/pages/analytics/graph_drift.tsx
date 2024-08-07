@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import { ChartPure } from "./chart";
-import { useCtezGraphGQL, useDriftGraph, useDriftGraphAll } from "../../api/analytics";
+import { useCtezGraphGql, useDriftGraph, useDriftGraphAll } from "../../api/analytics";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 
@@ -16,7 +16,7 @@ const GraphDrift: React.FC = () => {
     'imported',
     'text4',
   ]);
-  const { data: chartData = false } = useCtezGraphGQL();
+  const { data: chartData = false } = useCtezGraphGql();
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
   const [activeTab, setActiveTab] = useState('1m');
