@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Flex, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
+import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
@@ -144,7 +144,7 @@ const GraphCtez: React.FC = () => {
 
     </Flex>
 
-    <ChartPure option={option} loading={!chartData} showZoom style={{ height: 300 }} />
+    {chartData ? <ChartPure option={option} showZoom style={{ height: 300 }} /> : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)
 }
 export default GraphCtez;

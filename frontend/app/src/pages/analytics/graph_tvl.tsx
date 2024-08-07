@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Flex, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
+import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
@@ -104,7 +104,7 @@ const GraphTVL: React.FC = () => {
             </ButtonGroup>
 
         </Flex>
-        <ChartPure option={option} loading={!chartData} showZoom style={{ height: 300 }} />
+        {chartData ? <ChartPure option={option} showZoom style={{ height: 300 }} /> : <Skeleton height='300px' minWidth='20px' />}
     </Flex>)
 }
 export default GraphTVL;

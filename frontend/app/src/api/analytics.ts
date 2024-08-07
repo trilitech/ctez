@@ -60,6 +60,32 @@ export const useTvlGraphGql = () => {
   );
 };
 
+export const useTopOvensGraphGql = () => {
+  return useQuery<OvenTvlGql[], Error>(
+    'top_ovens_gql',
+    async () => {
+      const response = await axios({
+        url: GQL_API_URL,
+        method: "POST",
+        data: {
+          query: `
+            query {
+              oven(order_by: {ctez_outstanding: desc}, limit: 20) {
+                ctez_outstanding
+                id
+                address
+              }
+            }
+          `
+        }
+      });
+
+      return response.data.data.oven;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
 const analyticsAPI = axios.create({
   baseURL: 'https://analyticsapi.ctez.app'
 });

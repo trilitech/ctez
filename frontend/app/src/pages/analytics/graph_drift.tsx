@@ -56,7 +56,7 @@ const GraphDrift: React.FC = () => {
             color: '#3560ED14',
           }
         ])
-      }, 
+      },
       color: '#0F62FF',
       datasetIndex: 0,
       smooth: true
@@ -102,7 +102,7 @@ const GraphDrift: React.FC = () => {
         <Button fontSize='12px' className={activeTab === 'all' ? "btnactive" : ''} textDecoration='underline' onClick={() => setActiveTab('all')}>ALL</Button>
       </ButtonGroup>
     </Flex>
-    <ChartPure option={option} loading={!chartData} showZoom style={{ height: 300 }} />
+    {chartData ? <ChartPure option={option} showZoom style={{ height: 300 }} /> : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)
 }
 export default GraphDrift;
