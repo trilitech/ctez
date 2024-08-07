@@ -1,3 +1,5 @@
+import { number } from "yup/lib/locale"
+
 export interface priceSats {
     ctez_price: number;
     tez_price: string;
@@ -201,4 +203,14 @@ export interface OvenTransactionTable {
     ovenAddress: string;
     target: number;
     timestamp: Date;
+}
+
+export interface CtezStatsGQL {
+    id: string;
+    timestamp: number;
+    current_avg_price: number;
+    target_price: number;
+    current_annual_drift: number;
+    ctez_sell_price: number;
+    ctez_buy_price: number;
 }

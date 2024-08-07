@@ -1,27 +1,33 @@
 import axios from "axios";
 import { useQuery } from "react-query";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGQL, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
 export const useCtezGraphGQL = () => {
-  return useQuery<Array<{ target_price: number, current_avg_price: number, timestamp: string }>, Error>(
+  return useQuery<CtezStatsGQL[], Error>(
     'ctez_graph_gql',
     async () => {
-      return axios({
+      const response = await axios({
         url: GQL_API_URL,
         method: "POST",
         data: {
           query: `
             query {
               router_stats(order_by: {timestamp: asc}) {
-                target_price
-                current_avg_price
+                id
                 timestamp
+                current_avg_price
+                target_price
+                current_annual_drift
+                ctez_sell_price
+                ctez_buy_price
               }
           }`
         }
-      }).then(response => response.data.data.router_stats);
+      });
+
+      return response.data.data.router_stats.map((s: CtezStatsGQL) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 }));
     },
     { refetchInterval: 30_000 },
   );

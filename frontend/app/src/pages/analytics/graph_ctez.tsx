@@ -1,11 +1,9 @@
-import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
+import { Button, ButtonGroup, Flex, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
-import { useCtezGraphctez1m, useCtezGraphctezall, useCtezGraphGQL } from "../../api/analytics";
-import { TextWithCircleColor } from "../../components/analytics/TTextWithColorCircle";
-import TwoLineChart from "../../components/graph/two-line-chart";
-import { useThemeColors } from "../../hooks/utilHooks";
+import { useCtezGraphGQL } from "../../api/analytics";
+  import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
 
@@ -20,13 +18,11 @@ const GraphCtez: React.FC = () => {
     'imported',
     'text4',
   ]);
-  const { data: mainDatatarget1m = false } = useCtezGraphctez1m();
-  const { data: mainDatatargetall = false } = useCtezGraphGQL();
+  const { data: chartData = false } = useCtezGraphGQL();
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
   const [activeTab, setActiveTab] = useState('1m');
-  const data = mainDatatargetall;
 
   // graph options
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
@@ -36,15 +32,27 @@ const GraphCtez: React.FC = () => {
     dataset: [{
       dimensions: [
         { name: 'timestamp', displayName: '' },
-        { name: 'current_avg_price', displayName: 'Current Price' },
+        { name: 'current_avg_price', displayName: 'Avg Price' },
       ],
-      source: data || []
+      source: chartData || []
+    }, {
+      dimensions: [
+        { name: 'timestamp', displayName: '' },
+        { name: 'ctez_sell_price', displayName: 'Sell Price' },
+      ],
+      source: chartData || []
+    }, {
+      dimensions: [
+        { name: 'timestamp', displayName: '' },
+        { name: 'ctez_buy_price', displayName: 'Buy Price' },
+      ],
+      source: chartData || []
     }, {
       dimensions: [
         { name: 'timestamp', displayName: '' },
         { name: 'target_price', displayName: 'Target Price' },
       ],
-      source: data || []
+      source: chartData || []
     }],
     tooltip: {
       trigger: 'axis'
@@ -77,11 +85,25 @@ const GraphCtez: React.FC = () => {
     }, {
       type: 'line',
       symbol: 'none',
-      color: '#38CB89',
+      color: 'red',
       datasetIndex: 1,
+      smooth: true
+    }, {
+      type: 'line',
+      symbol: 'none',
+      color: 'yellow',
+      datasetIndex: 2,
+      smooth: true
+    }, {
+      type: 'line',
+      symbol: 'none',
+      color: '#38CB89',
+      datasetIndex: 3,
       smooth: true
     }]
   };
+
+  const lastValue = chartData && chartData[chartData.length - 1].current_avg_price;
 
   return (<Flex direction='column'
     borderRadius={16}
@@ -108,7 +130,7 @@ const GraphCtez: React.FC = () => {
             lineHeight="29px"
             fontWeight={600}
           >
-            {(mainDatatarget1m && !value && mainDatatarget1m[mainDatatarget1m.length - 1].value) ? `${numberToMillionOrBillionFormate(mainDatatarget1m[mainDatatarget1m.length - 1].value, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
+            {(lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           </Text>
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>
@@ -122,7 +144,7 @@ const GraphCtez: React.FC = () => {
 
     </Flex>
 
-    <ChartPure option={option} loading={!data} showZoom style={{ height: 300 }} />
+    <ChartPure option={option} loading={!chartData} showZoom style={{ height: 300 }} />
   </Flex>)
 }
 export default GraphCtez;
