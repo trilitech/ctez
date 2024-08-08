@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
@@ -41,7 +42,7 @@ const getBatchesGql = async (count: number, queryTemplate: string, limit = 1000)
   });
 
   return await Promise.all(chunkPromises);
-} 
+}
 
 export const useCtezGraphGql = () => {
   return useQuery<CtezStatsGql[], Error>(
@@ -61,8 +62,21 @@ export const useCtezGraphGql = () => {
           }
         }
       `;
-      const chunks = await getBatchesGql(count, query);
-      return chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 })))
+
+      const [baseStats, chunks] = await Promise.all([getBaseStats(), getBatchesGql(count, query)]);
+      const lastPoint: CtezStatsGql = {
+        id: 'now-now-now',
+        timestamp: new Date().toISOString(),
+        target_price: baseStats.currentTarget,
+        current_annual_drift: baseStats.currentAnnualDrift,
+        ctez_buy_price: baseStats.currentCtezBuyPrice,
+        ctez_sell_price: baseStats.currentCtezSellPrice,
+        current_avg_price: baseStats.currentAvgPrice
+      }
+
+      const data = chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 })));
+      data.push(lastPoint);
+      return data;
     },
     { refetchInterval: 30_000 },
   );

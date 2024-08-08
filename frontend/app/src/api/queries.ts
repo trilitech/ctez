@@ -40,7 +40,7 @@ export const useCtezBaseStats = (userAddress?: string) => {
   return useQuery<BaseStats, AxiosError, BaseStats>(
     ['baseStats'],
     async () => {
-      return getBaseStats(userAddress);
+      return getBaseStats();
     },
     {
       refetchInterval: 30_000,

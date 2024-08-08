@@ -43,7 +43,7 @@ const getFeeRate = (liquidity: number, targetLiquidity: number): number => {
   return rate * 60 * 60 * 24 * 365.25 * 100 / 2 ** 64;
 }
 
-export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> => {
+export const getBaseStats = async (): Promise<BaseStats> => {
   const storage = await getActualCtezStorage();
   const target = storage.context.target.toNumber() / 2 ** 64;
   const sellCtezDex = storage.sell_ctez;

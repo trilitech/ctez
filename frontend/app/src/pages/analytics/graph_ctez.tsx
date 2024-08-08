@@ -103,7 +103,7 @@ const GraphCtez: React.FC = () => {
     }]
   };
 
-  const lastValue = chartData && chartData[chartData.length - 1].current_avg_price;
+  const lastValue = chartData && chartData[chartData.length - 1].target_price;
   const displayValue = (lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : undefined;
 
   return (<Flex direction='column'
@@ -131,7 +131,7 @@ const GraphCtez: React.FC = () => {
             lineHeight="29px"
             fontWeight={600}
           >
-            {displayValue ? `Avg: ${displayValue}` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
+            {displayValue || <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           </Text>
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>

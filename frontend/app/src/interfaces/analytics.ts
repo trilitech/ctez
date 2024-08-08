@@ -207,7 +207,7 @@ export interface OvenTransactionTable {
 
 export interface CtezStatsGql {
     id: string;
-    timestamp: number;
+    timestamp: string;
     current_avg_price: number;
     target_price: number;
     current_annual_drift: number;
