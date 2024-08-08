@@ -1,34 +1,68 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
+const getCountGql = async (entity: string): Promise<number> => {
+  const response = await axios({
+    url: GQL_API_URL,
+    method: "POST",
+    data: {
+      query: `
+        query {
+          ${entity}_aggregate {
+            aggregate {
+              count
+            }
+          }
+        }
+      `
+    }
+  });
+
+  return response.data.data[`${entity}_aggregate`].aggregate.count as number;
+}
+
+const getBatchesGql = async (count: number, queryTemplate: string, limit = 1000): Promise<AxiosResponse<any>[]> => {
+  const batchSize = 1000;
+  const chunkPromises = Array.from(Array(Math.ceil(count / batchSize)), (_, i) => {
+    const chunkQuery = queryTemplate
+      .replace('<LIMIT>', batchSize.toString())
+      .replace('<OFFSET>', (i * batchSize).toString());
+
+    return axios({
+      url: GQL_API_URL,
+      method: "POST",
+      data: {
+        query: chunkQuery
+      }
+    });
+  });
+
+  return await Promise.all(chunkPromises);
+} 
+
 export const useCtezGraphGql = () => {
   return useQuery<CtezStatsGql[], Error>(
     'ctez_graph_gql',
     async () => {
-      const response = await axios({
-        url: GQL_API_URL,
-        method: "POST",
-        data: {
-          query: `
-            query {
-              router_stats(order_by: {timestamp: asc}) {
-                id
-                timestamp
-                current_avg_price
-                target_price
-                current_annual_drift
-                ctez_sell_price
-                ctez_buy_price
-              }
-            }
-          `
+      const count = await getCountGql('router_stats');
+      const query = `
+        query {
+          router_stats(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            id
+            timestamp
+            current_avg_price
+            target_price
+            current_annual_drift
+            ctez_sell_price
+            ctez_buy_price
+          }
         }
-      });
-
-      return response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 }));
+      `
+      const chunks = await getBatchesGql(count, query);
+      return chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 })))
     },
     { refetchInterval: 30_000 },
   );
@@ -38,23 +72,19 @@ export const useTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'oven_tvl_gql',
     async () => {
-      const response = await axios({
-        url: GQL_API_URL,
-        method: "POST",
-        data: {
-          query: `
-            query {
-              tvl_history(order_by: {timestamp: asc}) {
-                total_supply
-                timestamp
-                id: timestamp
-              }
-            }
-          `
+      const count = await getCountGql('tvl_history');
+      const query = `
+        query {
+          tvl_history(order_by: {timestamp: asc} offset: <OFFSET>, limit: <LIMIT>) {
+            total_supply
+            timestamp
+            id: timestamp
+          }
         }
-      });
+      `
+      const chunks = await getBatchesGql(count, query);
 
-      return response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 }));
+      return chunks.flatMap(response => response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 })));
     },
     { refetchInterval: 30_000 },
   );
@@ -70,7 +100,7 @@ export const useTopOvensGraphGql = () => {
         data: {
           query: `
             query {
-              oven(order_by: {ctez_outstanding: desc}, limit: 20) {
+              oven(order_by: {ctez_outstanding: desc}, limit: 25) {
                 ctez_outstanding
                 id
                 address
