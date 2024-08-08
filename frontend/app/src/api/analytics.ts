@@ -5,6 +5,8 @@ import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGra
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
 const getCountGql = async (entity: string): Promise<number> => {
+  return 5000;
+
   const response = await axios({
     url: GQL_API_URL,
     method: "POST",
@@ -60,7 +62,7 @@ export const useCtezGraphGql = () => {
             ctez_buy_price
           }
         }
-      `
+      `;
       const chunks = await getBatchesGql(count, query);
       return chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 })))
     },
@@ -81,7 +83,7 @@ export const useTvlGraphGql = () => {
             id: timestamp
           }
         }
-      `
+      `;
       const chunks = await getBatchesGql(count, query);
 
       return chunks.flatMap(response => response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 })));
@@ -100,7 +102,7 @@ export const useTopOvensGraphGql = () => {
         data: {
           query: `
             query {
-              oven(order_by: {ctez_outstanding: desc}, limit: 25) {
+              oven(order_by: {ctez_outstanding: desc}, limit: 24) {
                 ctez_outstanding
                 id
                 address
