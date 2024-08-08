@@ -85,13 +85,13 @@ const GraphCtez: React.FC = () => {
     }, {
       type: 'line',
       symbol: 'none',
-      color: 'red',
+      color: '#f18e8e',
       datasetIndex: 1,
       smooth: true
     }, {
       type: 'line',
       symbol: 'none',
-      color: 'yellow',
+      color: 'rgb(165, 134, 227)',
       datasetIndex: 2,
       smooth: true
     }, {
