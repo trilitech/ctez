@@ -5,8 +5,6 @@ import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGra
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
 const getCountGql = async (entity: string): Promise<number> => {
-  return 5000;
-
   const response = await axios({
     url: GQL_API_URL,
     method: "POST",

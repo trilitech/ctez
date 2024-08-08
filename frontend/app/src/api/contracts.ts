@@ -32,6 +32,17 @@ const getMarginalPrice = (liquidity: number, targetLiquidity: number, targetPric
   return targetPrice * (21 - 3 * u + 3 * u ** 2 - u ** 3) / 20;
 }
 
+const getFeeRate = (liquidity: number, targetLiquidity: number): number => {
+  const max_rate = 5845483520;
+  const rate = (8 * liquidity < targetLiquidity)
+    ? max_rate
+    : (8 * liquidity > 7 * targetLiquidity)
+      ? 0
+      : Math.floor(Math.abs(max_rate * (7 * targetLiquidity - 8 * liquidity)) / (6 * targetLiquidity));
+
+  return rate * 60 * 60 * 24 * 365.25 * 100 / 2 ** 64;
+}
+
 export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> => {
   const storage = await getActualCtezStorage();
   const target = storage.context.target.toNumber() / 2 ** 64;
@@ -58,6 +69,9 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
   const drift = storage.context.drift.toNumber() / 2 ** 64;
   const currentAnnualDrift = (1.0 + drift) ** (365.25 * 24 * 3600) - 1.0;
 
+  const ctezDexFeeRate = getFeeRate(sellCtezDex.self_reserves.toNumber(), storage.context._Q.toNumber())
+  const tezDexFeeRate = getFeeRate(sellTezDex.self_reserves.toNumber(), storage.context._Q.toNumber() * target)
+
   return {
     originalTarget: storage.context.target.toNumber(),
     currentTarget: target,
@@ -74,9 +88,11 @@ export const getBaseStats = async (_userAddress?: string): Promise<BaseStats> =>
     ctezDexSelfTokens: sellCtezDex.self_reserves.toNumber() / 1e6,
     ctezDexProceeds: (sellCtezDex.proceeds_reserves.toNumber() - sellCtezDex.proceeds_debts.toNumber()) / 1e6,
     ctezDexSubsidy: (sellCtezDex.subsidy_reserves.toNumber() - sellCtezDex.subsidy_debts.toNumber()) / 1e6,
+    ctezDexFeeRate,
     tezDexSelfTokens: sellTezDex.self_reserves.toNumber() / 1e6,
     tezDexProceeds: (sellTezDex.proceeds_reserves.toNumber() - sellTezDex.proceeds_debts.toNumber()) / 1e6,
     tezDexSubsidy: (sellTezDex.subsidy_reserves.toNumber() - sellTezDex.subsidy_debts.toNumber()) / 1e6,
+    tezDexFeeRate
   };
 };
 
@@ -143,9 +159,9 @@ export const isMonthFromLiquidation = (
     storage.sell_tez.fee_index.toNumber(),
     storage.sell_tez.self_reserves.toNumber(),
   );
-  
+
   const updatedOutstandingCtez = getOvenCtezOutstandingAndFeeIndex(outstandingCtez * 1e6, ovenFeeIndex, sellCtezDexFeeIndex, sellTezDexFeeIndex).ctezOutstanding / 1e6;
-  
+
   // const futureFees = updatedOutstandingCtez - outstandingCtez;
   // console.log('outstandingCtez', outstandingCtez);
   // console.log('updatedOutstandingCtez', updatedOutstandingCtez);

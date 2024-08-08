@@ -47,39 +47,18 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
   const stats = () => {
     return (
       <Flex direction="column">
-        <Flex direction="row" fontWeight="bold">
+        <Text color={sidebarTxt} fontSize="xs" fontWeight="bold" cursor="default">
+          Ctez
+        </Text>
+        <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Target
+            Target
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
             {data?.currentTarget.toFixed(6)}
           </Text>
         </Flex>
-        <Flex direction="row"  mt={2}>
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Sell Price
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezSellPrice.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row" fontWeight="bold">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Avg Price
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAvgPrice.toFixed(6)}
-          </Text>
-        </Flex>
         <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Buy Price
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezBuyPrice.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row" mt={2}>
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Premium
           </Text>
@@ -89,13 +68,59 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
         </Flex>
         <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Annual Drift
+            Drift
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAnnualDrift.toFixed(2)}%
+            {data?.currentAnnualDrift.toFixed(2)}% / year
+          </Text>
+        </Flex>
+        <Text mt={2} color={sidebarTxt} fontSize="xs" fontWeight="bold" cursor="default">
+          Dex
+        </Text>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Best ask
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentCtezSellPrice.toFixed(6)}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Best bid
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentCtezBuyPrice.toFixed(6)}
           </Text>
         </Flex>
         <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
+          Liquidity incentives
+        </Text>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Selling: 
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.ctezDexFeeRate.toFixed(2)}% / year
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Buying:
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+          {data?.tezDexFeeRate.toFixed(2)}% / year
+          </Text>
+        </Flex>
+        {/* <Flex direction="row" mt={2}>
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Current Avg Price
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentAvgPrice.toFixed(6)}
+          </Text>
+        </Flex> */}
+        {/* <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={6}>
             Sell Ctez Dex:
         </Text>
         <Flex direction="row">
@@ -148,7 +173,7 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
             {data?.tezDexSubsidy.toFixed(6)}
           </Text>
-        </Flex>
+        </Flex> */}
         {/* <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Annual Drift (Past week)

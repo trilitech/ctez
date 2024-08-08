@@ -20,9 +20,11 @@ export interface BaseStats {
   ctezDexSelfTokens: number;
   ctezDexProceeds: number;
   ctezDexSubsidy: number;
+  ctezDexFeeRate: number;
   tezDexSelfTokens: number;
   tezDexProceeds: number;
   tezDexSubsidy: number;
+  tezDexFeeRate: number;
 }
 
 export interface UserOvenStats {

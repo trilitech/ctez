@@ -3,7 +3,7 @@ import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
 import { useCtezGraphGql } from "../../api/analytics";
-  import { useThemeColors } from "../../hooks/utilHooks";
+import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
 
@@ -104,6 +104,7 @@ const GraphCtez: React.FC = () => {
   };
 
   const lastValue = chartData && chartData[chartData.length - 1].current_avg_price;
+  const displayValue = (lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : undefined;
 
   return (<Flex direction='column'
     borderRadius={16}
@@ -130,7 +131,7 @@ const GraphCtez: React.FC = () => {
             lineHeight="29px"
             fontWeight={600}
           >
-            {(lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
+            {displayValue ? `Avg: ${displayValue}` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           </Text>
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>
