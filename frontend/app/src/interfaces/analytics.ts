@@ -220,3 +220,8 @@ export interface OvenTvlGql {
     total_supply: number;
     timestamp: string;
 }
+
+export interface OvenDonutGql {
+    ctez_outstanding: number;
+    address: string;
+}

@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
@@ -92,7 +92,6 @@ export const useTvlGraphGql = () => {
           tvl_history(order_by: {timestamp: asc} offset: <OFFSET>, limit: <LIMIT>) {
             total_supply
             timestamp
-            id: timestamp
           }
         }
       `;
@@ -105,7 +104,7 @@ export const useTvlGraphGql = () => {
 };
 
 export const useTopOvensGraphGql = () => {
-  return useQuery<OvenTvlGql[], Error>(
+  return useQuery<OvenDonutGql[], Error>(
     'top_ovens_gql',
     async () => {
       const response = await axios({
@@ -114,17 +113,30 @@ export const useTopOvensGraphGql = () => {
         data: {
           query: `
             query {
-              oven(order_by: {ctez_outstanding: desc}, limit: 24) {
-                ctez_outstanding
-                id
+              oven(order_by: {ctez_outstanding: desc}, limit: 25) {
+                ctez_outstanding,
                 address
+                id: address
+              }
+              oven_aggregate(order_by: {ctez_outstanding: desc}, offset: 25) {
+                aggregate {
+                  sum {
+                    ctez_outstanding
+                  }
+                }
               }
             }
           `
         }
       });
 
-      return response.data.data.oven;
+      const ovens = response.data.data.oven;
+      const othersItem: OvenDonutGql = {
+        address: 'Others',
+        ctez_outstanding: response.data.data.oven_aggregate.aggregate.sum.ctez_outstanding
+      };
+      ovens.push(othersItem);
+      return ovens;
     },
     { refetchInterval: 30_000 },
   );
