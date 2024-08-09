@@ -54,7 +54,6 @@ export const useCtezGraphGql = () => {
       const query = `
         query {
           router_stats(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
-            id
             timestamp
             current_avg_price
             target_price
@@ -90,24 +89,24 @@ export const useTvlGraphGql = () => {
     async () => {
       const [count, allOvens, baseStats] = await Promise.all([getCountGql('tvl_history'), getAllOvens(), getBaseStats()]);
       const query = `
-        query {
-          tvl_history(order_by: {timestamp: asc} offset: <OFFSET>, limit: <LIMIT>) {
-            total_supply
-            timestamp
+        query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
+          tvl_history: ca_tvl_history_1d(where: {bucket_1d: {_gte: $from, _lte: $to}}) {
+            timestamp: bucket_1d
+            tvl: tvl_usd
           }
         }
       `;
       const summary = getOvenSummary(allOvens, baseStats);
       const chunks = await getBatchesGql(count, query);
-      const data = chunks.flatMap(response => response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 })));
-      if (summary) {
-        const lastPoint: OvenTvlGql = {
-          id: 'now-now-now',
-          timestamp: new Date().toISOString(),
-          total_supply: summary?.totalOutstandingCtez
-        }
-        data.push(lastPoint);
-      }
+      const data = chunks.flatMap(response => response.data.data.tvl_history);
+      // if (summary) {
+      //   const lastPoint: OvenTvlGql = {
+      //     id: 'now-now-now',
+      //     timestamp: new Date().toISOString(),
+      //     total_supply: summary?.totalOutstandingCtez
+      //   }
+      //   data.push(lastPoint);
+      // }
 
       return data;
     },

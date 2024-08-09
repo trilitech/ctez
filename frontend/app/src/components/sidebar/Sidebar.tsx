@@ -112,7 +112,7 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
           {data?.tezDexFeeRate.toFixed(2)}% / year
           </Text>
         </Flex>
-        <Flex direction="row" mt={2}>
+        {/* <Flex direction="row" mt={2}>
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Current Avg Price
           </Text>
@@ -172,8 +172,8 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
             {data?.tezDexSubsidy.toFixed(6)}
-          </Text>
-        </Flex>
+          </Text> 
+        </Flex> */}
          {/* <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
             Annual Drift (Past week)

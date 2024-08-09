@@ -217,7 +217,7 @@ export interface CtezStatsGql {
 
 export interface OvenTvlGql {
     id: string;
-    total_supply: number;
+    tvl: number;
     timestamp: string;
 }
 
