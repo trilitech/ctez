@@ -86,12 +86,12 @@ export const getBaseStats = async (): Promise<BaseStats> => {
     ctezDexFeeIndex: sellCtezDex.fee_index.toNumber(),
     tezDexFeeIndex: sellTezDex.fee_index.toNumber(),
     ctezDexSelfTokens: sellCtezDex.self_reserves.toNumber() / 1e6,
-    ctezDexProceeds: (sellCtezDex.proceeds_reserves.toNumber() - sellCtezDex.proceeds_debts.toNumber()) / 1e6,
-    ctezDexSubsidy: (sellCtezDex.subsidy_reserves.toNumber() - sellCtezDex.subsidy_debts.toNumber()) / 1e6,
+    ctezDexProceeds: sellCtezDex.proceeds_reserves.minus(sellCtezDex.proceeds_debts).toNumber() / 1e6,
+    ctezDexSubsidy: sellCtezDex.subsidy_reserves.minus(sellCtezDex.subsidy_debts).toNumber() / 1e6,
     ctezDexFeeRate,
     tezDexSelfTokens: sellTezDex.self_reserves.toNumber() / 1e6,
-    tezDexProceeds: (sellTezDex.proceeds_reserves.toNumber() - sellTezDex.proceeds_debts.toNumber()) / 1e6,
-    tezDexSubsidy: (sellTezDex.subsidy_reserves.toNumber() - sellTezDex.subsidy_debts.toNumber()) / 1e6,
+    tezDexProceeds: sellTezDex.proceeds_reserves.minus(sellTezDex.proceeds_debts).toNumber() / 1e6,
+    tezDexSubsidy: sellTezDex.subsidy_reserves.minus(sellTezDex.subsidy_debts).toNumber() / 1e6,
     tezDexFeeRate
   };
 };

@@ -2,8 +2,9 @@ import { Flex, FormControl, FormLabel, Input, Stack, useToast, Text, InputGroup 
 import { addMinutes } from 'date-fns/fp';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { number, object } from 'yup';
+import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
+import BigNumber from 'bignumber.js';
 import { RemoveLiquidityParams } from '../../../interfaces';
 import { removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
@@ -48,7 +49,7 @@ const RemoveLiquidity: React.FC = () => {
   const lqtBalance = isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt;
 
   const calcMinValues = useCallback(
-    async (lqtBurned: number) => {
+    async (lqtBurned: BigNumber) => {
       if (!lqtBurned) {
         setOtherValues({
           minSelfReceived: 0,
@@ -58,17 +59,15 @@ const RemoveLiquidity: React.FC = () => {
       } else if (ctezStorage && actualCtezStorage && userAddress) {
         const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
         const account = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
-        const lqtBurnedNat = lqtBurned * 1e6;
         const slippageFactor = (1 - slippage * 0.01)
-        const totalLiquidityShares = dex.total_liquidity_shares.toNumber();
-        const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves.toNumber(), totalLiquidityShares, 0) * slippageFactor;
-        const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account?.proceeds_owed.toNumber() || 0) * slippageFactor;
-        const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account?.subsidy_owed.toNumber() || 0) * slippageFactor;
+        const minSelfReceived = calcRedeemedAmount(lqtBurned, dex.self_reserves, dex.total_liquidity_shares, new BigNumber(0)).multipliedBy(slippageFactor);
+        const minProceedsReceived = calcRedeemedAmount(lqtBurned, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed || new BigNumber(0)).multipliedBy(slippageFactor);
+        const minSubsidyReceived = calcRedeemedAmount(lqtBurned, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0)).multipliedBy(slippageFactor);
 
         setOtherValues({
-          minSelfReceived: formatNumberStandard(minSelfReceived / 1e6),
-          minProceedsReceived: formatNumberStandard(minProceedsReceived / 1e6),
-          minSubsidyReceived: formatNumberStandard(minSubsidyReceived / 1e6),
+          minSelfReceived: formatNumberStandard(minSelfReceived.toNumber() / 1e6),
+          minProceedsReceived: formatNumberStandard(minProceedsReceived.toNumber() / 1e6),
+          minSubsidyReceived: formatNumberStandard(minSubsidyReceived.toNumber() / 1e6),
         });
       }
     },
@@ -81,13 +80,23 @@ const RemoveLiquidity: React.FC = () => {
     slippage: Number(slippage),
   };
 
-  const maxValue = (): number => formatNumber(lqtBalance || 0.0);
+  const maxValue = (): BigNumber => lqtBalance ?? new BigNumber(0);
 
   const validationSchema = object().shape({
-    lqtBurned: number()
-      .positive(t('shouldPositive'))
+    lqtBurned: string()
       .required(t('required'))
-      .max(maxValue(), `${t('insufficientBalance')}`),
+      .test({
+        test: (value) => {
+          return !!value && new BigNumber(value).isLessThanOrEqualTo(maxValue());
+        },
+        message: t('insufficientBalance'),
+      })
+      .test({
+        test: (value) => {
+          return !!value && new BigNumber(value).isPositive();
+        },
+        message: t('shouldPositive'),
+      }),
     deadline: number().min(0).optional(),
     slippage: number().min(0).optional(),
   });
@@ -99,7 +108,7 @@ const RemoveLiquidity: React.FC = () => {
         const data: RemoveLiquidityParams = {
           deadline,
           to: userAddress,
-          lqtBurned: formatNumberStandard(Number(formData.lqtBurned) * 1e6) ,
+          lqtBurned: formData.lqtBurned,
           minSelfReceived: otherValues.minSelfReceived,
           minProceedsReceived: otherValues.minProceedsReceived,
           minSubsidyReceived: otherValues.minSubsidyReceived,
@@ -129,7 +138,7 @@ const RemoveLiquidity: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    calcMinValues(Number(values.lqtBurned));
+    calcMinValues(new BigNumber(values.lqtBurned));
   }, [calcMinValues, values.slippage, values.lqtBurned, side]);
 
   const { buttonText, errorList } = useMemo(() => {
@@ -169,13 +178,13 @@ const RemoveLiquidity: React.FC = () => {
           />
           {typeof lqtBalance !== 'undefined' && (
             <Text color={text4} fontSize="xs" mt={1} mb={2}>
-              Balance: {formatNumberStandard(lqtBalance / 1e6)}{' '}
+              Balance: {lqtBalance.toString(10)}{' '}
               <Text
                 as="span"
                 cursor="pointer"
                 color={maxColor}
                 onClick={() =>
-                  formik.setFieldValue('lqtBurned', formatNumberStandard(lqtBalance / 1e6))
+                  formik.setFieldValue('lqtBurned', lqtBalance.toString(10))
                 }
               >
                 (Max)

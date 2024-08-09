@@ -1,5 +1,7 @@
-export const calcRedeemedAmount = (liquidityRedeemed: number, reserves: number, totalLiquidityShares: number, debt: number): number => {
-    const denominator = Math.max(totalLiquidityShares, 1);
-    const redeemedAmount = Math.floor(liquidityRedeemed * reserves / denominator);
-    return Math.max(redeemedAmount - debt, 0);
+import BigNumber from "bignumber.js";
+
+export const calcRedeemedAmount = (liquidityRedeemed: BigNumber, reserves: BigNumber, totalLiquidityShares: BigNumber, debt: BigNumber): BigNumber => {
+    const denominator = BigNumber.max(totalLiquidityShares, 1);
+    const redeemedAmount = liquidityRedeemed.multipliedBy(reserves).dividedToIntegerBy(denominator);
+    return BigNumber.max(redeemedAmount.minus(debt), 0);
 }

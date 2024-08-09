@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
+import { getAllOvens } from "../contracts/ctez";
+import { getOvenSummary, useOvenSummary } from "../hooks/utilHooks";
 import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -86,7 +88,7 @@ export const useTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'oven_tvl_gql',
     async () => {
-      const count = await getCountGql('tvl_history');
+      const [count, allOvens, baseStats] = await Promise.all([getCountGql('tvl_history'), getAllOvens(), getBaseStats()]);
       const query = `
         query {
           tvl_history(order_by: {timestamp: asc} offset: <OFFSET>, limit: <LIMIT>) {
@@ -95,9 +97,19 @@ export const useTvlGraphGql = () => {
           }
         }
       `;
+      const summary = getOvenSummary(allOvens, baseStats);
       const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 })));
+      if (summary) {
+        const lastPoint: OvenTvlGql = {
+          id: 'now-now-now',
+          timestamp: new Date().toISOString(),
+          total_supply: summary?.totalOutstandingCtez
+        }
+        data.push(lastPoint);
+      }
 
-      return chunks.flatMap(response => response.data.data.tvl_history.map((h: OvenTvlGql) => ({ ...h, total_supply: h.total_supply / 1e6 })));
+      return data;
     },
     { refetchInterval: 30_000 },
   );

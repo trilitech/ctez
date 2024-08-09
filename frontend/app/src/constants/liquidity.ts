@@ -16,7 +16,7 @@ export type TAddBtnTxt = ValueOf<typeof ADD_BTN_TXT>;
 
 export interface IRemoveLiquidityForm {
   deadline: number | undefined;
-  lqtBurned: number | '';
+  lqtBurned: string | '';
   slippage: number;
 }
 

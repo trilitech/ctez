@@ -2,6 +2,7 @@ import { Flex, FormControl, FormLabel, Input, Stack, useToast, InputGroup } from
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
+import BigNumber from 'bignumber.js';
 import { CollectFromLiquidityParams } from '../../../interfaces';
 import { collectFromLiquidity } from '../../../contracts/cfmm';
 import { COLLECT_BTN_TXT } from '../../../constants/liquidity';
@@ -51,13 +52,12 @@ const CollectFromLiquidity: React.FC = () => {
       } else if (ctezStorage && actualCtezStorage && userAddress) {
         const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
         const account = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
-        const totalLiquidityShares = dex.total_liquidity_shares.toNumber();
-        const proceedsReceived = calcRedeemedAmount(lqtBalance, dex.proceeds_reserves.toNumber(), totalLiquidityShares, account?.proceeds_owed.toNumber() || 0);
-        const subsidyReceived = calcRedeemedAmount(lqtBalance, dex.subsidy_reserves.toNumber(), totalLiquidityShares, account?.subsidy_owed.toNumber() || 0);
+        const proceedsReceived = calcRedeemedAmount(lqtBalance, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed || new BigNumber(0));
+        const subsidyReceived = calcRedeemedAmount(lqtBalance, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0));
 
         setOtherValues({
-          proceedsReceived: formatNumberStandard(proceedsReceived / 1e6),
-          subsidyReceived: formatNumberStandard(subsidyReceived / 1e6),
+          proceedsReceived: formatNumberStandard(proceedsReceived.toNumber() / 1e6),
+          subsidyReceived: formatNumberStandard(subsidyReceived.toNumber() / 1e6),
         });
       }
     },
@@ -121,7 +121,7 @@ const CollectFromLiquidity: React.FC = () => {
           <Input
             name="lqtBalance"
             id="lqtBalance"
-            value={inputFormatNumberStandard((lqtBalance || 0) / 1e6)}
+            value={inputFormatNumberStandard((lqtBalance?.toNumber() || 0) / 1e6)}
             color={text2}
             bg={inputbg}
             readOnly

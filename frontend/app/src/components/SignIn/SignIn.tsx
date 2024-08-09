@@ -135,28 +135,28 @@ const SignIn: React.FC = () => {
                   <Tr>
                     <Td>Tez LQT:</Td>
                     <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(userLqtData?.tezDexLqt))}
+                      {userLqtData?.tezDexLqt?.toString(10)}
                     </Td>
                   </Tr>
                 )}
                 {typeof userLqtData?.tezDexLqtShare !== 'undefined' && (
                   <Tr>
                     <Td>Tez LQT Pool share:</Td>
-                    <Td textAlign="right">{userLqtData?.tezDexLqtShare}%</Td>
+                    <Td textAlign="right">{userLqtData?.tezDexLqtShare.toFixed(2)}%</Td>
                   </Tr>
                 )}
                 {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
                   <Tr>
                     <Td>Ctez LQT:</Td>
                     <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(userLqtData?.ctezDexLqt))}
+                      {userLqtData?.ctezDexLqt?.toString(10)}
                     </Td>
                   </Tr>
                 )}
                 {typeof userLqtData?.ctezDexLqtShare !== 'undefined' && (
                   <Tr>
                     <Td>Ctez LQT Pool share:</Td>
-                    <Td textAlign="right">{userLqtData?.ctezDexLqtShare}%</Td>
+                    <Td textAlign="right">{userLqtData?.ctezDexLqtShare.toFixed(2)}%</Td>
                   </Tr>
                 )}
               </Tbody>

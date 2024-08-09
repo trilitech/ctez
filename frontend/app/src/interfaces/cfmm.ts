@@ -16,7 +16,7 @@ export interface CollectFromLiquidityParams {
 export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;
-  lqtBurned: number;
+  lqtBurned: string;
   minSelfReceived : number;
   minProceedsReceived: number;
   minSubsidyReceived: number;
@@ -58,13 +58,13 @@ export interface CfmmStorage {
 }
 
 export interface HalfDexLQTData {
-  lqt: number;
-  lqtShare: number;
+  lqt: BigNumber;
+  lqtShare: BigNumber;
 }
 
 export interface UserLQTData {
-  ctezDexLqt: number;
-  ctezDexLqtShare: number;
-  tezDexLqt: number;
-  tezDexLqtShare: number;
+  ctezDexLqt: BigNumber;
+  ctezDexLqtShare: BigNumber;
+  tezDexLqt: BigNumber;
+  tezDexLqtShare: BigNumber;
 }

@@ -82,6 +82,9 @@
 .hoverPointer:hover{
     cursor: pointer;
 }
+a.hoverPointer:visited, a.hoverPointer:active  {
+    fill: inherit;
+}
 .custom-tooltip{ 
     width: 130px;
     height: 52px;

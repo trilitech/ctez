@@ -52,10 +52,10 @@ export const getOvenStorage = async (ovenAddress: string): Promise<OvenStorage> 
 export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boolean): Promise<HalfDexLQTData> => {
   const storage = await cTez.storage<CTezStorage>();
   const dex = ctezDex ? storage.sell_ctez : storage.sell_tez;
-  const lqt = (await dex.liquidity_owners.get(userAddress))?.liquidity_shares?.toNumber() ?? 0;
+  const lqt = (await dex.liquidity_owners.get(userAddress))?.liquidity_shares ?? new BigNumber(0);
   const lqtShare = dex.total_liquidity_shares.isZero()
-    ? 0
-    : Number(((lqt / dex.total_liquidity_shares.toNumber()) * 100).toFixed(6));
+    ? new BigNumber(0)
+    : (lqt.dividedBy(dex.total_liquidity_shares).multipliedBy(100));
 
   return { lqt, lqtShare }
 }
