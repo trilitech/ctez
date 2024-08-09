@@ -2,7 +2,7 @@ from math import floor
 from typing import Optional
 import click
 
-from scripts.helpers import create_manager
+from scripts.helpers import create_manager, get_balance_mutez
 from tests.helpers.addressable import get_address
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
 from tests.helpers.contracts.fa12.fa12 import Fa12
@@ -361,7 +361,7 @@ def execute_every_entrypoint(
     manager.wait(opg)
     print(f'Operation has been completed: {opg.opg_hash}')
 
-    ctez_amount_to_swap = floor(add_tez_liquidity_amount / (target * 1.06))
+    ctez_amount_to_swap = min(floor(add_tez_liquidity_amount / (target * 1.06)), ctez_token.view_balance(sender_address))
     print(f'Swapping {ctez_amount_to_swap} ctez to tez...')
     opg = manager.bulk(
         ctez_token.approve(ctez2, 0),
@@ -371,7 +371,7 @@ def execute_every_entrypoint(
     manager.wait(opg)
     print(f'Operation has been completed: {opg.opg_hash}')
 
-    tez_amount_to_swap = floor(add_ctez_liquidity_amount * target / 1.06)
+    tez_amount_to_swap = min(floor(add_ctez_liquidity_amount * target / 1.06), get_balance_mutez(manager, sender_address))
     print(f'Swapping {tez_amount_to_swap} tez to ctez...')
     opg = ctez2.tez_to_ctez(sender_address, 0, deadline).with_amount(tez_amount_to_swap).send()
     manager.wait(opg)
