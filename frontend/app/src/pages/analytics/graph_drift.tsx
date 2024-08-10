@@ -68,7 +68,9 @@ const GraphDrift: React.FC = () => {
   return (<Flex direction='column'
     borderRadius={16}
     backgroundColor={background}
-    flex={1}
+    flexGrow={1}
+    flexShrink={1}
+    flexBasis={320}
     paddingX={largerScreen ? '35px' : '19px'}
     paddingY={largerScreen ? '27px' : '24px'}
     gridGap={1}

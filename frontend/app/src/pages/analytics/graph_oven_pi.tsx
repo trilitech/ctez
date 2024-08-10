@@ -16,7 +16,9 @@ const OvenPiChart: React.FC = () => {
   return (<Flex direction='column'
     borderRadius={16}
     backgroundColor={background}
-    flex={1}
+    flexGrow={1}
+    flexShrink={1}
+    flexBasis={320}
     paddingX='35px'
     paddingY='27px'
     gridGap={6}

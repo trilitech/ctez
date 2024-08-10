@@ -20,11 +20,11 @@ const AnaluticsPage: React.FC = () => {
     const [textcolor] = useThemeColors(['homeTxt']);
     const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-    const [background,inputbg] = useThemeColors([
+    const [background, inputbg] = useThemeColors([
         'cardbg2',
         'inputbg',
     ]);
-    const {colorMode} = useColorMode();
+    const { colorMode } = useColorMode();
     const GradientText = (text: string | number, isDollor: boolean) => {
         return <b className='gradientcolortext'>
             {isDollor ? '$' : null}
@@ -32,27 +32,27 @@ const AnaluticsPage: React.FC = () => {
         </b>;
     }
     return (
-        <Box p= {largerScreen ? '55px' : '15px'} pt={largerScreen ? '55px' : '30px'} maxWidth={1200} mx="auto" className={colorMode}>
+        <Box p={largerScreen ? '55px' : '15px'} pt={largerScreen ? '55px' : '30px'} maxWidth={1200} mx="auto" className={colorMode}>
             <Center maxWidth='759px' margin='0px auto' >
-            {headerData?<Text
+                {headerData ? <Text
                     color={textcolor}
                     fontSize={largerScreen ? '40px' : '26px'}
                     lineHeight={largerScreen ? '50px' : '32px'}
                     fontWeight={400}
                     textAlign='center'
                 >
-           {GradientText(`${numberToMillionOrBillionFormate(headerData.total_debt)} ctez`, false) } collateralized by {GradientText(`${numberToMillionOrBillionFormate(headerData.collateral_locked)} tez`, false) } across {GradientText(`${headerData.Total_Ovens} `, false)} {GradientText('ovens',false)}
-                                            
+                    {GradientText(`${numberToMillionOrBillionFormate(headerData.total_debt)} ctez`, false)} collateralized by {GradientText(`${numberToMillionOrBillionFormate(headerData.collateral_locked)} tez`, false)} across {GradientText(`${headerData.Total_Ovens} `, false)} {GradientText('ovens', false)}
+
                 </Text>
-                :<Skeleton>
-                    <Text
-                    color={textcolor}
-                    fontSize={largerScreen ? '40px' : '26px'}
-                    lineHeight="50px"
-                    fontWeight={400}
-                    textAlign='center'
-                >
-                441.39k ctez collateralized by 568.34k tez across 195 ovens 
+                    : <Skeleton>
+                        <Text
+                            color={textcolor}
+                            fontSize={largerScreen ? '40px' : '26px'}
+                            lineHeight="50px"
+                            fontWeight={400}
+                            textAlign='center'
+                        >
+                            441.39k ctez collateralized by 568.34k tez across 195 ovens
                 </Text>
                     </Skeleton>}
             </Center>
@@ -66,8 +66,7 @@ const AnaluticsPage: React.FC = () => {
                 >
                     Protocol
                 </Text>
-                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
-                    {/* <GraphCtezOld /> */}
+                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
                     <GraphCtez />
                     <GraphDrift />
                 </Flex>
@@ -86,9 +85,9 @@ const AnaluticsPage: React.FC = () => {
             </div>
 
             <div className='section-container'>
-                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
-                   <GraphTVL />
-                     <OvenPiChart />
+                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
+                    <GraphTVL />
+                    <OvenPiChart />
 
                 </Flex>
             </div>
@@ -97,7 +96,7 @@ const AnaluticsPage: React.FC = () => {
             </div>
 
             <div className='section-container'>
-            <Text
+                <Text
                     fontSize={largerScreen ? '30px' : '20px'}
                     lineHeight="50px"
                     fontWeight={400}
@@ -106,14 +105,14 @@ const AnaluticsPage: React.FC = () => {
                 >
                     AMM
                 </Text>
-                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
-                     <GraphAMMTVL/>
-                   <GraphAMMVolume/>
+                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
+                    <GraphAMMTVL />
+                    <GraphAMMVolume />
                 </Flex>
             </div>
 
             <div className='section-container'>
-            <TransactionTableAMM/>
+                <TransactionTableAMM />
             </div>
 
 
