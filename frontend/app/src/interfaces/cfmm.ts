@@ -16,7 +16,7 @@ export interface CollectFromLiquidityParams {
 export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;
-  lqtBurned: string;
+  lqtBurned: BigNumber;
   minSelfReceived : number;
   minProceedsReceived: number;
   minSubsidyReceived: number;

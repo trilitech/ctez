@@ -121,7 +121,7 @@ const CollectFromLiquidity: React.FC = () => {
           <Input
             name="lqtBalance"
             id="lqtBalance"
-            value={inputFormatNumberStandard((lqtBalance?.toNumber() || 0) / 1e6)}
+            value={inputFormatNumberStandard((lqtBalance ?? new BigNumber(0)).dividedBy(1e6).toNumber())}
             color={text2}
             bg={inputbg}
             readOnly

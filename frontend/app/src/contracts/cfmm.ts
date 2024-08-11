@@ -114,7 +114,7 @@ export const removeLiquidity = async (
 
   const hash = await cfmm.methods[args.isCtezSide ? 'remove_ctez_liquidity' : 'remove_tez_liquidity'](
     args.to,
-    args.lqtBurned,
+    args.lqtBurned.toString(10),
     args.minSelfReceived * 1e6,
     args.minProceedsReceived * 1e6,
     args.minSubsidyReceived * 1e6,

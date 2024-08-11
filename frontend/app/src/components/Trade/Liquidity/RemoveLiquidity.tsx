@@ -46,7 +46,8 @@ const RemoveLiquidity: React.FC = () => {
   const { data: userLqtData } = useUserLqtData(userAddress);
 
   const isCtezSide = side === 'ctez';
-  const lqtBalance = isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt;
+  const getLqtBalance = (_isCtezSide: boolean) => ((_isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt) ?? new BigNumber(0)).dividedBy(1e6)
+  const lqtBalance = getLqtBalance(isCtezSide);
 
   const calcMinValues = useCallback(
     async (lqtBurned: BigNumber) => {
@@ -59,10 +60,11 @@ const RemoveLiquidity: React.FC = () => {
       } else if (ctezStorage && actualCtezStorage && userAddress) {
         const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
         const account = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
-        const slippageFactor = (1 - slippage * 0.01)
-        const minSelfReceived = calcRedeemedAmount(lqtBurned, dex.self_reserves, dex.total_liquidity_shares, new BigNumber(0)).multipliedBy(slippageFactor);
-        const minProceedsReceived = calcRedeemedAmount(lqtBurned, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed || new BigNumber(0)).multipliedBy(slippageFactor);
-        const minSubsidyReceived = calcRedeemedAmount(lqtBurned, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0)).multipliedBy(slippageFactor);
+        const slippageFactor = (1 - slippage * 0.01);
+        const lqtBurnedNat = BigNumber.min(lqtBurned, lqtBalance).multipliedBy(1e6);
+        const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves, dex.total_liquidity_shares, new BigNumber(0)).multipliedBy(slippageFactor);
+        const minProceedsReceived = calcRedeemedAmount(lqtBurnedNat, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed || new BigNumber(0)).multipliedBy(slippageFactor);
+        const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0)).multipliedBy(slippageFactor);
 
         setOtherValues({
           minSelfReceived: formatNumberStandard(minSelfReceived.toNumber() / 1e6),
@@ -75,19 +77,17 @@ const RemoveLiquidity: React.FC = () => {
   );
 
   const initialValues: IRemoveLiquidityForm = {
-    lqtBurned: '',
+    lqtBurned: lqtBalance.toString(),
     deadline: Number(deadlineFromStore),
     slippage: Number(slippage),
   };
-
-  const maxValue = (): BigNumber => lqtBalance ?? new BigNumber(0);
 
   const validationSchema = object().shape({
     lqtBurned: string()
       .required(t('required'))
       .test({
         test: (value) => {
-          return !!value && new BigNumber(value).isLessThanOrEqualTo(maxValue());
+          return !!value && new BigNumber(value).isLessThanOrEqualTo(lqtBalance);
         },
         message: t('insufficientBalance'),
       })
@@ -108,7 +108,7 @@ const RemoveLiquidity: React.FC = () => {
         const data: RemoveLiquidityParams = {
           deadline,
           to: userAddress,
-          lqtBurned: formData.lqtBurned,
+          lqtBurned: new BigNumber(formData.lqtBurned).multipliedBy(1e6),
           minSelfReceived: otherValues.minSelfReceived,
           minProceedsReceived: otherValues.minProceedsReceived,
           minSubsidyReceived: otherValues.minSubsidyReceived,
@@ -134,8 +134,11 @@ const RemoveLiquidity: React.FC = () => {
 
   const onHandleSideChanged = useCallback((sideValue: DexSide) => {
     setSide(sideValue);
-    formik.setFieldValue('lqtBurned', 0);
   }, []);
+
+  useEffect(() => {
+    formik.setFieldValue('lqtBurned', lqtBalance);
+  }, [lqtBalance.toString(10)]);
 
   useEffect(() => {
     calcMinValues(new BigNumber(values.lqtBurned));

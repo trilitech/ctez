@@ -135,7 +135,7 @@ const SignIn: React.FC = () => {
                   <Tr>
                     <Td>Tez LQT:</Td>
                     <Td textAlign="right">
-                      {userLqtData?.tezDexLqt?.toString(10)}
+                      {userLqtData.tezDexLqt.dividedBy(1e6).toString(10)}
                     </Td>
                   </Tr>
                 )}
@@ -149,7 +149,7 @@ const SignIn: React.FC = () => {
                   <Tr>
                     <Td>Ctez LQT:</Td>
                     <Td textAlign="right">
-                      {userLqtData?.ctezDexLqt?.toString(10)}
+                      {userLqtData?.ctezDexLqt.dividedBy(1e6).toString(10)}
                     </Td>
                   </Tr>
                 )}
