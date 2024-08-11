@@ -1,6 +1,8 @@
 import axios from 'axios';
+import BigNumber from 'bignumber.js';
 import { sub, format } from 'date-fns';
 import { getActualCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
+import { getCtezFa12TotalSupply } from '../contracts/fa12';
 import { BaseStats, CTezStorage, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
 import { RPC_URL } from '../utils/globals';
 import { getOvenCtezOutstandingAndFeeIndex, getUpdatedDexFeeIndex } from '../utils/ovenUtils';
@@ -32,7 +34,7 @@ const getMarginalPrice = (liquidity: number, targetLiquidity: number, targetPric
   return targetPrice * (21 - 3 * u + 3 * u ** 2 - u ** 3) / 20;
 }
 
-const getFeeRate = (liquidity: number, targetLiquidity: number): number => {
+const getAnnualFeeRate = (liquidity: number, targetLiquidity: number): number => {
   const max_rate = 5845483520;
   const rate = (8 * liquidity < targetLiquidity)
     ? max_rate
@@ -40,26 +42,34 @@ const getFeeRate = (liquidity: number, targetLiquidity: number): number => {
       ? 0
       : Math.floor(Math.abs(max_rate * (7 * targetLiquidity - 8 * liquidity)) / (6 * targetLiquidity));
 
-  return rate * 60 * 60 * 24 * 365.25 * 100 / 2 ** 64;
+  return rate * 60 * 60 * 24 * 365.25 / 2 ** 64;
+}
+
+const getAnnualLiquidityIncentives = (ctezTotalSupply: BigNumber, dexAnnualFeeRate: number, dexSelfReservesInCtez: BigNumber): number => {
+  const earnedSubsidyInCtezPerYear = ctezTotalSupply.multipliedBy(dexAnnualFeeRate);
+  return earnedSubsidyInCtezPerYear.dividedBy(BigNumber.max(dexSelfReservesInCtez, 1)).toNumber();
 }
 
 export const getBaseStats = async (): Promise<BaseStats> => {
-  const storage = await getActualCtezStorage();
+  const [storage, ctezTotalSupply] = await Promise.all([getActualCtezStorage(), getCtezFa12TotalSupply()]);
   const target = storage.context.target.toNumber() / 2 ** 64;
   const sellCtezDex = storage.sell_ctez;
   const sellTezDex = storage.sell_tez;
+    
+  /* eslint-disable */
+  const ctezDexTargetLiquidity = storage.context._Q.toNumber();
+  const tezDexTargetLiquidity = storage.context._Q.multipliedBy(target).toNumber();
 
   const ctezSellPrice = getMarginalPrice(
     sellCtezDex.self_reserves.toNumber(),
-    /* eslint-disable */
-    storage.context._Q.toNumber(),
+    ctezDexTargetLiquidity,
     target
   );
   const tezBuyPrice = 1 / ctezSellPrice;
 
   const tezSellPrice = getMarginalPrice(
     sellTezDex.self_reserves.toNumber(),
-    storage.context._Q.toNumber() * target,
+    tezDexTargetLiquidity,
     1 / target
   )
   const ctezBuyPrice = 1 / tezSellPrice;
@@ -69,8 +79,10 @@ export const getBaseStats = async (): Promise<BaseStats> => {
   const drift = storage.context.drift.toNumber() / 2 ** 64;
   const currentAnnualDrift = (1.0 + drift) ** (365.25 * 24 * 3600) - 1.0;
 
-  const ctezDexFeeRate = getFeeRate(sellCtezDex.self_reserves.toNumber(), storage.context._Q.toNumber())
-  const tezDexFeeRate = getFeeRate(sellTezDex.self_reserves.toNumber(), storage.context._Q.toNumber() * target)
+  const ctezDexFeeRate = getAnnualFeeRate(sellCtezDex.self_reserves.toNumber(), storage.context._Q.toNumber());
+  const tezDexFeeRate = getAnnualFeeRate(sellTezDex.self_reserves.toNumber(), storage.context._Q.multipliedBy(target).toNumber());
+  const ctezLiquidityIncentives = getAnnualLiquidityIncentives(ctezTotalSupply, ctezDexFeeRate, sellCtezDex.self_reserves);
+  const tezLiquidityIncentives = getAnnualLiquidityIncentives(ctezTotalSupply, tezDexFeeRate, sellTezDex.self_reserves.dividedBy(target));
 
   return {
     originalTarget: storage.context.target.toNumber(),
@@ -80,19 +92,24 @@ export const getBaseStats = async (): Promise<BaseStats> => {
     currentCtezBuyPrice: ctezBuyPrice,
     currentTezBuyPrice: tezBuyPrice,
     currentAvgPrice: currentAvgPrice,
-    premium: (premium * 100),
-    currentAnnualDrift: (currentAnnualDrift * 100),
+    premium: premium * 100,
+    currentAnnualDrift: currentAnnualDrift * 100,
     drift,
+    ctezTotalSupply: ctezTotalSupply.dividedBy(1e6).toNumber(),
     ctezDexFeeIndex: sellCtezDex.fee_index.toNumber(),
     tezDexFeeIndex: sellTezDex.fee_index.toNumber(),
     ctezDexSelfTokens: sellCtezDex.self_reserves.toNumber() / 1e6,
+    ctezDexTargetLiquidity: ctezDexTargetLiquidity / 1e6,
     ctezDexProceeds: sellCtezDex.proceeds_reserves.minus(sellCtezDex.proceeds_debts).toNumber() / 1e6,
     ctezDexSubsidy: sellCtezDex.subsidy_reserves.minus(sellCtezDex.subsidy_debts).toNumber() / 1e6,
-    ctezDexFeeRate,
+    ctezDexAnnualFeeRate: ctezDexFeeRate * 100,
+    ctezLiquidityIncentives: ctezLiquidityIncentives * 100,
     tezDexSelfTokens: sellTezDex.self_reserves.toNumber() / 1e6,
+    tezDexTargetLiquidity: tezDexTargetLiquidity / 1e6,
     tezDexProceeds: sellTezDex.proceeds_reserves.minus(sellTezDex.proceeds_debts).toNumber() / 1e6,
     tezDexSubsidy: sellTezDex.subsidy_reserves.minus(sellTezDex.subsidy_debts).toNumber() / 1e6,
-    tezDexFeeRate
+    tezDexAnnualFeeRate: tezDexFeeRate * 100,
+    tezLiquidityIncentives: tezLiquidityIncentives * 100
   };
 };
 

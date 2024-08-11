@@ -17,14 +17,19 @@ export interface BaseStats {
   premium: number;
   currentAnnualDrift: number;
   drift: number;
+  ctezTotalSupply: number;
   ctezDexSelfTokens: number;
+  ctezDexTargetLiquidity: number;
   ctezDexProceeds: number;
   ctezDexSubsidy: number;
-  ctezDexFeeRate: number;
+  ctezDexAnnualFeeRate: number;
+  ctezLiquidityIncentives: number;
   tezDexSelfTokens: number;
+  tezDexTargetLiquidity: number;
   tezDexProceeds: number;
   tezDexSubsidy: number;
-  tezDexFeeRate: number;
+  tezDexAnnualFeeRate: number;
+  tezLiquidityIncentives: number;
 }
 
 export interface UserOvenStats {

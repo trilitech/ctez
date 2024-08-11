@@ -18,7 +18,7 @@ import {
 } from '../interfaces';
 import { CTEZ_ADDRESS as CFMM_ADDRESS } from '../utils/globals';
 import { getTezosInstance } from './client';
-import { getCTezFa12Contract, getLQTContract } from './fa12';
+import { getCTezFa12Contract } from './fa12';
 import { executeMethod, initContract } from './utils';
 
 let cfmm: WalletContract;
@@ -31,12 +31,6 @@ export const initCfmm = async (address: string): Promise<void> => {
 
 export const getCfmmStorage = async (): Promise<CfmmStorage> => {
   const storage = await cfmm.storage<CfmmStorage>();
-  return storage;
-};
-
-export const getLQTContractStorage = async (): Promise<any> => {
-  const lqtContract = await getLQTContract();
-  const storage: any = await lqtContract.storage();
   return storage;
 };
 
