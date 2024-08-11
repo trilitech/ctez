@@ -87,7 +87,7 @@ export const useTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'oven_tvl_gql',
     async () => {
-      const [count, allOvens, baseStats] = await Promise.all([getCountGql('tvl_history'), getAllOvens(), getBaseStats()]);
+      const [count, allOvens, baseStats] = await Promise.all([getCountGql('ca_tvl_history_1d'), getAllOvens(), getBaseStats()]);
       const query = `
         query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
           tvl_history: ca_tvl_history_1d(where: {bucket_1d: {_gte: $from, _lte: $to}}) {
