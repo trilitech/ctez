@@ -22,10 +22,6 @@ export const Chart = (props: ChartProps) => {
 
   const option = useMemo(() => {
     const showZoom = props.showZoom === undefined || props.showZoom;
-    const endDate = new Date();
-    const startDate = new Date(endDate);
-    startDate.setDate(endDate.getDate() - 3);
-    // monthBefore.setMonth(now.getMonth() - 1);
 
     return {
       backgroundColor: 'transparent',
@@ -68,7 +64,9 @@ export const Chart = (props: ChartProps) => {
     }
 
     const handleResize = () => {
-      chart?.resize();
+      setTimeout(() => {
+        chart?.resize();
+      });
     };
     window.addEventListener('resize', handleResize);
 
