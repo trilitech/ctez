@@ -28,6 +28,10 @@ const GraphCtez: React.FC = () => {
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
   const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);
 
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setMonth(endDate.getMonth() - 1);
+
   const option: React.ComponentProps<typeof ChartPure>['option'] = {
     dataset: [{
       dimensions: [
@@ -147,7 +151,14 @@ const GraphCtez: React.FC = () => {
 
     </Flex>
 
-    {chartData ? <ChartPure option={option} showZoom style={{ height: 300 }} /> : <Skeleton height='300px' minWidth='20px' />}
+    {chartData
+      ? <ChartPure
+        option={option}
+        showZoom
+        zoomStartDate={activeTab === '1m' ? startDate : undefined}
+        zoomEndDate={activeTab === '1m' ? endDate : undefined}
+        style={{ height: 300 }} />
+      : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)
 }
 export default GraphCtez;

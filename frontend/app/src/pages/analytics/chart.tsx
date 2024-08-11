@@ -11,6 +11,8 @@ interface ChartProps {
   loading?: boolean;
   title?: string;
   showZoom?: boolean;
+  zoomStartDate?: Date;
+  zoomEndDate?: Date;
 }
 
 export const Chart = (props: ChartProps) => {
@@ -20,6 +22,10 @@ export const Chart = (props: ChartProps) => {
 
   const option = useMemo(() => {
     const showZoom = props.showZoom === undefined || props.showZoom;
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 3);
+    // monthBefore.setMonth(now.getMonth() - 1);
 
     return {
       backgroundColor: 'transparent',
@@ -29,10 +35,12 @@ export const Chart = (props: ChartProps) => {
       },
       dataZoom: showZoom ? [{
         type: 'inside',
-        filterMode: 'none'
+        filterMode: 'none',
+        startValue: props.zoomStartDate?.toISOString(),
+        endValue: props.zoomEndDate?.toISOString()
       }, {
         type: 'slider',
-        filterMode: 'none'
+        filterMode: 'none',
       }] : undefined,
       ...props.option,
       grid: {
