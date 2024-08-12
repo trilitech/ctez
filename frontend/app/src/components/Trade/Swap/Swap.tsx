@@ -68,10 +68,11 @@ const Swap: React.FC = () => {
   const maxValue = (): number =>
     formType === FORM_TYPE.CTEZ_TEZ ? balance?.ctez || 0.0 : balance?.xtz || 0.0;
 
-  const rate = (): number =>
-    formType === FORM_TYPE.CTEZ_TEZ
-      ? formatNumberStandard(baseStats?.currentCtezSellPrice ?? 1)
-      : formatNumberStandard(baseStats?.currentTezSellPrice ?? 1);
+  const rate = (): number => {
+    return formType === FORM_TYPE.CTEZ_TEZ
+      ? formatNumberStandard(baseStats?.currentCtezBuyPrice ?? 1)
+      : formatNumberStandard(baseStats?.currentTezBuyPrice ?? 1);
+  }
 
   const getDexLiquidity = useCallback((): number => {
     const dex = formType === FORM_TYPE.CTEZ_TEZ
@@ -137,7 +138,7 @@ const Swap: React.FC = () => {
         const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
         const receivedPrice = Number((receivedLocal / values.amount).toFixed(6));
         
-        const initialPrice = rate()
+        const initialPrice = rate();
         const priceImpactLocal = ((initialPrice - receivedPrice) * 100) / initialPrice;
 
         setPriceImpact(priceImpactLocal);
