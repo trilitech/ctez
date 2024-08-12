@@ -85,7 +85,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
   const validationSchema = object().shape({
     delegate: string()
       .test({
-        test: (value) => validateAddress(value) === 3,
+        test: (value) => !!value && validateAddress(value) === 3,
       })
       .required(t('required')),
     amount: number().optional(),
