@@ -60,9 +60,9 @@ export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boo
   return { lqt, lqtShare }
 }
 
-export const calcSelfTokensToSell = async (isSellCtezDex: boolean, proceedsAmount: number): Promise<number> => {
+export const calcSelfTokensToSell = async (isSellCtezDex: boolean, proceedsAmount: BigNumber): Promise<number> => {
   try {
-    const amount: BigNumber = await cTez.contractViews.calc_sell_amount({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount })
+    const amount: BigNumber = await cTez.contractViews.calc_sell_amount({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount.toString(10) })
       .executeView({ viewCaller: cTez.address });
     return amount.toNumber();
   } catch {

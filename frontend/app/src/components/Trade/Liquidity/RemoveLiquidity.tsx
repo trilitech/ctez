@@ -46,8 +46,7 @@ const RemoveLiquidity: React.FC = () => {
   const { data: userLqtData } = useUserLqtData(userAddress);
 
   const isCtezSide = side === 'ctez';
-  const getLqtBalance = (_isCtezSide: boolean) => ((_isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt) ?? new BigNumber(0)).dividedBy(1e6)
-  const lqtBalance = getLqtBalance(isCtezSide);
+  const lqtBalance = ((isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt) ?? new BigNumber(0)).dividedBy(1e6);
 
   const calcMinValues = useCallback(
     async (lqtBurned: BigNumber) => {
@@ -67,9 +66,9 @@ const RemoveLiquidity: React.FC = () => {
         const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0)).multipliedBy(slippageFactor);
 
         setOtherValues({
-          minSelfReceived: formatNumberStandard(minSelfReceived.toNumber() / 1e6),
-          minProceedsReceived: formatNumberStandard(minProceedsReceived.toNumber() / 1e6),
-          minSubsidyReceived: formatNumberStandard(minSubsidyReceived.toNumber() / 1e6),
+          minSelfReceived: formatNumberStandard(minSelfReceived.dividedBy(1e6).toNumber()),
+          minProceedsReceived: formatNumberStandard(minProceedsReceived.dividedBy(1e6).toNumber()),
+          minSubsidyReceived: formatNumberStandard(minSubsidyReceived.dividedBy(1e6).toNumber()),
         });
       }
     },
@@ -77,7 +76,7 @@ const RemoveLiquidity: React.FC = () => {
   );
 
   const initialValues: IRemoveLiquidityForm = {
-    lqtBurned: lqtBalance.toString(),
+    lqtBurned: lqtBalance.toString(10),
     deadline: Number(deadlineFromStore),
     slippage: Number(slippage),
   };
@@ -137,7 +136,7 @@ const RemoveLiquidity: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    formik.setFieldValue('lqtBurned', lqtBalance);
+    formik.setFieldValue('lqtBurned', lqtBalance.toString(10));
   }, [lqtBalance.toString(10)]);
 
   useEffect(() => {
@@ -171,7 +170,7 @@ const RemoveLiquidity: React.FC = () => {
           <Input
             name="lqtBurned"
             id="lqtBurned"
-            value={inputFormatNumberStandard(values.lqtBurned)}
+            value={values.lqtBurned}
             color={text2}
             bg={inputbg}
             onChange={handleChange}

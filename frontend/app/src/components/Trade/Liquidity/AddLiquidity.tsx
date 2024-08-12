@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { addMinutes } from 'date-fns/fp';
 import { useFormik } from 'formik';
+import BigNumber from 'bignumber.js';
 import { useWallet } from '../../../wallet/hooks';
 import { useCtezStorage, useUserBalance } from '../../../api/queries';
 
@@ -19,15 +20,15 @@ import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/
 import DexSideSelector, { DexSide } from './DexSideSelector';
 import TokenInputIcon from '../TokenInputIcon';
 
-const calcLiquidityMinted = (depositAmount: number, dex: HalfDex): number => {
-  const numerator = Math.max(dex.total_liquidity_shares.toNumber(), 1);
-  const denominator = Math.max(dex.self_reserves.toNumber(), 1);
-  return Math.ceil(depositAmount * numerator / denominator)
+const calcLiquidityMinted = (depositAmount: number, dex: HalfDex): BigNumber => {
+  const numerator = BigNumber.max(dex.total_liquidity_shares, 1);
+  const denominator = BigNumber.max(dex.self_reserves, 1);
+  return new BigNumber(depositAmount).multipliedBy(numerator).dividedBy(denominator).integerValue(BigNumber.ROUND_CEIL);
 }
 
 const AddLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
-  const [minLqt, setMinLqt] = useState(0);
+  const [minLqt, setMinLqt] = useState('0');
   const { data: balance } = useUserBalance(userAddress);
   const { data: ctezStorage } = useCtezStorage();
   const [side, setSide] = React.useState<DexSide>('ctez')
@@ -50,11 +51,11 @@ const AddLiquidity: React.FC = () => {
       if (ctezStorage) {
         const dex = isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez;
         const amountNat = amountDeposited * 1e6;
-        const minLQTMinted = calcLiquidityMinted(amountNat, dex) * (1 - slippage * 0.01);
-        setMinLqt(Number(Math.floor(minLQTMinted).toFixed()));
+        const minLQTMinted = calcLiquidityMinted(amountNat, dex).multipliedBy(1 - slippage * 0.01);
+        setMinLqt(minLQTMinted.integerValue(BigNumber.ROUND_FLOOR).toString(10));
       }
       else {
-        setMinLqt(-1);
+        setMinLqt('-1');
       }
     },
     [slippage, side, ctezStorage],
@@ -86,7 +87,7 @@ const AddLiquidity: React.FC = () => {
           deadline,
           amount: formData.amount,
           owner: userAddress,
-          minLqtMinted: minLqt,
+          minLqtMinted: new BigNumber(minLqt),
           isCtezSide
         };
         const result = await addLiquidity(data);

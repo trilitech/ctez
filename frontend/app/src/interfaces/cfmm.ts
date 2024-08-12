@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 export interface AddLiquidityParams {
   owner: string;
   deadline: Date;
-  minLqtMinted: number;
+  minLqtMinted: BigNumber;
   amount: number;
   isCtezSide: boolean;
 }

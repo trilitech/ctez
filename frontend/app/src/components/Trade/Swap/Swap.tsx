@@ -8,6 +8,7 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
+import BigNumber from 'bignumber.js';
 import { MdAdd, MdSwapVert } from 'react-icons/md';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -132,7 +133,7 @@ const Swap: React.FC = () => {
   useEffect(() => {
     const calc = async () => {
       if (values.amount) {
-        const swapAmountNat = values.amount * 1e6;
+        const swapAmountNat = new BigNumber(values.amount).multipliedBy(1e6).integerValue(BigNumber.ROUND_FLOOR);
         const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
         const receivedPrice = Number((receivedLocal / values.amount).toFixed(6));
         

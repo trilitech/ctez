@@ -40,7 +40,7 @@ const CollectFromLiquidity: React.FC = () => {
   const { data: userLqtData } = useUserLqtData(userAddress);
 
   const isCtezSide = side === 'ctez';
-  const lqtBalance = isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt;
+  const lqtBalance = (isCtezSide ? userLqtData?.ctezDexLqt : userLqtData?.tezDexLqt) ?? new BigNumber(0);
 
   const calcMinValues = useCallback(
     async () => {
@@ -100,7 +100,7 @@ const CollectFromLiquidity: React.FC = () => {
     if (!userAddress) {
       return { buttonText: COLLECT_BTN_TXT.CONNECT, errorList: [COLLECT_BTN_TXT.CONNECT] };
     }
-    if (lqtBalance) {
+    if (lqtBalance.isGreaterThan(0)) {
       if (!otherValues.proceedsReceived && !otherValues.subsidyReceived) {
         return { buttonText: COLLECT_BTN_TXT.NO_WITHDRAWS, errorList: [COLLECT_BTN_TXT.NO_WITHDRAWS] };
       }
@@ -121,7 +121,7 @@ const CollectFromLiquidity: React.FC = () => {
           <Input
             name="lqtBalance"
             id="lqtBalance"
-            value={inputFormatNumberStandard((lqtBalance ?? new BigNumber(0)).dividedBy(1e6).toNumber())}
+            value={lqtBalance.dividedBy(1e6).toString(10)}
             color={text2}
             bg={inputbg}
             readOnly

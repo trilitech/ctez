@@ -78,7 +78,7 @@ export const addCtezLiquidity = async (args: AddLiquidityParams): Promise<Wallet
         .add_ctez_liquidity(
           args.owner,
           args.amount * 1e6,
-          args.minLqtMinted,
+          args.minLqtMinted.toString(10),
           args.deadline.toISOString(),
         )
         .toTransferParams(),
@@ -96,7 +96,7 @@ export const addCtezLiquidity = async (args: AddLiquidityParams): Promise<Wallet
 export const addTezLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
   const hash = await cfmm.methods.add_tez_liquidity(
     args.owner,
-    args.minLqtMinted,
+    args.minLqtMinted.toString(10),
     args.deadline.toISOString(),
   ).send({amount: args.amount})
   return hash;
