@@ -90,7 +90,6 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
       const exists =
         options?.find((option) => (option as TOption).value === inputValue) !== undefined;
       const valid = validateAddress(inputValue) === 3;
-      // TODO: show validation errors somewhere?
       return valid && !exists;
     },
     [options],
