@@ -98,7 +98,7 @@ const CollectFromLiquidity: React.FC = () => {
 
   const { buttonText, errorList } = useMemo(() => {
     if (!userAddress) {
-      return { buttonText: COLLECT_BTN_TXT.CONNECT, errorList: [COLLECT_BTN_TXT.CONNECT] };
+      return { buttonText: COLLECT_BTN_TXT.CONNECT, errorList: [] };
     }
     if (lqtBalance.isGreaterThan(0)) {
       if (!otherValues.proceedsReceived && !otherValues.subsidyReceived) {
