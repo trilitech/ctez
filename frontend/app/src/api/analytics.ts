@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { getAllOvens } from "../contracts/ctez";
 import { getOvenSummary, useOvenSummary } from "../hooks/utilHooks";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
@@ -75,7 +75,7 @@ export const useCtezGraphGql = () => {
         current_avg_price: baseStats.currentAvgPrice
       }
 
-      const data = chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.annual_drift * 100 })));
+      const data = chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, annual_drift: s.annual_drift * 100 })));
       data.push(lastPoint);
       return data;
     },
@@ -148,6 +148,35 @@ export const useTopOvensGraphGql = () => {
       };
       ovens.push(othersItem);
       return ovens;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useOvensSummaryGql = () => {
+  return useQuery<OvensSummaryGql, Error>(
+    'ovens_summary_gql',
+    async () => {
+      const response = await axios({
+        url: GQL_API_URL,
+        method: "POST",
+        data: {
+          query: `
+            query {
+              oven_summary {
+                collateral_locked
+                collateral_ratio
+                created
+                liquidated
+                total
+                total_debt
+              }
+            }
+          `
+        }
+      });
+
+      return response.data.data.oven_summary[0];
     },
     { refetchInterval: 30_000 },
   );

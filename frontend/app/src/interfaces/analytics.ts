@@ -225,3 +225,12 @@ export interface OvenDonutGql {
     ctez_outstanding: number;
     address: string;
 }
+
+export interface OvensSummaryGql {
+    collateral_locked: number;
+    collateral_ratio: number;
+    created: number;
+    liquidated: number;
+    total: number;
+    total_debt: number;
+}

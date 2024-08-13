@@ -59,9 +59,7 @@ export const toOven = (oven: OvenSerializable): Oven => {
 };
 
 export const maxCTez = (tez: number, target: number): number => {
-  const newTez = tez * 1e6;
-  const newTarget = target * 2 ** 64;
-  const result = (newTez * 15) / (newTarget / 2 ** 60);
+  const result = (tez * 1e6 * 15) / ((target * 16));
   return Number((Math.floor(result) / 1e6).toFixed(6));
 };
 
