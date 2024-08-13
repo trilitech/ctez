@@ -210,7 +210,7 @@ export interface CtezStatsGql {
     timestamp: string;
     current_avg_price: number;
     target_price: number;
-    current_annual_drift: number;
+    annual_drift: number;
     ctez_sell_price: number;
     ctez_buy_price: number;
 }

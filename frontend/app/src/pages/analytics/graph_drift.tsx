@@ -32,7 +32,7 @@ const GraphDrift: React.FC = () => {
     dataset: [{
       dimensions: [
         { name: 'timestamp', displayName: '' },
-        { name: 'current_annual_drift', displayName: 'Annual Drift' },
+        { name: 'annual_drift', displayName: 'Annual Drift' },
       ],
       source: chartData || []
     }],
@@ -67,7 +67,7 @@ const GraphDrift: React.FC = () => {
     }]
   };
 
-  const lastValue = chartData && chartData[chartData.length - 1].current_annual_drift;
+  const lastValue = chartData && chartData[chartData.length - 1].annual_drift;
 
   return (<Flex direction='column'
     borderRadius={16}

@@ -57,7 +57,7 @@ export const useCtezGraphGql = () => {
             timestamp
             current_avg_price
             target_price
-            current_annual_drift
+            annual_drift
             ctez_sell_price
             ctez_buy_price
           }
@@ -69,13 +69,13 @@ export const useCtezGraphGql = () => {
         id: 'now-now-now',
         timestamp: new Date().toISOString(),
         target_price: baseStats.currentTarget,
-        current_annual_drift: baseStats.currentAnnualDrift,
+        annual_drift: baseStats.currentAnnualDrift,
         ctez_buy_price: baseStats.currentCtezBuyPrice,
         ctez_sell_price: baseStats.currentCtezSellPrice,
         current_avg_price: baseStats.currentAvgPrice
       }
 
-      const data = chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.current_annual_drift * 100 })));
+      const data = chunks.flatMap(response => response.data.data.router_stats.map((s: CtezStatsGql) => ({ ...s, current_annual_drift: s.annual_drift * 100 })));
       data.push(lastPoint);
       return data;
     },
