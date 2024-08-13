@@ -286,7 +286,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
           </ModalBody>
 
           <ModalFooter>
-            <Button w="100%" type="submit">
+            <Button w="100%" type="submit" walletGuard>
               {t('createoven')}
             </Button>
           </ModalFooter>

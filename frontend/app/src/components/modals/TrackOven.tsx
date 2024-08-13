@@ -118,7 +118,7 @@ const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
           </ModalBody>
 
           <ModalFooter py={6}>
-            <Button w="100%" type="submit" isLoading={formik.isSubmitting}>
+            <Button w="100%" type="submit" isLoading={formik.isSubmitting} walletGuard>
               {t('trackOven')}
             </Button>
           </ModalFooter>
