@@ -67,7 +67,7 @@ const GraphDrift: React.FC = () => {
     }]
   };
 
-  const lastValue = chartData && chartData[chartData.length - 1].annual_drift_percent;
+  const lastValue = chartData && chartData[chartData.length - 1]?.annual_drift_percent || 0;
 
   return (<Flex direction='column'
     borderRadius={16}

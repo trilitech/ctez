@@ -16,7 +16,7 @@ import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
 import { useWallet } from '../../../wallet/hooks';
-import { useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
+import { useActualCtezStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
   ConversionFormParams,
@@ -30,14 +30,14 @@ import { useAppSelector } from '../../../redux/store';
 import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
-import { calcSelfTokensToSell } from '../../../contracts/ctez';
+import { calcSelfTokensToSell, calcSelfTokensToSellOnchain } from '../../../contracts/ctez';
 import TokenInputIcon from '../TokenInputIcon';
 
 const Swap: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
-  const { data: ctezStorage } = useCtezStorage();
+  const { data: ctezStorage } = useActualCtezStorage();
 
   const { data: balance } = useUserBalance(userAddress);
   const { t } = useTranslation(['common', 'header']);
@@ -133,9 +133,11 @@ const Swap: React.FC = () => {
 
   useEffect(() => {
     const calc = async () => {
-      if (values.amount) {
+      if (values.amount && ctezStorage) {
         const swapAmountNat = new BigNumber(values.amount).multipliedBy(1e6).integerValue(BigNumber.ROUND_FLOOR);
-        const receivedLocal = (await calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
+        // const receivedLocalOnchain = (await calcSelfTokensToSellOnchain(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
+        const receivedLocal = (calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, ctezStorage, swapAmountNat)) / 1e6;
+
         const receivedPrice = Number((receivedLocal / values.amount).toFixed(6));
         
         const initialPrice = rate();
@@ -154,7 +156,7 @@ const Swap: React.FC = () => {
     }
 
     calc();
-  }, [formType, values.amount, slippage, rate]);
+  }, [formType, values.amount, slippage, rate, ctezStorage]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);

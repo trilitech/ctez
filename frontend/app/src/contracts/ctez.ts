@@ -12,6 +12,7 @@ import {
   depositors,
   EditDepositorOps,
   ErrorType,
+  HalfDex,
   HalfDexLQTData,
   Oven,
   OvenStorage,
@@ -60,7 +61,61 @@ export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boo
   return { lqt, lqtShare }
 }
 
-export const calcSelfTokensToSell = async (isSellCtezDex: boolean, proceedsAmount: BigNumber): Promise<number> => {
+export const calcSelfTokensToSell = (isSellCtezDex: boolean, storage: CTezStorage, proceedsAmount: BigNumber): number => {
+  const clampNat = (val: BigNumber): BigNumber => {
+    return val.isPositive() ? val : new BigNumber(0);
+  };
+
+  const newton_step = (x: BigNumber, y: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
+    /* Computes
+        3 y⁴ + 6 y² (q - Q)² + 8 y³ (-q + Q) + 80 Q³ x 
+        ---------------------------------------------------
+        4 ((y - q)³ + 3 (y - q)² Q + 3 (y - q) Q² + 21 Q³)
+    */
+    const dq = BigNumber.min(y, q);
+    const q_m_Q = q.minus(Q);
+    const dq_m_q = dq.minus(q);
+    const dq_m_q_sq = dq_m_q.multipliedBy(dq_m_q);
+    const dq_m_q_cu = dq_m_q_sq.multipliedBy(dq_m_q);
+    const Q_sq = Q.multipliedBy(Q);
+    const Q_cu = Q_sq.multipliedBy(Q);
+    const num = new BigNumber(3).multipliedBy(dq.pow(4))
+      .plus(new BigNumber(6).multipliedBy(dq.pow(2)).multipliedBy(q_m_Q.pow(2)))
+      .plus(new BigNumber(8).multipliedBy(dq.pow(3)).multipliedBy(-q_m_Q))
+      .plus(new BigNumber(80).multipliedBy(Q_cu).multipliedBy(x));
+    const denom = new BigNumber(4).multipliedBy(
+      dq_m_q_cu.plus(new BigNumber(3).multipliedBy(dq_m_q_sq).multipliedBy(Q))
+        .plus(new BigNumber(3).multipliedBy(dq_m_q).multipliedBy(Q_sq))
+        .plus(new BigNumber(21).multipliedBy(Q_cu))
+    );
+    return num.dividedToIntegerBy(denom)
+  }
+
+  const getSwapAmount = (x: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
+    q = BigNumber.min(q, Q);
+    let y = x;
+    y = clampNat(newton_step(x, y, q, Q));
+    y = clampNat(newton_step(x, y, q, Q));
+    y = clampNat(newton_step(x, y, q, Q));
+    const result = y.minus(y.dividedToIntegerBy(1_000_000_000)).minus(1);
+    return result.isPositive() ? result : new BigNumber(0);
+  };
+
+  const dex = isSellCtezDex ? storage.sell_ctez : storage.sell_tez;
+  const tradeAmount = isSellCtezDex 
+  ? proceedsAmount.multipliedBy(2**64).dividedToIntegerBy(storage.context.target).integerValue() 
+  : proceedsAmount.multipliedBy(storage.context.target).dividedToIntegerBy(2**64).integerValue();
+
+  const targetSelfReserves = isSellCtezDex 
+  /* eslint-disable */
+  ? storage.context._Q 
+  /* eslint-disable */
+  : BigNumber.max(storage.context._Q.multipliedBy(storage.context.target).dividedToIntegerBy(2**64).integerValue(), 1);
+
+  return getSwapAmount(tradeAmount, dex.self_reserves, targetSelfReserves).integerValue().toNumber();
+};
+
+export const calcSelfTokensToSellOnchain = async (isSellCtezDex: boolean, proceedsAmount: BigNumber): Promise<number> => {
   try {
     const amount: BigNumber = await cTez.contractViews.calc_sell_amount({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount.toString(10) })
       .executeView({ viewCaller: cTez.address });
