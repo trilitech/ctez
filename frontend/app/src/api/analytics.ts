@@ -2,7 +2,13 @@ import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { getAllOvens } from "../contracts/ctez";
 import { getOvenSummary, useOvenSummary } from "../hooks/utilHooks";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransaction, OvenTransactionDto, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { 
+  AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, 
+  ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, 
+  OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransaction, OvenTransactionDto, OvenTransactionTable, OvenTvlGql, 
+  PiGraphOven, priceSats, SwapTransaction, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
+  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll 
+} from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
@@ -194,7 +200,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
       const count = await getCountGql(`${entity}_aggregate`, filter);
       const query = `
         query {
-          ${entity}(${filter}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(${filter}, order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
             account
             amount
             id
@@ -219,7 +225,30 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
         target_price: dto.router_stats.target_price,
         transaction_hash: dto.transaction_hash,
         timestamp: dto.router_stats.timestamp,
-      } as OvenTransaction))).reverse();
+      } as OvenTransaction)));
+
+      return data;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+
+export const useTradeVolumeGql = (range : '1d' | '30d') => {
+  return useQuery<TradeVolumeGql[], Error>(
+    ['trade_volume_gql', range],
+    async () => {
+      const count = await getCountGql(`ca_trade_volume_history_${range}_aggregate`);
+      const query = `
+        query trade_volume_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
+          trade_volume: ca_trade_volume_history_${range}(where: {bucket_${range}: {_gte: $from, _lte: $to}}) {
+            timestamp: bucket_${range}
+            volume_usd
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data.trade_volume);
 
       return data;
     },

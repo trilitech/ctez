@@ -258,3 +258,9 @@ export interface OvenTransaction {
     timestamp: number;
     transaction_hash: string;
 }
+
+export interface TradeVolumeGql {
+    id: string;
+    volume_usd: number;
+    timestamp: string;
+}

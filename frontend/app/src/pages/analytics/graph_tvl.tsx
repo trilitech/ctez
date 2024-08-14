@@ -69,7 +69,7 @@ const GraphTVL: React.FC = () => {
     }]
   };
 
-  const lastValue = chartData && chartData[chartData.length - 1]?.tvl || 0;
+  const lastValue = chartData && chartData[chartData.length - 1]?.tvl;
 
   return (<Flex direction='column'
     borderRadius={16}

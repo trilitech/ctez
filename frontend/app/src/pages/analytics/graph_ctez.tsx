@@ -107,7 +107,7 @@ const GraphCtez: React.FC = () => {
     }]
   };
 
-  const lastValue = chartData && chartData[chartData.length - 1]?.target_price || 1;
+  const lastValue = chartData && chartData[chartData.length - 1]?.target_price;
   const displayValue = (lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : undefined;
 
   return (<Flex direction='column'
