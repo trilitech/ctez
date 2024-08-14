@@ -1,146 +1,180 @@
 import { Box, Button, ButtonGroup, Flex, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
+import { useDepositTransactionTable, useMintedTransactionTable, useOvensTransactionsGql, useOvenTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
 import { useTableNumberUtils } from "../../hooks/useTableUtils";
 import { useThemeColors } from "../../hooks/utilHooks";
 import TableCommon, { ColData } from "./comonTable";
 
 
- enum Transactiontype {
-    Mint='Mint',
-    Burn='Burn',
-    Deposit='Deposit',
-    Withdraw='Withdraw'
+enum Transactiontype {
+    Mint = 'Mint',
+    Burn = 'Burn',
+    Deposit = 'Deposit',
+    Withdraw = 'Withdraw',
+    Liquidate = 'Liquidate'
 }
 
 const TransactionTableoven: React.FC = () => {
-  const { positiveOrNegative, valueFormat } = useTableNumberUtils();
+    const { positiveOrNegative, valueFormat } = useTableNumberUtils();
     const [textcolor] = useThemeColors(['homeTxt']);
     const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-    const [background,inputbg] = useThemeColors([
+    const [background, inputbg] = useThemeColors([
         'cardbg2',
         'inputbg',
     ]);
-    const { data: mintedTransactionTable = [] } = useOvenTransactionTable();
-    const { data: burnTransactionTable = [] } = useMintedTransactionTable();
-    const { data: depositTransactionTable = [] } = useDepositTransactionTable();
-    const { data: withdrawTransactionTable = [] } = useWithdrawTransactionTable();
+    const { data: mintedTransactionTable = [] } = useOvensTransactionsGql('mint');
+    const { data: burnTransactionTable = [] } = useOvensTransactionsGql('burn');
+    const { data: depositTransactionTable = [] } = useOvensTransactionsGql('deposit');
+    const { data: withdrawTransactionTable = [] } = useOvensTransactionsGql('withdraw');
+    const { data: liquidateTransactionTable = [] } = useOvensTransactionsGql('liquidate');
 
-    const [transactionType,setTransactionType]=useState<Transactiontype>(Transactiontype.Mint);
-    const columBurn:ColData[]=[
-        {
-            accessor:'Burned',
-            datakey:'burnAmount',
-            isCtez:true,
-            isShowAdderessSend:true,
-        },
-        {
-            accessor:'Target',
-            datakey:'target' 
-        },
-        {
-            accessor:'Oven',
-            datakey:'ovenAddress',
-            istrimAddress:true,
-        },
-        {
-            accessor:'Account',
-            datakey:'address',
-            istrimAddress:true,
-        },
-        {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
 
-    ]
-
-    const columDeposit:ColData[]=[
+    const [transactionType, setTransactionType] = useState<Transactiontype>(Transactiontype.Mint);
+    const columBurn: ColData[] = [
         {
-            accessor:'Deposit',
-            datakey:'amount',
-            isTez:true,
-            isShowAdderessSend:true,
-
+            accessor: 'Burned',
+            datakey: 'amount',
+            isCtez: true,
+            isShowOperationHash: true,
+            operationHashDataKey: 'transaction_hash'
         },
         {
-            accessor:'Target',
-            datakey:'target' 
+            accessor: 'Target',
+            datakey: 'target_price'
         },
         {
-            accessor:'Oven',
-            datakey:'ovenAddress',
-            istrimAddress:true,
+            accessor: 'Oven',
+            datakey: 'oven_address',
+            istrimAddress: true,
         },
         {
-            accessor:'Account',
-            datakey:'address',
-            istrimAddress:true,
+            accessor: 'Account',
+            datakey: 'account',
+            istrimAddress: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Time',
+            datakey: 'timestamp',
+            isTimeformat: true
+        }
 
     ]
-    const columWithdraw:ColData[]=[
-        {
-            accessor:'Withdraw',
-            datakey:'amount',
-            isTez:true,
-            isShowAdderessSend:true,
 
+    const columDeposit: ColData[] = [
+        {
+            accessor: 'Deposit',
+            datakey: 'amount',
+            isTez: true,
+            isShowOperationHash: true,
+            operationHashDataKey: 'transaction_hash'
         },
         {
-            accessor:'Target',
-            datakey:'target' 
+            accessor: 'Target',
+            datakey: 'target_price'
         },
         {
-            accessor:'Oven',
-            datakey:'ovenAddress',
-            istrimAddress:true,
+            accessor: 'Oven',
+            datakey: 'oven_address',
+            istrimAddress: true,
         },
         {
-            accessor:'Account',
-            datakey:'address',
-            istrimAddress:true,
+            accessor: 'Account',
+            datakey: 'account',
+            istrimAddress: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Time',
+            datakey: 'timestamp',
+            isTimeformat: true
+        }
 
     ]
-    const columMinted:ColData[]=[
+    const columWithdraw: ColData[] = [
         {
-            accessor:'Minted',
-            datakey:'mintAmount',
-            isCtez:true,
-            isShowAdderessSend:true,
+            accessor: 'Withdraw',
+            datakey: 'amount',
+            isTez: true,
+            isShowOperationHash: true,
+            operationHashDataKey: 'transaction_hash'
         },
         {
-            accessor:'Target',
-            datakey:'target' 
+            accessor: 'Target',
+            datakey: 'target_price'
         },
         {
-            accessor:'Oven',
-            datakey:'ovenAddress',
-            istrimAddress:true,
+            accessor: 'Oven',
+            datakey: 'oven_address',
+            istrimAddress: true,
         },
         {
-            accessor:'Account',
-            datakey:'address',
-            istrimAddress:true,
+            accessor: 'Account',
+            datakey: 'account',
+            istrimAddress: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Time',
+            datakey: 'timestamp',
+            isTimeformat: true
+        }
+
+    ]
+    const columMinted: ColData[] = [
+        {
+            accessor: 'Minted',
+            datakey: 'amount',
+            isCtez: true,
+            isShowOperationHash: true,
+            operationHashDataKey: 'transaction_hash'
+        },
+        {
+            accessor: 'Target',
+            datakey: 'target_price'
+        },
+        {
+            accessor: 'Oven',
+            datakey: 'oven_address',
+            istrimAddress: true,
+        },
+        {
+            accessor: 'Account',
+            datakey: 'account',
+            istrimAddress: true,
+        },
+        {
+            accessor: 'Time',
+            datakey: 'timestamp',
+            isTimeformat: true
+        }
+
+    ];
+    const columLiquidate: ColData[] = [
+        {
+            accessor: 'Burned',
+            datakey: 'amount',
+            isCtez: true,
+            isShowOperationHash: true,
+            operationHashDataKey: 'transaction_hash'
+        },
+        {
+            accessor: 'Target',
+            datakey: 'target_price'
+        },
+        {
+            accessor: 'Oven',
+            datakey: 'oven_address',
+            istrimAddress: true,
+        },
+        {
+            accessor: 'Account',
+            datakey: 'account',
+            istrimAddress: true,
+        },
+        {
+            accessor: 'Time',
+            datakey: 'timestamp',
+            isTimeformat: true
+        }
 
     ]
 
@@ -161,20 +195,19 @@ const TransactionTableoven: React.FC = () => {
                 Transactions
             </Text>
             <ButtonGroup variant='ghost' textColor={textcolor} spacing='-1' gridGap={2}>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Mint)} className={transactionType===Transactiontype.Mint?'btnactive':''} >Mint</Button>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Burn)}  className={transactionType===Transactiontype.Burn?'btnactive':''}>Burn</Button>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Deposit)}  className={transactionType===Transactiontype.Deposit?'btnactive':''}>Deposit</Button>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Withdraw)}  className={transactionType===Transactiontype.Withdraw?'btnactive':''}>Withdraw</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Mint)} className={transactionType === Transactiontype.Mint ? 'btnactive' : ''} >Mint</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Burn)} className={transactionType === Transactiontype.Burn ? 'btnactive' : ''}>Burn</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Deposit)} className={transactionType === Transactiontype.Deposit ? 'btnactive' : ''}>Deposit</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Withdraw)} className={transactionType === Transactiontype.Withdraw ? 'btnactive' : ''}>Withdraw</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Liquidate)} className={transactionType === Transactiontype.Liquidate ? 'btnactive' : ''}>Liquidate</Button>
             </ButtonGroup>
 
         </Flex>
-    {transactionType===Transactiontype.Mint && <TableCommon column={columMinted} data={mintedTransactionTable}/>}
-    {transactionType===Transactiontype.Burn && <TableCommon column={columBurn} data={burnTransactionTable}/>}
-    {transactionType===Transactiontype.Deposit && <TableCommon column={columDeposit} data={depositTransactionTable}/>}
-    {transactionType===Transactiontype.Withdraw && <TableCommon column={columWithdraw} data={withdrawTransactionTable}/>}
-
-
-
-   </Box>)
+        {transactionType === Transactiontype.Mint && <TableCommon column={columMinted} data={mintedTransactionTable} />}
+        {transactionType === Transactiontype.Burn && <TableCommon column={columBurn} data={burnTransactionTable} />}
+        {transactionType === Transactiontype.Deposit && <TableCommon column={columDeposit} data={depositTransactionTable} />}
+        {transactionType === Transactiontype.Withdraw && <TableCommon column={columWithdraw} data={withdrawTransactionTable} />}
+        {transactionType === Transactiontype.Liquidate && <TableCommon column={columLiquidate} data={liquidateTransactionTable} />}
+    </Box>)
 }
 export default TransactionTableoven;

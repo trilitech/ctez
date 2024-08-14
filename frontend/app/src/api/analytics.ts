@@ -2,29 +2,32 @@ import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { getAllOvens } from "../contracts/ctez";
 import { getOvenSummary, useOvenSummary } from "../hooks/utilHooks";
-import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
+import { AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransaction, OvenTransactionDto, OvenTransactionTable, OvenTvlGql, PiGraphOven, priceSats, SwapTransaction, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
-const getCountGql = async (entity: string): Promise<number> => {
+const getCountGql = async (entity: string, args = ''): Promise<number> => {
+  const header = `${entity}${args && `(${args})`}`;
+  const query = `
+    query {
+      ${header} {
+        aggregate {
+          count
+        }
+      }
+    }
+  `;
+
   const response = await axios({
     url: GQL_API_URL,
     method: "POST",
     data: {
-      query: `
-        query {
-          ${entity}_aggregate {
-            aggregate {
-              count
-            }
-          }
-        }
-      `
+      query
     }
   });
 
-  return response.data.data[`${entity}_aggregate`].aggregate.count as number;
+  return response.data.data[entity].aggregate.count as number;
 }
 
 const getBatchesGql = async (count: number, queryTemplate: string, limit = 1000): Promise<AxiosResponse<any>[]> => {
@@ -43,14 +46,14 @@ const getBatchesGql = async (count: number, queryTemplate: string, limit = 1000)
     });
   });
 
-  return await Promise.all(chunkPromises);
+  return Promise.all(chunkPromises);
 }
 
 export const useCtezGraphGql = () => {
   return useQuery<CtezStatsGql[], Error>(
     'ctez_graph_gql',
     async () => {
-      const count = await getCountGql('router_stats');
+      const count = await getCountGql('router_stats_aggregate');
       const query = `
         query {
           router_stats(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -87,7 +90,7 @@ export const useTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'oven_tvl_gql',
     async () => {
-      const [count, allOvens, baseStats] = await Promise.all([getCountGql('ca_tvl_history_1d'), getAllOvens(), getBaseStats()]);
+      const [count, allOvens, baseStats] = await Promise.all([getCountGql('ca_tvl_history_1d_aggregate'), getAllOvens(), getBaseStats()]);
       const query = `
         query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
           tvl_history: ca_tvl_history_1d(where: {bucket_1d: {_gte: $from, _lte: $to}}) {
@@ -177,6 +180,48 @@ export const useOvensSummaryGql = () => {
       });
 
       return response.data.data.oven_summary[0];
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'withdraw' | 'liquidate') => {
+  return useQuery<OvenTransaction[], Error>(
+    ['ovens_transactions_deposit_gql', type],
+    async () => {
+      const entity = 'oven_transaction_history';
+      const filter = `where: {transaction_type: {_eq: "${type}"}}`;
+      const count = await getCountGql(`${entity}_aggregate`, filter);
+      const query = `
+        query {
+          ${entity}(${filter}, offset: <OFFSET>, limit: <LIMIT>) {
+            account
+            amount
+            id
+            transaction_hash
+            oven {
+              address
+            }
+            router_stats {
+              target_price
+              timestamp
+            }
+          }
+        }
+      `;
+
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity].map((dto: OvenTransactionDto) => ({
+        account: dto.account,
+        amount: dto.amount,
+        id: dto.id,
+        oven_address: dto.oven.address,
+        target_price: dto.router_stats.target_price,
+        transaction_hash: dto.transaction_hash,
+        timestamp: dto.router_stats.timestamp,
+      } as OvenTransaction))).reverse();
+
+      return data;
     },
     { refetchInterval: 30_000 },
   );

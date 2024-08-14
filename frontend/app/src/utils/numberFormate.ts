@@ -19,17 +19,20 @@ const SI_SYMBOL = ["", "k", "m", "b", "t", "p", "e"];
 //   // format number and add suffix
 //   return scaled.toFixed(2) + suffix;
 // }
-const addZeroes=(num:number,fixDigit:number)=>{
-  return num.toLocaleString("en", {useGrouping: false, minimumFractionDigits: fixDigit})
+const addZeroes = (num: number, fixDigit: number) => {
+  return num.toLocaleString("en", { useGrouping: false, minimumFractionDigits: fixDigit })
 }
-export const numberToMillionOrBillionFormate=(num :any,digits=2,isDecimal=false, )=>{
-  if(digits===6){
-     if(!(num % 1 !== 0))
-        return num;
-    return addZeroes(num,digits)
+export const numberToMillionOrBillionFormate = (num: any, digits = 2, isDecimal = false,) => {
+  if (num === 0) 
+    return '0';
+
+  if (digits === 6) {
+    if (!(num % 1 !== 0))
+      return num;
+    return addZeroes(num, digits)
   }
-  
-  if(isDecimal){
+
+  if (isDecimal) {
     return num.toFixed(digits)
   }
   const lookup = [
@@ -42,33 +45,33 @@ export const numberToMillionOrBillionFormate=(num :any,digits=2,isDecimal=false,
     { value: 1e18, symbol: "e" }
   ];
   const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  const item = lookup.slice().reverse().find(function(itemE) {
+  const item = lookup.slice().reverse().find(function (itemE) {
     return num >= itemE.value;
   });
-  return item ? 
-  (num / item.value).toFixed(0).toString().split('').length>2?
-  (num / item.value).toFixed(0).replace(rx, "$1") + item.symbol :
-  (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol 
-  
-  : (num.toFixed(digits)?num.toFixed(digits):'<0.01');
+  return item ?
+    (num / item.value).toFixed(0).toString().split('').length > 2 ?
+      (num / item.value).toFixed(0).replace(rx, "$1") + item.symbol :
+      (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol
+
+    : (num.toFixed(digits) ? num.toFixed(digits) : '<0.01');
 }
 
-export const formatDate=(dateInEpoch:number)=> {
-  const date= new Date(dateInEpoch);
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+export const formatDate = (dateInEpoch: number) => {
+  const date = new Date(dateInEpoch);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const day = date.getDate();
   const monthIndex = date.getMonth();
   const year = date.getFullYear();
-  
+
   return `${monthNames[monthIndex]} . ${day} ,  ${year}`;
-  }
-  export const formatMonth=(dateInEpoch:number)=> {
-    const date= new Date(dateInEpoch);
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
-    const monthIndex = date.getMonth();
-    
-    return `${monthNames[monthIndex]}`;
-  }
-  export const parseISO=(timestamp:number| string)=>{
-    return new Date (timestamp);
-  } 
+}
+export const formatMonth = (dateInEpoch: number) => {
+  const date = new Date(dateInEpoch);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthIndex = date.getMonth();
+
+  return `${monthNames[monthIndex]}`;
+}
+export const parseISO = (timestamp: number | string) => {
+  return new Date(timestamp);
+}

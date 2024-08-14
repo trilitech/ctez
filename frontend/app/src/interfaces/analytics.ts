@@ -234,3 +234,27 @@ export interface OvensSummaryGql {
     total: number;
     total_debt: number;
 }
+
+export interface OvenTransactionDto {
+    account: string;
+    amount: string;
+    id: string;
+    oven: {
+        address: string;
+    };
+    router_stats: {
+        target_price: number;
+        timestamp: number;
+    };
+    transaction_hash: string;
+}
+
+export interface OvenTransaction {
+    account: string;
+    amount: string;
+    id: string;
+    oven_address: string;
+    target_price: number;
+    timestamp: number;
+    transaction_hash: string;
+}
