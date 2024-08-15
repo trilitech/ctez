@@ -250,13 +250,12 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                             href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            Add {numberToMillionOrBillionFormate(pagedata.quantityTk1, 6)} tez and {numberToMillionOrBillionFormate(pagedata.quantityTk2, 6)} ctez
+                            Add {numberToMillionOrBillionFormate(pagedata.self_amount, 6)} {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'}
                             <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
                               className="addresslinktdIcon"
                               as={linkLight}
-
                             />
                           </a>
                         </div>
@@ -301,12 +300,12 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       </Td>;
                     if (isTez && isConsiderLogicChange)
                       return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{
-                        pagedata.direction === 'tez_to_ctez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz, 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez, 6)} ctez`
+                        pagedata.direction === 'tez_to_ctez' || pagedata.dex === 'sell_tez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz ?? pagedata.self_amount, 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez ?? pagedata.self_amount, 6)} ctez`
                       }
                       </Td>;
                     if (isCtez2 && isConsiderLogicChange)
                       return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
-                        {pagedata.direction === 'ctez_to_tez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz, 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez, 6)} ctez`}
+                        {pagedata.direction === 'ctez_to_tez' || pagedata.dex === 'sell_tez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz ?? pagedata.self_amount, 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez ?? pagedata.self_amount, 6)} ctez`}
                       </Td>;
 
                     if (isTez)

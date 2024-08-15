@@ -5,9 +5,9 @@ import { getOvenSummary, useOvenSummary } from "../hooks/utilHooks";
 import { 
   AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, 
   ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, 
-  OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransaction, OvenTransactionDto, OvenTransactionTable, OvenTvlGql, 
+  OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTransactionTable, OvenTvlGql, 
   PiGraphOven, priceSats, SwapTransaction, SwapTransactionsGql, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
-  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll 
+  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto 
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -59,10 +59,11 @@ export const useCtezGraphGql = () => {
   return useQuery<CtezStatsGql[], Error>(
     'ctez_graph_gql',
     async () => {
-      const count = await getCountGql('router_stats_aggregate');
+      const entity = 'router_stats';
+      const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
-          router_stats(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
             timestamp
             current_avg_price
             target_price
@@ -84,7 +85,7 @@ export const useCtezGraphGql = () => {
         current_avg_price: baseStats.currentAvgPrice
       }
 
-      const data = chunks.flatMap(response => response.data.data.router_stats);
+      const data = chunks.flatMap(response => response.data.data[entity]);
       data.push(lastPoint);
       return data;
     },
@@ -192,7 +193,7 @@ export const useOvensSummaryGql = () => {
 };
 
 export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'withdraw' | 'liquidate') => {
-  return useQuery<OvenTransaction[], Error>(
+  return useQuery<OvenTransactionGql[], Error>(
     ['ovens_transactions_deposit_gql', type],
     async () => {
       const entity = 'oven_transaction_history';
@@ -217,7 +218,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
       `;
 
       const chunks = await getBatchesGql(count, query);
-      const data = chunks.flatMap(response => response.data.data[entity].map((dto: OvenTransactionDto) => ({
+      const data = chunks.flatMap(response => response.data.data[entity].map((dto: OvenTransactionDtoGql) => ({
         account: dto.account,
         amount: dto.amount,
         id: dto.id,
@@ -225,7 +226,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
         target_price: dto.router_stats.target_price,
         transaction_hash: dto.transaction_hash,
         timestamp: dto.router_stats.timestamp,
-      } as OvenTransaction)));
+      } as OvenTransactionGql)));
 
       return data;
     },
@@ -277,6 +278,42 @@ export const useSwapTransactionsGql = () => {
       `;
       const chunks = await getBatchesGql(count, query);
       const data = chunks.flatMap(response => response.data.data[entity]);
+
+      return data;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useAddLiquidityTransactionsGql = () => {
+  return useQuery<AddLiquidityTransactionsGql[], Error>(
+    ['add_liquidity_transactions_gql'],
+    async () => {
+      const entity = 'add_liquidity_transaction_history';
+      const count = await getCountGql(`${entity}_aggregate`);
+      const query = `
+        query {
+          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+            account
+            dex
+            self_amount
+            id
+            router_stats {
+              timestamp
+            }
+            transaction_hash
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity].map((dto: AddLiquidityTransactionsDto) => ({
+        id: dto.id,
+        account: dto.account,
+        dex: dto.dex,
+        self_amount: dto.self_amount,
+        timestamp: dto.router_stats.timestamp,
+        transaction_hash: dto.transaction_hash
+      } as AddLiquidityTransactionsGql)));
 
       return data;
     },

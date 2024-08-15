@@ -235,7 +235,7 @@ export interface OvensSummaryGql {
     total_debt: number;
 }
 
-export interface OvenTransactionDto {
+export interface OvenTransactionDtoGql {
     account: string;
     amount: string;
     id: string;
@@ -249,7 +249,7 @@ export interface OvenTransactionDto {
     transaction_hash: string;
 }
 
-export interface OvenTransaction {
+export interface OvenTransactionGql {
     account: string;
     amount: string;
     id: string;
@@ -272,6 +272,26 @@ export interface SwapTransactionsGql {
     amount_xtz: number;
     direction: 'ctez_to_tez' | 'tez_to_ctez';
     price: number;
+    timestamp: string;
+    transaction_hash: string;
+}
+
+export interface AddLiquidityTransactionsDto {
+    account: string;
+    dex: 'sell_ctez' | 'sell_tez';
+    self_amount: string;
+    id: string;
+    router_stats: {
+        timestamp: string;
+    },
+    transaction_hash: string;
+}
+
+export interface AddLiquidityTransactionsGql {
+    account: string;
+    dex: 'sell_ctez' | 'sell_tez';
+    self_amount: string;
+    id: string;
     timestamp: string;
     transaction_hash: string;
 }
