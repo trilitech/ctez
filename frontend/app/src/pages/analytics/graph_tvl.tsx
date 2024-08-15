@@ -5,7 +5,8 @@ import { graphic } from "echarts";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
-import { useTvlGraphGql } from "../../api/analytics";
+import { useOvensSummaryGql, useTezosPriceGql, useTvlGraphGql } from "../../api/analytics";
+import { OvenTvlGql } from "../../interfaces/analytics";
 
 const GraphTVL: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
@@ -13,7 +14,12 @@ const GraphTVL: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  const { data: chartData = false } = useTvlGraphGql();
+  const { data: historyData = false } = useTvlGraphGql();
+  const { data: summary = false } = useOvensSummaryGql();
+  const { data: price = false } = useTezosPriceGql();
+  const chartData = historyData && summary && price
+    ? [...historyData, { id: 'now', timestamp: new Date().toISOString(), tvl: Number((summary.collateral_locked * price).toFixed(2)) } as OvenTvlGql]
+    : historyData;
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();

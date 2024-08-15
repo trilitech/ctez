@@ -2,10 +2,10 @@ import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import { getAllOvens } from "../contracts/ctez";
 import { getOvenSummary } from "../hooks/utilHooks";
-import { 
-  CtezStatsGql, OneLineGraph, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql, 
-  SwapTransactionsGql, TradeVolumeGql, TvlData, TvlDataALL, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto, 
-  RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql 
+import {
+  CtezStatsGql, OneLineGraph, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql,
+  SwapTransactionsGql, TradeVolumeGql, TvlData, TvlDataALL, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto,
+  RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -72,20 +72,28 @@ export const useCtezGraphGql = () => {
         }
       `;
 
-      const [baseStats, chunks] = await Promise.all([getBaseStats(), getBatchesGql(count, query)]);
-      const lastPoint: CtezStatsGql = {
+      const chunks = await getBatchesGql(count, query);
+      return chunks.flatMap(response => response.data.data[entity]);
+    }
+  );
+};
+
+export const useCtezGraphCurrentPointGql = () => {
+  return useQuery<CtezStatsGql, Error>(
+    'ctez_graph_current_point',
+    async () => {
+      const baseStats = await getBaseStats();
+      const currentPoint: CtezStatsGql = {
         id: 'now-now-now',
         timestamp: new Date().toISOString(),
-        target_price: baseStats.currentTarget,
-        annual_drift_percent: baseStats.currentAnnualDrift,
-        ctez_buy_price: baseStats.currentCtezBuyPrice,
-        ctez_sell_price: baseStats.currentCtezSellPrice,
-        current_avg_price: baseStats.currentAvgPrice
-      }
+        target_price: Number(baseStats.currentTarget.toFixed(6)),
+        annual_drift_percent: Number(baseStats.currentAnnualDrift.toFixed(2)),
+        ctez_buy_price: Number(baseStats.currentCtezBuyPrice.toFixed(6)),
+        ctez_sell_price: Number(baseStats.currentCtezSellPrice.toFixed(6)),
+        current_avg_price: Number(baseStats.currentAvgPrice.toFixed(6))
+      };
 
-      const data = chunks.flatMap(response => response.data.data[entity]);
-      data.push(lastPoint);
-      return data;
+      return currentPoint;
     },
     { refetchInterval: 30_000 },
   );
@@ -95,7 +103,7 @@ export const useTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'oven_tvl_gql',
     async () => {
-      const [count, allOvens, baseStats] = await Promise.all([getCountGql('ca_tvl_history_1d_aggregate'), getAllOvens(), getBaseStats()]);
+      const count = await getCountGql('ca_tvl_history_1d_aggregate');
       const query = `
         query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
           tvl_history: ca_tvl_history_1d(where: {bucket_1d: {_gte: $from, _lte: $to}}) {
@@ -104,21 +112,9 @@ export const useTvlGraphGql = () => {
           }
         }
       `;
-      const summary = getOvenSummary(allOvens, baseStats);
       const chunks = await getBatchesGql(count, query);
-      const data = chunks.flatMap(response => response.data.data.tvl_history);
-      // if (summary) {
-      //   const lastPoint: OvenTvlGql = {
-      //     id: 'now-now-now',
-      //     timestamp: new Date().toISOString(),
-      //     total_supply: summary?.totalOutstandingCtez
-      //   }
-      //   data.push(lastPoint);
-      // }
-
-      return data;
-    },
-    { refetchInterval: 30_000 },
+      return chunks.flatMap(response => response.data.data.tvl_history);
+    }
   );
 };
 
@@ -157,7 +153,7 @@ export const useTopOvensGraphGql = () => {
       ovens.push(othersItem);
       return ovens;
     },
-    { refetchInterval: 30_000 },
+    { refetchInterval: 60_000 },
   );
 };
 
@@ -165,13 +161,14 @@ export const useOvensSummaryGql = () => {
   return useQuery<OvensSummaryGql, Error>(
     'ovens_summary_gql',
     async () => {
+      const entity = 'oven_summary';
       const response = await axios({
         url: GQL_API_URL,
         method: "POST",
         data: {
           query: `
             query {
-              oven_summary {
+              ${entity} {
                 collateral_locked
                 collateral_ratio
                 created
@@ -184,7 +181,32 @@ export const useOvensSummaryGql = () => {
         }
       });
 
-      return response.data.data.oven_summary[0];
+      return response.data.data[entity][0];
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useTezosPriceGql = () => {
+  return useQuery<number, Error>(
+    'tezos_price_gql',
+    async () => {
+      const entity = 'quotes'
+      const response = await axios({
+        url: GQL_API_URL,
+        method: "POST",
+        data: {
+          query: `
+            query {
+              ${entity} (order_by: {level: desc}, limit: 1) {
+                usd
+              }
+            }
+          `
+        }
+      });
+
+      return response.data.data[entity][0].usd;
     },
     { refetchInterval: 30_000 },
   );
@@ -232,7 +254,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
   );
 };
 
-export const useTradeVolumeGql = (range : '1d' | '30d') => {
+export const useTradeVolumeGql = (range: '1d' | '30d') => {
   return useQuery<TradeVolumeGql[], Error>(
     ['trade_volume_gql', range],
     async () => {
