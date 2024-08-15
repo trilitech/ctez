@@ -4,6 +4,7 @@ import React, { Dispatch, ReactNode, SetStateAction, useCallback, useState } fro
 import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from 'recharts';
 import { useThemeColors } from '../../hooks/utilHooks';
 import { trimAddress, trimSizeMap } from '../../utils/addressUtils';
+import { NETWORK } from '../../utils/globals';
 import { numberToMillionOrBillionFormate } from '../../utils/numberFormate';
 
 const RenderActiveShape = (props: any) => {
@@ -42,7 +43,7 @@ const RenderActiveShape = (props: any) => {
     <g style={{ zIndex: 999 }}>
       <text x={cx} y={cy} dy={1} textAnchor="middle" fill={fill} fontSize={largerScreen ? '' : '10px'}>
         {payload.address === "Others" ? 'Others' :
-          <a className='hoverPointer' href={`https://tzkt.io/${payload.address}`} target="_blank" rel="noreferrer" >{trimAddress(payload.address)}</a>}
+          <a className='hoverPointer' href={`https://${NETWORK}.tzkt.io/${payload.address}`} target="_blank" rel="noreferrer" >{trimAddress(payload.address)}</a>}
       </text>
       <Sector
         cx={cx}

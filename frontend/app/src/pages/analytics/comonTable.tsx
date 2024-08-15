@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup, ButtonProps, Container, Flex, Icon, SkeletonText, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery } from "@chakra-ui/react";
 import { Next, PageGroup, Paginator, Previous, usePaginator } from "chakra-paginator";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as timeago from 'timeago.js';
 import { useOvenTransactionTable } from "../../api/analytics";
 import { ReactComponent as leftIcon } from '../../assets/images/icons/left-icon.svg';
@@ -12,6 +12,7 @@ import { OvenTransactionTable } from "../../interfaces/analytics";
 import { trimAddress } from "../../utils/addressUtils";
 import SkeletonLayout from "../../components/skeleton";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
+import { NETWORK } from "../../utils/globals";
 
 interface CommonTable {
   column: ColData[]
@@ -81,6 +82,10 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
   const handlePageChange = (nextPage: number) => {
     setCurrentPage(nextPage);
   };
+
+  const getExplorerUrl = useCallback((hash: string) => {
+    return `https://${NETWORK}.tzkt.io/${hash}`;
+  }, [NETWORK])
 
   const modals = useMemo(() => {
     return (
@@ -184,7 +189,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
                         <div >
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             {`${numberToMillionOrBillionFormate(pageData[dataKey], 6)} ctez`}
@@ -207,7 +212,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                         <div >
                           <a
                             className="addresslinktd2"
-                            href={`https://tzkt.io/${pageData[dataKey]}`}
+                            href={getExplorerUrl(pageData[dataKey])}
                             rel="noreferrer"
                             target="_blank">
                             {
@@ -228,7 +233,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             {pageData.direction === 'tez_to_ctez' ? <p>Swap {numberToMillionOrBillionFormate(pageData.amount_xtz, 6)} tez for {numberToMillionOrBillionFormate(pageData.amount_ctez, 6)} ctez</p> : <p>Swap {numberToMillionOrBillionFormate(pageData.amount_ctez, 6)} ctez for {numberToMillionOrBillionFormate(pageData.amount_xtz, 6)} tez</p>}
@@ -249,7 +254,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             Add {numberToMillionOrBillionFormate(pageData.self_amount, 6)} {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'}
@@ -267,7 +272,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             Remove {numberToMillionOrBillionFormate(pageData.self_redeemed, 6)} {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'}
@@ -286,7 +291,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             Redeemed from {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'} liquidity
@@ -305,7 +310,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                       return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
                         <div >
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
+                            href={getExplorerUrl(pageData[operationHashDataKey])}
                             rel="noreferrer"
                             target="_blank">
                             {`${numberToMillionOrBillionFormate(pageData[dataKey], 6)} tez`}

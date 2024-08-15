@@ -23,11 +23,6 @@ export const getCurrentBlock = async () => {
 
   return response.data.header.level;
 };
-export const getTimeStampOfBlock = async (block: number) => {
-  const response = await axios.get(`https://api.tzkt.io/v1/blocks/${block}`);
-
-  return response.data.timestamp;
-};
 
 const getMarginalPrice = (liquidity: number, targetLiquidity: number, targetPrice: number): number => {
   const u = Math.min(liquidity / targetLiquidity, 1);
