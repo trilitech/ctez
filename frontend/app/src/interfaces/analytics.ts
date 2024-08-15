@@ -244,7 +244,7 @@ export interface OvenTransactionDto {
     };
     router_stats: {
         target_price: number;
-        timestamp: number;
+        timestamp: string;
     };
     transaction_hash: string;
 }
@@ -255,7 +255,7 @@ export interface OvenTransaction {
     id: string;
     oven_address: string;
     target_price: number;
-    timestamp: number;
+    timestamp: string;
     transaction_hash: string;
 }
 
@@ -263,4 +263,15 @@ export interface TradeVolumeGql {
     id: string;
     volume_usd: number;
     timestamp: string;
+}
+
+export interface SwapTransactionsGql {
+    id: string;
+    account: string;
+    amount_ctez: number;
+    amount_xtz: number;
+    direction: 'ctez_to_tez' | 'tez_to_ctez';
+    price: number;
+    timestamp: string;
+    transaction_hash: string;
 }

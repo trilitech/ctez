@@ -34,29 +34,29 @@ const TransactionTableoven: React.FC = () => {
     const columBurn: ColData[] = [
         {
             accessor: 'Burned',
-            datakey: 'amount',
+            dataKey: 'amount',
             isCtez: true,
             isShowOperationHash: true,
             operationHashDataKey: 'transaction_hash'
         },
         {
             accessor: 'Target',
-            datakey: 'target_price'
+            dataKey: 'target_price'
         },
         {
             accessor: 'Oven',
-            datakey: 'oven_address',
-            istrimAddress: true,
+            dataKey: 'oven_address',
+            isTrimAddress: true,
         },
         {
             accessor: 'Account',
-            datakey: 'account',
-            istrimAddress: true,
+            dataKey: 'account',
+            isTrimAddress: true,
         },
         {
             accessor: 'Time',
-            datakey: 'timestamp',
-            isTimeformat: true
+            dataKey: 'timestamp',
+            isTimeFormat: true
         }
 
     ]
@@ -64,116 +64,116 @@ const TransactionTableoven: React.FC = () => {
     const columDeposit: ColData[] = [
         {
             accessor: 'Deposit',
-            datakey: 'amount',
+            dataKey: 'amount',
             isTez: true,
             isShowOperationHash: true,
             operationHashDataKey: 'transaction_hash'
         },
         {
             accessor: 'Target',
-            datakey: 'target_price'
+            dataKey: 'target_price'
         },
         {
             accessor: 'Oven',
-            datakey: 'oven_address',
-            istrimAddress: true,
+            dataKey: 'oven_address',
+            isTrimAddress: true,
         },
         {
             accessor: 'Account',
-            datakey: 'account',
-            istrimAddress: true,
+            dataKey: 'account',
+            isTrimAddress: true,
         },
         {
             accessor: 'Time',
-            datakey: 'timestamp',
-            isTimeformat: true
+            dataKey: 'timestamp',
+            isTimeFormat: true
         }
 
     ]
     const columWithdraw: ColData[] = [
         {
             accessor: 'Withdraw',
-            datakey: 'amount',
+            dataKey: 'amount',
             isTez: true,
             isShowOperationHash: true,
             operationHashDataKey: 'transaction_hash'
         },
         {
             accessor: 'Target',
-            datakey: 'target_price'
+            dataKey: 'target_price'
         },
         {
             accessor: 'Oven',
-            datakey: 'oven_address',
-            istrimAddress: true,
+            dataKey: 'oven_address',
+            isTrimAddress: true,
         },
         {
             accessor: 'Account',
-            datakey: 'account',
-            istrimAddress: true,
+            dataKey: 'account',
+            isTrimAddress: true,
         },
         {
             accessor: 'Time',
-            datakey: 'timestamp',
-            isTimeformat: true
+            dataKey: 'timestamp',
+            isTimeFormat: true
         }
 
     ]
     const columMinted: ColData[] = [
         {
             accessor: 'Minted',
-            datakey: 'amount',
+            dataKey: 'amount',
             isCtez: true,
             isShowOperationHash: true,
             operationHashDataKey: 'transaction_hash'
         },
         {
             accessor: 'Target',
-            datakey: 'target_price'
+            dataKey: 'target_price'
         },
         {
             accessor: 'Oven',
-            datakey: 'oven_address',
-            istrimAddress: true,
+            dataKey: 'oven_address',
+            isTrimAddress: true,
         },
         {
             accessor: 'Account',
-            datakey: 'account',
-            istrimAddress: true,
+            dataKey: 'account',
+            isTrimAddress: true,
         },
         {
             accessor: 'Time',
-            datakey: 'timestamp',
-            isTimeformat: true
+            dataKey: 'timestamp',
+            isTimeFormat: true
         }
 
     ];
     const columLiquidate: ColData[] = [
         {
             accessor: 'Burned',
-            datakey: 'amount',
+            dataKey: 'amount',
             isCtez: true,
             isShowOperationHash: true,
             operationHashDataKey: 'transaction_hash'
         },
         {
             accessor: 'Target',
-            datakey: 'target_price'
+            dataKey: 'target_price'
         },
         {
             accessor: 'Oven',
-            datakey: 'oven_address',
-            istrimAddress: true,
+            dataKey: 'oven_address',
+            isTrimAddress: true,
         },
         {
             accessor: 'Account',
-            datakey: 'account',
-            istrimAddress: true,
+            dataKey: 'account',
+            isTrimAddress: true,
         },
         {
             accessor: 'Time',
-            datakey: 'timestamp',
-            isTimeformat: true
+            dataKey: 'timestamp',
+            isTimeFormat: true
         }
 
     ]

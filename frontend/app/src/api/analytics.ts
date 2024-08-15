@@ -6,7 +6,7 @@ import {
   AMMTransactionLiquidity, ctezGraphctez, ctezGraphctezDateRange, ctezGraphOvendata, ctezGraphTVL, ctezGraphVolumestat, 
   ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, 
   OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransaction, OvenTransactionDto, OvenTransactionTable, OvenTvlGql, 
-  PiGraphOven, priceSats, SwapTransaction, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
+  PiGraphOven, priceSats, SwapTransaction, SwapTransactionsGql, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
   TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll 
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
@@ -233,7 +233,6 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
   );
 };
 
-
 export const useTradeVolumeGql = (range : '1d' | '30d') => {
   return useQuery<TradeVolumeGql[], Error>(
     ['trade_volume_gql', range],
@@ -249,6 +248,35 @@ export const useTradeVolumeGql = (range : '1d' | '30d') => {
       `;
       const chunks = await getBatchesGql(count, query);
       const data = chunks.flatMap(response => response.data.data.trade_volume);
+
+      return data;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useSwapTransactionsGql = () => {
+  return useQuery<SwapTransactionsGql[], Error>(
+    ['swap_transactions_gql'],
+    async () => {
+      const count = await getCountGql('swap_transaction_history_aggregate');
+      const entity = 'swap_transaction_history';
+      const query = `
+        query {
+          ${entity}(order_by: {timestamp: desc}, offset: <OFFSET>, limit: <LIMIT>) {
+            id
+            account
+            amount_ctez
+            amount_xtz
+            direction
+            price
+            timestamp
+            transaction_hash
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity]);
 
       return data;
     },

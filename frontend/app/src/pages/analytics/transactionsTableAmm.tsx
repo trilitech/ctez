@@ -1,19 +1,19 @@
 import { Box, Button, ButtonGroup, Flex, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useAddLiquidityTransactionTable, useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useRemoveLiquidityTransactionTable, useSwapTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
+import { useAddLiquidityTransactionTable, useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useRemoveLiquidityTransactionTable, useSwapTransactionsGql, useSwapTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
 import { useTableNumberUtils } from "../../hooks/useTableUtils";
 import { useThemeColors } from "../../hooks/utilHooks";
 import TableCommon, { ColData } from "./comonTable";
 
 
- enum Transactiontype {
-    Swaps='Swaps',
-    Adds='Adds',
-    Removes='Removes',
+enum Transactiontype {
+    Swaps = 'Swaps',
+    Adds = 'Adds',
+    Removes = 'Removes',
 }
 
 const TransactionTableAMM: React.FC = () => {
-  const { positiveOrNegative, valueFormat } = useTableNumberUtils();
+    const { positiveOrNegative, valueFormat } = useTableNumberUtils();
     const [textcolor] = useThemeColors(['homeTxt']);
     const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
@@ -22,104 +22,110 @@ const TransactionTableAMM: React.FC = () => {
         'imported',
         'text4',
     ]);
-    const { data: swapTranscation = [] } = useSwapTransactionTable();
+    const { data: swapTranscation = [] } = useSwapTransactionsGql();
     const { data: addTranscation = [] } = useAddLiquidityTransactionTable();
     const { data: removeTranscation = [] } = useRemoveLiquidityTransactionTable();
 
-    const [transactionType,setTransactionType]=useState<Transactiontype>(Transactiontype.Swaps);
-    const columSwap:ColData[]=[
+    const [transactionType, setTransactionType] = useState<Transactiontype>(Transactiontype.Swaps);
+    const columSwap: ColData[] = [
         {
-            accessor:'Description',
-            datakey:'description',
-            isDecription:true,
+            accessor: 'Description',
+            dataKey: 'description',
+            isDescription: true,
+            operationHashDataKey: 'transaction_hash'
         },
         {
-            accessor:'Amount',
-            datakey:'tezQty',
-            isTez:true,
-            isConsiderLogicChange:true,
+            accessor: 'Amount X',
+            dataKey: 'amount_xtz',
+            isTez: true,
+            isConsiderLogicChange: true,
         },
         {
-            accessor:'Amount',
-            datakey:'tokenQty',
-            isCtez2:true,
-            isConsiderLogicChange:true,
+            accessor: 'Amount Y',
+            dataKey: 'amount_ctez',
+            isCtez2: true,
+            isConsiderLogicChange: true,
         },
         {
-            accessor:'Account',
-            datakey:'trader',
-            istrimAddress:true,
+            accessor: 'Ctez Price',
+            dataKey: 'price',
+            isTez: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Account',
+            dataKey: 'account',
+            isTrimAddress: true,
+        },
+        {
+            accessor: 'Time',
+            dataKey: 'timestamp',
+            isTimeFormat: true
+        }
 
     ]
-    const columAdds:ColData[]=[
+    const columAdds: ColData[] = [
         {
-            accessor:'Description',
-            datakey:'description',
-            isDecriptionAdd:true,
+            accessor: 'Description',
+            dataKey: 'description',
+            isDescriptionAdd: true,
         },
         {
-            accessor:'Amount',
-            datakey:'quantityTk1',
-            isTez:true,
+            accessor: 'Amount',
+            dataKey: 'quantityTk1',
+            isTez: true,
         },
         {
-            accessor:'Amount',
-            datakey:'quantityTk2',
-            isCtez2:true,
+            accessor: 'Amount',
+            dataKey: 'quantityTk2',
+            isCtez2: true,
         },
         {
-            accessor:'Account',
-            datakey:'trader',
-            istrimAddress:true,
+            accessor: 'Account',
+            dataKey: 'trader',
+            isTrimAddress: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Time',
+            dataKey: 'timestamp',
+            isTimeFormat: true
+        }
 
     ]
 
-    const columRemoves:ColData[]=[
+    const columRemoves: ColData[] = [
         {
-            accessor:'Description',
-            datakey:'description',
-            isDecriptionRemove:true,
+            accessor: 'Description',
+            dataKey: 'description',
+            isDescriptionRemove: true,
         },
         {
-            accessor:'Amount',
-            datakey:'quantityTk1',
-            isTez:true,
+            accessor: 'Amount',
+            dataKey: 'quantityTk1',
+            isTez: true,
         },
         {
-            accessor:'Amount',
-            datakey:'quantityTk2',
-            isCtez2:true,
+            accessor: 'Amount',
+            dataKey: 'quantityTk2',
+            isCtez2: true,
         },
         {
-            accessor:'Account',
-            datakey:'trader',
-            istrimAddress:true,
+            accessor: 'Account',
+            dataKey: 'trader',
+            isTrimAddress: true,
         },
         {
-            accessor:'Time',
-            datakey:'timestamp',
-            isTimeformat:true
-        } 
+            accessor: 'Time',
+            dataKey: 'timestamp',
+            isTimeFormat: true
+        }
 
     ]
     return (<Box
         backgroundColor={background}
         fontSize='14px'
         borderRadius={16}
-        paddingX={largerScreen?'35px':'19px'}
-        paddingY={largerScreen?'27px':'24px'} 
+        paddingX={largerScreen ? '35px' : '19px'}
+        paddingY={largerScreen ? '27px' : '24px'}
     >
         <Flex justifyContent='space-between' wrap='wrap'>
             <Text
@@ -131,17 +137,17 @@ const TransactionTableAMM: React.FC = () => {
                 Transactions
             </Text>
             <ButtonGroup variant='ghost' textColor={textcolor} spacing='-1' gridGap={2}>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Swaps)} className={transactionType===Transactiontype.Swaps?'btnactive':''} >Swaps</Button>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Adds)}  className={transactionType===Transactiontype.Adds?'btnactive':''}>Adds</Button>
-                <Button fontSize='12px' textDecoration='underline' onClick={()=>setTransactionType(Transactiontype.Removes)}  className={transactionType===Transactiontype.Removes?'btnactive':''}>Removes</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Swaps)} className={transactionType === Transactiontype.Swaps ? 'btnactive' : ''} >Swaps</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Adds)} className={transactionType === Transactiontype.Adds ? 'btnactive' : ''}>Adds</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Removes)} className={transactionType === Transactiontype.Removes ? 'btnactive' : ''}>Removes</Button>
             </ButtonGroup>
 
         </Flex>
-    {transactionType===Transactiontype.Swaps && <TableCommon column={columSwap} data={swapTranscation}/>}
-    {transactionType===Transactiontype.Adds && <TableCommon column={columAdds} data={addTranscation}/>}
-    {transactionType===Transactiontype.Removes && <TableCommon column={columRemoves} data={removeTranscation}/>}
+        {transactionType === Transactiontype.Swaps && <TableCommon column={columSwap} data={swapTranscation} />}
+        {transactionType === Transactiontype.Adds && <TableCommon column={columAdds} data={addTranscation} />}
+        {transactionType === Transactiontype.Removes && <TableCommon column={columRemoves} data={removeTranscation} />}
 
 
-   </Box>)
+    </Box>)
 }
 export default TransactionTableAMM;
