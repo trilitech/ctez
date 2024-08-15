@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup, Flex, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useAddLiquidityTransactionsGql, useAddLiquidityTransactionTable, useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useRemoveLiquidityTransactionsGql, useRemoveLiquidityTransactionTable, useSwapTransactionsGql, useSwapTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
+import { useAddLiquidityTransactionsGql, useCollectFromLiquidityTransactionsGql, useRemoveLiquidityTransactionsGql, useSwapTransactionsGql } from "../../api/analytics";
 import { useTableNumberUtils } from "../../hooks/useTableUtils";
 import { useThemeColors } from "../../hooks/utilHooks";
 import TableCommon, { ColData } from "./comonTable";
@@ -10,6 +10,7 @@ enum Transactiontype {
     Swaps = 'Swaps',
     Adds = 'Adds',
     Removes = 'Removes',
+    Collects = 'Collects',
 }
 
 const TransactionTableAMM: React.FC = () => {
@@ -25,6 +26,7 @@ const TransactionTableAMM: React.FC = () => {
     const { data: swapTransaction = [] } = useSwapTransactionsGql();
     const { data: addTransaction = [] } = useAddLiquidityTransactionsGql();
     const { data: removeTransaction = [] } = useRemoveLiquidityTransactionsGql();
+    const { data: collectTransaction = [] } = useCollectFromLiquidityTransactionsGql();
 
     const [transactionType, setTransactionType] = useState<Transactiontype>(Transactiontype.Swaps);
     const columSwap: ColData[] = [
@@ -124,6 +126,37 @@ const TransactionTableAMM: React.FC = () => {
         }
 
     ]
+
+    const columCollects: ColData[] = [
+        {
+            accessor: 'Description',
+            dataKey: 'description',
+            isDescriptionCollect: true,
+            operationHashDataKey: 'transaction_hash'
+        },
+        {
+            accessor: 'Proceeds',
+            dataKey: 'proceeds_withdrawn',
+            isConsiderLogicChange: true,
+            isCtez2: true,
+        },
+        {
+            accessor: 'Subsidy',
+            dataKey: 'subsidy_withdrawn',
+            isCtez2: true,
+        },
+        {
+            accessor: 'Account',
+            dataKey: 'account',
+            isTrimAddress: true,
+        },
+        {
+            accessor: 'Time',
+            dataKey: 'timestamp',
+            isTimeFormat: true
+        }
+    ]
+
     return (<Box
         backgroundColor={background}
         fontSize='14px'
@@ -144,14 +177,14 @@ const TransactionTableAMM: React.FC = () => {
                 <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Swaps)} className={transactionType === Transactiontype.Swaps ? 'btnactive' : ''} >Swaps</Button>
                 <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Adds)} className={transactionType === Transactiontype.Adds ? 'btnactive' : ''}>Adds</Button>
                 <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Removes)} className={transactionType === Transactiontype.Removes ? 'btnactive' : ''}>Removes</Button>
+                <Button fontSize='12px' textDecoration='underline' onClick={() => setTransactionType(Transactiontype.Collects)} className={transactionType === Transactiontype.Collects ? 'btnactive' : ''}>Redeems</Button>
             </ButtonGroup>
 
         </Flex>
         {transactionType === Transactiontype.Swaps && <TableCommon column={columSwap} data={swapTransaction} />}
         {transactionType === Transactiontype.Adds && <TableCommon column={columAdds} data={addTransaction} />}
         {transactionType === Transactiontype.Removes && <TableCommon column={columRemoves} data={removeTransaction} />}
-
-
+        {transactionType === Transactiontype.Collects && <TableCommon column={columCollects} data={collectTransaction} />}
     </Box>)
 }
 export default TransactionTableAMM;

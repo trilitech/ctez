@@ -319,3 +319,25 @@ export interface RemoveLiquidityTransactionsGql {
     timestamp: string;
     transaction_hash: string;
 }
+
+export interface CollectFromLiquidityTransactionsDto {
+    account: string;
+    dex: 'sell_ctez' | 'sell_tez';
+    proceeds_withdrawn: string;
+    subsidy_withdrawn: string;
+    id: string;
+    router_stats: {
+        timestamp: string;
+    },
+    transaction_hash: string;
+}
+
+export interface CollectFromLiquidityTransactionsGql {
+    account: string;
+    dex: 'sell_ctez' | 'sell_tez';
+    proceeds_withdrawn: string;
+    subsidy_withdrawn: string;
+    id: string;
+    timestamp: string;
+    transaction_hash: string;
+}

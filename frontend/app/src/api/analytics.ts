@@ -7,7 +7,7 @@ import {
   ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, 
   OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTransactionTable, OvenTvlGql, 
   PiGraphOven, priceSats, SwapTransaction, SwapTransactionsGql, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
-  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto, RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql 
+  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto, RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql 
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -354,6 +354,44 @@ export const useRemoveLiquidityTransactionsGql = () => {
         timestamp: dto.router_stats.timestamp,
         transaction_hash: dto.transaction_hash
       } as RemoveLiquidityTransactionsGql)));
+
+      return data;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useCollectFromLiquidityTransactionsGql = () => {
+  return useQuery<CollectFromLiquidityTransactionsGql[], Error>(
+    ['collect_from_liquidity_transactions_gql'],
+    async () => {
+      const entity = 'collect_from_liquidity_transaction_history';
+      const count = await getCountGql(`${entity}_aggregate`);
+      const query = `
+        query {
+          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+            dex
+            account
+            id
+            proceeds_withdrawn
+            subsidy_withdrawn
+            transaction_hash
+            router_stats {
+              timestamp
+            }
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity].map((dto: CollectFromLiquidityTransactionsDto) => ({
+        id: dto.id,
+        account: dto.account,
+        dex: dto.dex,
+        proceeds_withdrawn: dto.proceeds_withdrawn,
+        subsidy_withdrawn: dto.subsidy_withdrawn,
+        timestamp: dto.router_stats.timestamp,
+        transaction_hash: dto.transaction_hash
+      } as CollectFromLiquidityTransactionsGql)));
 
       return data;
     },

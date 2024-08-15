@@ -26,6 +26,7 @@ export interface ColData {
   isDescription?: boolean,
   isDescriptionAdd?: boolean,
   isDescriptionRemove?: boolean,
+  isDescriptionCollect?: boolean,
   isTez?: boolean,
   isCtez2?: boolean,
   isShowOperationHash?: boolean,
@@ -174,7 +175,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
               return (
                 <Tr key={pagedata.address + index}>
                   {column.map((coldata, mainkey) => {
-                    const { dataKey, isTrimAddress, isTimeFormat, isCtez, isDescription, isDescriptionAdd, isDescriptionRemove, isTez, isCtez2, isShowOperationHash, isConsiderLogicChange } = coldata;
+                    const { dataKey, isTrimAddress, isTimeFormat, isCtez, isDescription, isDescriptionAdd, isDescriptionRemove, isDescriptionCollect, isTez, isCtez2, isShowOperationHash, isConsiderLogicChange } = coldata;
                     const operationHashDataKey = coldata.operationHashDataKey || 'operationHash';
                     if (isTimeFormat)
                       return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{timeago.format(pagedata[dataKey])}</Td>;
@@ -269,6 +270,25 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                             rel="noreferrer"
                             target="_blank">
                             Remove {numberToMillionOrBillionFormate(pagedata.self_redeemed, 6)} {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'}
+                              <Icon
+                              color="light.tradebg"
+                              _hover={{ cursor: 'pointer' }}
+                              className="addresslinktdIcon"
+                              as={linkLight}
+
+                            />
+                          </a>
+                        </div>
+
+                      </Td>);
+                    if (isDescriptionCollect)
+                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
+                        <div>
+                          <a className="addresslinktd"
+                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            rel="noreferrer"
+                            target="_blank">
+                            Redeemed from {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'} liquidity
                               <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
