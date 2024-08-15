@@ -87,7 +87,9 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
         test: (value) => !!value && validateAddress(value) === 3,
       })
       .required(t('required')),
-    amount: number().optional(),
+    amount: number()
+      .typeError('Amount must be a number')
+      .optional(),
     depositors: array()
       .test({
         test: (value) => {

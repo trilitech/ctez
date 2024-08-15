@@ -86,6 +86,12 @@ const RemoveLiquidity: React.FC = () => {
       .required(t('required'))
       .test({
         test: (value) => {
+          return !!value && !(new BigNumber(value).isNaN());
+        },
+        message: 'Amount must be a number',
+      })
+      .test({
+        test: (value) => {
           return !!value && new BigNumber(value).isLessThanOrEqualTo(lqtBalance);
         },
         message: t('insufficientBalance'),

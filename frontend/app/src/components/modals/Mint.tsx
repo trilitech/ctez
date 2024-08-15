@@ -69,6 +69,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
 
   const validationSchema = Yup.object().shape({
     amount: Yup.number()
+      .typeError('Amount must be a number')
       .min(0.000001)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .test({

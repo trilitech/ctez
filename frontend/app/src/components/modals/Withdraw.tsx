@@ -71,6 +71,7 @@ const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
 
   const validationSchema = object().shape({
     amount: number()
+      .typeError('Amount must be a number')
       .min(0.000001)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .required(t('required')),

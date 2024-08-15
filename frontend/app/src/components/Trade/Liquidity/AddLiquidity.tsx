@@ -73,6 +73,7 @@ const AddLiquidity: React.FC = () => {
     slippage: number().min(0).optional(),
     deadline: number().min(0).optional(),
     amount: number()
+      .typeError('Amount must be a number')
       .min(0.000001, `${t('shouldMinimum')} 0.000001`)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .positive(t('shouldPositive'))

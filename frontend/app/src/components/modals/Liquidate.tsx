@@ -48,7 +48,10 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
   };
 
   const validationSchema = object().shape({
-    amount: number().min(0.000001).required(t('required')),
+    amount: number()
+      .typeError('Amount must be a number')
+      .min(0.000001)
+      .required(t('required')),
     to: string()
       .test({
         test: (value) => !!value && validateAddress(value) === 3,

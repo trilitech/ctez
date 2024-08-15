@@ -86,6 +86,7 @@ const Swap: React.FC = () => {
     slippage: Yup.number().min(0).optional(),
     deadline: Yup.number().min(0).required(t('required')),
     amount: Yup.number()
+      .typeError('Amount must be a number')
       .positive(t('shouldPositive'))
       .min(0.000001, `${t('shouldMinimum')} 0.000001`)
       .max(maxValue(), `${t('insufficientBalance')}`)
