@@ -171,22 +171,23 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {currentPageOvens.map((pagedata: any, index: number) => {
+            {currentPageOvens.map((pageData: any, index: number) => {
+              const rowKey = pageData.id;
               return (
-                <Tr key={pagedata.address + index}>
+                <Tr key={rowKey + index}>
                   {column.map((coldata, mainkey) => {
                     const { dataKey, isTrimAddress, isTimeFormat, isCtez, isDescription, isDescriptionAdd, isDescriptionRemove, isDescriptionCollect, isTez, isCtez2, isShowOperationHash, isConsiderLogicChange } = coldata;
                     const operationHashDataKey = coldata.operationHashDataKey || 'operationHash';
                     if (isTimeFormat)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{timeago.format(pagedata[dataKey])}</Td>;
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{timeago.format(pageData[dataKey])}</Td>;
                     if (isCtez && isShowOperationHash)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
                         <div >
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            {`${numberToMillionOrBillionFormate(pagedata[dataKey], 6)} ctez`}
+                            {`${numberToMillionOrBillionFormate(pageData[dataKey], 6)} ctez`}
 
                             <Icon
                               color="light.tradebg"
@@ -199,18 +200,18 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                         </div>
                       </Td>;
                     if (isCtez)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pagedata[dataKey], 6)} ctez</Td>;
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pageData[dataKey], 6)} ctez</Td>;
 
                     if (isTrimAddress)
-                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
+                      return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
                         <div >
                           <a
                             className="addresslinktd2"
-                            href={`https://tzkt.io/${pagedata[dataKey]}`}
+                            href={`https://tzkt.io/${pageData[dataKey]}`}
                             rel="noreferrer"
                             target="_blank">
                             {
-                              trimAddress(pagedata[dataKey])
+                              trimAddress(pageData[dataKey])
                             }
                             <Icon
                               color="light.tradebg"
@@ -224,13 +225,13 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
 
                       </Td>);
                     if (isDescription)
-                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
+                      return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            {pagedata.direction === 'tez_to_ctez' ? <p>Swap {numberToMillionOrBillionFormate(pagedata.amount_xtz, 6)} tez for {numberToMillionOrBillionFormate(pagedata.amount_ctez, 6)} ctez</p> : <p>Swap {numberToMillionOrBillionFormate(pagedata.amount_ctez, 6)} ctez for {numberToMillionOrBillionFormate(pagedata.amount_xtz, 6)} tez</p>}
+                            {pageData.direction === 'tez_to_ctez' ? <p>Swap {numberToMillionOrBillionFormate(pageData.amount_xtz, 6)} tez for {numberToMillionOrBillionFormate(pageData.amount_ctez, 6)} ctez</p> : <p>Swap {numberToMillionOrBillionFormate(pageData.amount_ctez, 6)} ctez for {numberToMillionOrBillionFormate(pageData.amount_xtz, 6)} tez</p>}
 
 
                             <Icon
@@ -245,13 +246,13 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
 
                       </Td>);
                     if (isDescriptionAdd)
-                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
+                      return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            Add {numberToMillionOrBillionFormate(pagedata.self_amount, 6)} {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'}
+                            Add {numberToMillionOrBillionFormate(pageData.self_amount, 6)} {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'}
                             <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
@@ -263,13 +264,13 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
 
                       </Td>);
                     if (isDescriptionRemove)
-                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
+                      return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            Remove {numberToMillionOrBillionFormate(pagedata.self_redeemed, 6)} {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'}
+                            Remove {numberToMillionOrBillionFormate(pageData.self_redeemed, 6)} {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'}
                               <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
@@ -282,13 +283,13 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
 
                       </Td>);
                     if (isDescriptionCollect)
-                      return (<Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
+                      return (<Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >
                         <div>
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            Redeemed from {pagedata.dex === 'sell_ctez' ? 'ctez' : 'tez'} liquidity
+                            Redeemed from {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'} liquidity
                               <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
@@ -301,13 +302,13 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
 
                       </Td>);
                     if (isTez && isShowOperationHash)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
                         <div >
                           <a className="addresslinktd"
-                            href={`https://tzkt.io/${pagedata[operationHashDataKey]}`}
+                            href={`https://tzkt.io/${pageData[operationHashDataKey]}`}
                             rel="noreferrer"
                             target="_blank">
-                            {`${numberToMillionOrBillionFormate(pagedata[dataKey], 6)} tez`}
+                            {`${numberToMillionOrBillionFormate(pageData[dataKey], 6)} tez`}
                             <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
@@ -319,21 +320,21 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                         </div>
                       </Td>;
                     if (isTez && isConsiderLogicChange)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{
-                        pagedata.direction === 'tez_to_ctez' || pagedata.dex === 'sell_tez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz ?? pagedata[dataKey], 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez ?? pagedata[dataKey], 6)} ctez`
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{
+                        pageData.direction === 'tez_to_ctez' || pageData.dex === 'sell_tez' ? `${numberToMillionOrBillionFormate(pageData.amount_xtz ?? pageData[dataKey], 6)} tez` : `${numberToMillionOrBillionFormate(pageData.amount_ctez ?? pageData[dataKey], 6)} ctez`
                       }
                       </Td>;
                     if (isCtez2 && isConsiderLogicChange)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
-                        {pagedata.direction === 'ctez_to_tez' || pagedata.dex === 'sell_ctez' ? `${numberToMillionOrBillionFormate(pagedata.amount_xtz ?? pagedata[dataKey], 6)} tez` : `${numberToMillionOrBillionFormate(pagedata.amount_ctez ?? pagedata[dataKey], 6)} ctez`}
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>
+                        {pageData.direction === 'ctez_to_tez' || pageData.dex === 'sell_ctez' ? `${numberToMillionOrBillionFormate(pageData.amount_xtz ?? pageData[dataKey], 6)} tez` : `${numberToMillionOrBillionFormate(pageData.amount_ctez ?? pageData[dataKey], 6)} ctez`}
                       </Td>;
 
                     if (isTez)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pagedata[dataKey], 6)} tez</Td>;
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pageData[dataKey], 6)} tez</Td>;
                     if (isCtez2)
-                      return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pagedata[dataKey], 6)} ctez</Td>;
+                      return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'}>{numberToMillionOrBillionFormate(pageData[dataKey], 6)} ctez</Td>;
 
-                    return <Td key={pagedata.address + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >{numberToMillionOrBillionFormate(pagedata[dataKey], 6)}</Td>;
+                    return <Td key={rowKey + index + mainkey} className={mainkey === 0 ? "tableFirstCell" : ''} textAlign={mainkey === 0 ? 'left' : 'right'} >{numberToMillionOrBillionFormate(pageData[dataKey], 6)}</Td>;
                   })}
                 </Tr>)
             })}
