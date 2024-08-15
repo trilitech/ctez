@@ -1,7 +1,7 @@
 import { ProSidebar, SidebarHeader, SidebarContent, Menu, MenuItem } from 'react-pro-sidebar';
 import clsx from 'clsx';
 import { Text, Flex, Box, Image } from '@chakra-ui/react';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { ReactComponent as MyOvens } from '../../assets/images/sidebar/myovens.svg';
@@ -42,9 +42,15 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
     dispatch(openModal(MODAL_NAMES.CREATE_OVEN));
   };
 
+  const [devMode, setDevMode] = useState(false);
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.detail === 3)
+      setDevMode((prevValue) => !prevValue);
+  }, []);
+
   const stats = () => {
     return (
-      <Flex direction="column">
+      <Flex direction="column" onClick={handleClick}>
         <Text color={sidebarTxt} fontSize="xs" fontWeight="bold" cursor="default">
           Ctez
         </Text>
@@ -110,111 +116,111 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
             {data?.tezLiquidityIncentives.toFixed(2)}% / year
           </Text>
         </Flex>
-        {/* <Text color={sidebarTxt} fontWeight="bold" fontSize="xs" cursor="default" mt={6}>
+        {devMode && <><hr style={{marginTop: '1.5rem'}}/><Text color={sidebarTxt} fontWeight="bold" fontSize="xs" cursor="default" mt={6}>
           Dev Zone:
-          </Text>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Current Avg Price
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAvgPrice.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Ctez Total Supply
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezTotalSupply.toFixed(6)}
-          </Text>
-        </Flex>
-        <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
-          Sell Ctez Dex:
         </Text>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Self tokens
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Current Avg Price
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezDexSelfTokens.toFixed(6)}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.currentAvgPrice.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Ctez Total Supply
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Proceeds
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezDexProceeds.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Subsidy
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezDexSubsidy.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Q_ctez
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezDexTargetLiquidity.toFixed(6)}
-          </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Fee Rate
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezDexAnnualFeeRate.toFixed(2)}% / year
-          </Text>
-        </Flex>
-        <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
-          Sell Tez Dex:
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezTotalSupply.toFixed(6)}
+            </Text>
+          </Flex>
+          <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
+            Sell Ctez Dex:
         </Text>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Self tokens
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Self tokens
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezDexSelfTokens.toFixed(6)}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezDexSelfTokens.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Proceeds
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Proceeds
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezDexProceeds.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Subsidy
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezDexProceeds.toFixed(6)}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezDexSubsidy.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Q_ctez
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Subsidy
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezDexTargetLiquidity.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Fee Rate
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezDexSubsidy.toFixed(6)}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.ctezDexAnnualFeeRate.toFixed(2)}% / year
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Q_tez
+          </Flex>
+          <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
+            Sell Tez Dex:
+        </Text>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Self tokens
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezDexTargetLiquidity.toFixed(6)}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.tezDexSelfTokens.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Proceeds
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Fee Rate
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.tezDexProceeds.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Subsidy
           </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezDexAnnualFeeRate.toFixed(2)}% / year
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.tezDexSubsidy.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Q_tez
           </Text>
-        </Flex> */}
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.tezDexTargetLiquidity.toFixed(6)}
+            </Text>
+          </Flex>
+          <Flex direction="row">
+            <Text color={sidebarTxt} fontSize="xs" cursor="default">
+              Fee Rate
+          </Text>
+            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+              {data?.tezDexAnnualFeeRate.toFixed(2)}% / year
+          </Text>
+          </Flex></>}
       </Flex>
     );
   };
