@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup, Flex, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useAddLiquidityTransactionsGql, useAddLiquidityTransactionTable, useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useRemoveLiquidityTransactionTable, useSwapTransactionsGql, useSwapTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
+import { useAddLiquidityTransactionsGql, useAddLiquidityTransactionTable, useDepositTransactionTable, useMintedTransactionTable, useOvenTransactionTable, useRemoveLiquidityTransactionsGql, useRemoveLiquidityTransactionTable, useSwapTransactionsGql, useSwapTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
 import { useTableNumberUtils } from "../../hooks/useTableUtils";
 import { useThemeColors } from "../../hooks/utilHooks";
 import TableCommon, { ColData } from "./comonTable";
@@ -24,7 +24,7 @@ const TransactionTableAMM: React.FC = () => {
     ]);
     const { data: swapTransaction = [] } = useSwapTransactionsGql();
     const { data: addTransaction = [] } = useAddLiquidityTransactionsGql();
-    const { data: removeTranscation = [] } = useRemoveLiquidityTransactionTable();
+    const { data: removeTransaction = [] } = useRemoveLiquidityTransactionsGql();
 
     const [transactionType, setTransactionType] = useState<Transactiontype>(Transactiontype.Swaps);
     const columSwap: ColData[] = [
@@ -93,20 +93,28 @@ const TransactionTableAMM: React.FC = () => {
             accessor: 'Description',
             dataKey: 'description',
             isDescriptionRemove: true,
+            operationHashDataKey: 'transaction_hash'
         },
         {
-            accessor: 'Amount',
-            dataKey: 'quantityTk1',
+            accessor: 'Self token',
+            dataKey: 'self_redeemed',
+            isConsiderLogicChange: true,
             isTez: true,
         },
         {
-            accessor: 'Amount',
-            dataKey: 'quantityTk2',
+            accessor: 'Proceeds',
+            dataKey: 'proceeds_redeemed',
+            isConsiderLogicChange: true,
+            isCtez2: true,
+        },
+        {
+            accessor: 'Subsidy',
+            dataKey: 'subsidy_redeemed',
             isCtez2: true,
         },
         {
             accessor: 'Account',
-            dataKey: 'trader',
+            dataKey: 'account',
             isTrimAddress: true,
         },
         {
@@ -141,7 +149,7 @@ const TransactionTableAMM: React.FC = () => {
         </Flex>
         {transactionType === Transactiontype.Swaps && <TableCommon column={columSwap} data={swapTransaction} />}
         {transactionType === Transactiontype.Adds && <TableCommon column={columAdds} data={addTransaction} />}
-        {transactionType === Transactiontype.Removes && <TableCommon column={columRemoves} data={removeTranscation} />}
+        {transactionType === Transactiontype.Removes && <TableCommon column={columRemoves} data={removeTransaction} />}
 
 
     </Box>)

@@ -7,7 +7,7 @@ import {
   ctezMainHeader, ctezOven, CtezStatsGql, DepositTransactionTable, driftGraphInterface, driftGraphInterfaceAll, MintBurnData, 
   OneLineGraph, Ovendata, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTransactionTable, OvenTvlGql, 
   PiGraphOven, priceSats, SwapTransaction, SwapTransactionsGql, TradeVolumeGql, TvlAMMData, TvlAMMDataAll, TvlData, TvlDataALL, TwoLineGraph, 
-  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto 
+  TwoLineGraphWithoutValue, VolumeAMMData, VolumeAMMDataAll, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto, RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql 
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -314,6 +314,46 @@ export const useAddLiquidityTransactionsGql = () => {
         timestamp: dto.router_stats.timestamp,
         transaction_hash: dto.transaction_hash
       } as AddLiquidityTransactionsGql)));
+
+      return data;
+    },
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useRemoveLiquidityTransactionsGql = () => {
+  return useQuery<RemoveLiquidityTransactionsGql[], Error>(
+    ['remove_liquidity_transactions_gql'],
+    async () => {
+      const entity = 'remove_liquidity_transaction_history';
+      const count = await getCountGql(`${entity}_aggregate`);
+      const query = `
+        query {
+          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+            dex
+            account
+            id
+            proceeds_redeemed
+            self_redeemed
+            subsidy_redeemed
+            transaction_hash
+            router_stats {
+              timestamp
+            }
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity].map((dto: RemoveLiquidityTransactionsDto) => ({
+        id: dto.id,
+        account: dto.account,
+        dex: dto.dex,
+        self_redeemed: dto.self_redeemed,
+        proceeds_redeemed: dto.proceeds_redeemed,
+        subsidy_redeemed: dto.subsidy_redeemed,
+        timestamp: dto.router_stats.timestamp,
+        transaction_hash: dto.transaction_hash
+      } as RemoveLiquidityTransactionsGql)));
 
       return data;
     },
