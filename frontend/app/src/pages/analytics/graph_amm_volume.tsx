@@ -1,28 +1,17 @@
 import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
-import { graphic } from "echarts";
-import { useCtezGraphAMMVolume, useCtezGraphAMMVolumeAll, useTradeVolumeGql } from "../../api/analytics";
-import { TextWithCircleColor } from "../../components/analytics/TTextWithColorCircle";
-import BarChartAlt from "../../components/graph/bar-graph";
+import { useTradeVolumeGql } from "../../api/analytics";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
 
-const color = '#0F62FF';
-const color2 = '#38CB89';
 const GraphAMMVolume: React.FC = () => {
     const [textcolor] = useThemeColors(['homeTxt']);
-    const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-    const [background, imported, text4] = useThemeColors([
+    const [background] = useThemeColors([
         'cardbg2',
-        'imported',
-        'text4',
     ]);
-    const { data: data1m = false } = useCtezGraphAMMVolume();
-    const { data: dataAll = false } = useCtezGraphAMMVolumeAll();
-
     const { data: chartData1d = false } = useTradeVolumeGql('1d');
     const { data: chartData30d = false } = useTradeVolumeGql('30d');
 

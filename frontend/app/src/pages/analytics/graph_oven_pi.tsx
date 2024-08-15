@@ -1,16 +1,14 @@
 import { Flex, SkeletonCircle, Text, useMediaQuery } from "@chakra-ui/react";
 import React from "react";
-import { useCtezGraphOvendata, useTopOvensGraphGql } from "../../api/analytics";
+import { useTopOvensGraphGql } from "../../api/analytics";
 import PiChart from "../../components/graph/pi-chart";
 import { useThemeColors } from "../../hooks/utilHooks";
 
 const OvenPiChart: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
-  const [textHighlight] = useThemeColors(['sideBarBg']);
   const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-  const [background, inputbg] = useThemeColors([
+  const [background] = useThemeColors([
     'cardbg2',
-    'inputbg',
   ]);
   const { data: dataChart = false } = useTopOvensGraphGql();
   return (<Flex direction='column'

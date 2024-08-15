@@ -14,14 +14,10 @@ enum Transactiontype {
 }
 
 const TransactionTableAMM: React.FC = () => {
-    const { positiveOrNegative, valueFormat } = useTableNumberUtils();
     const [textcolor] = useThemeColors(['homeTxt']);
-    const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-    const [background, imported, text4] = useThemeColors([
+    const [background] = useThemeColors([
         'cardbg2',
-        'imported',
-        'text4',
     ]);
     const { data: swapTransaction = [] } = useSwapTransactionsGql();
     const { data: addTransaction = [] } = useAddLiquidityTransactionsGql();

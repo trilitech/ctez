@@ -1,16 +1,13 @@
-import { Box, Button, ButtonGroup, ButtonProps, Container, Flex, Icon, SkeletonText, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery } from "@chakra-ui/react";
+import { Box, ButtonProps, Container, Flex, Icon, SkeletonText, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useMediaQuery } from "@chakra-ui/react";
 import { Next, PageGroup, Paginator, Previous, usePaginator } from "chakra-paginator";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as timeago from 'timeago.js';
-import { useOvenTransactionTable } from "../../api/analytics";
 import { ReactComponent as leftIcon } from '../../assets/images/icons/left-icon.svg';
 import { ReactComponent as rightIcon } from '../../assets/images/icons/right-icon.svg';
 import { ReactComponent as linkLight } from '../../assets/images/icons/link-light.svg';
 import { useTableNumberUtils } from "../../hooks/useTableUtils";
 import { useThemeColors } from "../../hooks/utilHooks";
-import { OvenTransactionTable } from "../../interfaces/analytics";
 import { trimAddress } from "../../utils/addressUtils";
-import SkeletonLayout from "../../components/skeleton";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { NETWORK } from "../../utils/globals";
 
@@ -276,7 +273,7 @@ const TableCommon: React.FC<CommonTable> = ({ column, data = [] }) => {
                             rel="noreferrer"
                             target="_blank">
                             Remove {numberToMillionOrBillionFormate(pageData.self_redeemed, 6)} {pageData.dex === 'sell_ctez' ? 'ctez' : 'tez'}
-                              <Icon
+                            <Icon
                               color="light.tradebg"
                               _hover={{ cursor: 'pointer' }}
                               className="addresslinktdIcon"

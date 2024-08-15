@@ -9,12 +9,9 @@ import { useTvlGraphGql } from "../../api/analytics";
 
 const GraphTVL: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
-  const [textHighlight] = useThemeColors(['sideBarBg']);
   const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-  const [background, imported, text4] = useThemeColors([
+  const [background] = useThemeColors([
     'cardbg2',
-    'imported',
-    'text4',
   ]);
   const { data: chartData = false } = useTvlGraphGql();
 
@@ -70,6 +67,7 @@ const GraphTVL: React.FC = () => {
   };
 
   const lastValue = chartData && chartData[chartData.length - 1]?.tvl;
+  const displayText = (lastValue && !value) ? `$${numberToMillionOrBillionFormate(lastValue)}` : value ? `$${numberToMillionOrBillionFormate(value)}` : null;
 
   return (<Flex direction='column'
     borderRadius={16}
@@ -93,14 +91,14 @@ const GraphTVL: React.FC = () => {
           TVL
             </Text>
         <Flex flexDirection='column'>
-          <Text
+          {displayText ? <Text
             color={textcolor}
             fontSize={largerScreen ? '32px' : '18px'}
             lineHeight="29px"
             fontWeight={600}
           >
-            {(lastValue && !value) ? `$${numberToMillionOrBillionFormate(lastValue)}` : value ? `$${numberToMillionOrBillionFormate(value)}` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
-          </Text>
+            {displayText}
+          </Text> : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>
       </div>

@@ -3,18 +3,15 @@ import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import { ChartPure } from "./chart";
-import { useCtezGraphGql, useDriftGraph, useDriftGraphAll } from "../../api/analytics";
+import { useCtezGraphGql } from "../../api/analytics";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 
 const GraphDrift: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
-  const [textHighlight] = useThemeColors(['sideBarBg']);
   const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-  const [background, imported, text4] = useThemeColors([
+  const [background] = useThemeColors([
     'cardbg2',
-    'imported',
-    'text4',
   ]);
   const { data: chartData = false } = useCtezGraphGql();
   const [value, setValue] = useState<number | undefined>();
@@ -68,6 +65,7 @@ const GraphDrift: React.FC = () => {
   };
 
   const lastValue = chartData && chartData[chartData.length - 1]?.annual_drift_percent;
+  const displayText = lastValue && !value ? `${numberToMillionOrBillionFormate(lastValue, 2)} %` : value ? `${numberToMillionOrBillionFormate(value, 2)} %` : null;
 
   return (<Flex direction='column'
     borderRadius={16}
@@ -91,14 +89,14 @@ const GraphDrift: React.FC = () => {
           Annual Drift
             </Text>
         <Flex flexDirection='column'>
-          <Text
+          {displayText ? <Text
             color={textcolor}
             fontSize={largerScreen ? '32px' : '18px'}
             lineHeight="29px"
             fontWeight={600}
           >
-            {(lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 2)} %` : value ? `${numberToMillionOrBillionFormate(value, 2)} %` : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
-          </Text>
+            {displayText}
+          </Text> : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>
       </div>

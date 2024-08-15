@@ -7,16 +7,11 @@ import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
 
-const color = '#0F62FF';
-const color2 = '#38CB89';
 const GraphCtez: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
-  const [textHighlight] = useThemeColors(['sideBarBg']);
   const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-  const [background, imported, text4] = useThemeColors([
+  const [background] = useThemeColors([
     'cardbg2',
-    'imported',
-    'text4',
   ]);
   const { data: chartData = false } = useCtezGraphGql();
 
@@ -131,14 +126,14 @@ const GraphCtez: React.FC = () => {
           Ctez Price
             </Text>
         <Flex flexDirection='column'>
-          <Text
+          {displayValue ? <Text
             color={textcolor}
             fontSize={largerScreen ? '32px' : '18px'}
             lineHeight="29px"
             fontWeight={600}
           >
-            {displayValue || <SkeletonText pr={6} noOfLines={1} spacing="1" />}
-          </Text>
+            {displayValue}
+          </Text> : <SkeletonText pr={6} noOfLines={1} spacing="1" />}
           {time ? <Text fontSize='12px' >{activeTab === '1m' ? dateFormat(time) : dateFormat2(time)}</Text> : <Text fontSize='12px' opacity={0}>Time</Text>}
         </Flex>
       </div>

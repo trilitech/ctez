@@ -1,7 +1,6 @@
 import { Box, Button, ButtonGroup, Flex, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useDepositTransactionTable, useMintedTransactionTable, useOvensTransactionsGql, useOvenTransactionTable, useWithdrawTransactionTable } from "../../api/analytics";
-import { useTableNumberUtils } from "../../hooks/useTableUtils";
+import { useOvensTransactionsGql } from "../../api/analytics";
 import { useThemeColors } from "../../hooks/utilHooks";
 import TableCommon, { ColData } from "./comonTable";
 
@@ -15,9 +14,7 @@ enum Transactiontype {
 }
 
 const TransactionTableoven: React.FC = () => {
-    const { positiveOrNegative, valueFormat } = useTableNumberUtils();
     const [textcolor] = useThemeColors(['homeTxt']);
-    const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
     const [background, inputbg] = useThemeColors([
         'cardbg2',
