@@ -4,7 +4,7 @@ import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import { ChartPure } from "./chart";
 import { useCtezGraphCurrentPointGql, useCtezGraphGql } from "../../api/analytics";
-import { useThemeColors } from "../../hooks/utilHooks";
+import { useChartZoom, useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 
 const GraphDrift: React.FC = () => {
@@ -13,60 +13,61 @@ const GraphDrift: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  
-  const { data: historicalData = false } = useCtezGraphGql();
-  const { data: currentPoint } = useCtezGraphCurrentPointGql();
-  const chartData = historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData;
 
+  const { data: historicalData = [] } = useCtezGraphGql();
+  const { data: currentPoint } = useCtezGraphCurrentPointGql();
+  const chartData = useMemo(
+    () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
+    [historicalData, currentPoint]
+  );
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
-  const [activeTab, setActiveTab] = useState('1m');
   // graph options
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
   const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);
 
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-  startDate.setMonth(endDate.getMonth() - 1);
+  const [activeTab, setActiveTab, startDate, endDate] = useChartZoom();
 
-  const option: React.ComponentProps<typeof ChartPure>['option'] = {
-    dataset: [{
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'annual_drift_percent', displayName: 'Annual Drift' },
-      ],
-      source: chartData || []
-    }],
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'time',
-    },
-    yAxis: {
-      type: 'value',
-      scale: true,
-    },
-    series: [{
-      type: 'line',
-      symbol: 'none',
-      areaStyle: {
-        color: new graphic.LinearGradient(0, 0, 1, 0, [
-          {
-            offset: 0,
-            color: '#3260EF4D',
-          },
-          {
-            offset: 1,
-            color: '#3560ED14',
-          }
-        ])
+  const option = useMemo(() => {
+    return {
+      dataset: [{
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'annual_drift_percent', displayName: 'Annual Drift' },
+        ],
+        source: chartData
+      }],
+      tooltip: {
+        trigger: 'axis'
       },
-      color: '#0F62FF',
-      datasetIndex: 0,
-      smooth: true
-    }]
-  };
+      xAxis: {
+        type: 'time',
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+      },
+      series: [{
+        type: 'line',
+        symbol: 'none',
+        areaStyle: {
+          color: new graphic.LinearGradient(0, 0, 1, 0, [
+            {
+              offset: 0,
+              color: '#3260EF4D',
+            },
+            {
+              offset: 1,
+              color: '#3560ED14',
+            }
+          ])
+        },
+        color: '#0F62FF',
+        datasetIndex: 0,
+        smooth: true
+      }]
+    } as React.ComponentProps<typeof ChartPure>['option'];
+  }, [chartData]);
 
   const lastValue = chartData && chartData[chartData.length - 1]?.annual_drift_percent;
   const displayText = lastValue && !value ? `${numberToMillionOrBillionFormate(lastValue, 2)} %` : value ? `${numberToMillionOrBillionFormate(value, 2)} %` : null;
@@ -114,11 +115,10 @@ const GraphDrift: React.FC = () => {
       ? <ChartPure
         option={option}
         showZoom
-        zoomStartDate={activeTab === '1m' ? startDate : undefined}
-        zoomEndDate={activeTab === '1m' ? endDate : undefined}
+        zoomStartDate={startDate}
+        zoomEndDate={endDate}
         style={{ height: 300 }} />
       : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)
 }
 export default GraphDrift;
-

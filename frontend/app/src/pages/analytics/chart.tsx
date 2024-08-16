@@ -11,8 +11,8 @@ interface ChartProps {
   loading?: boolean;
   title?: string;
   showZoom?: boolean;
-  zoomStartDate?: Date;
-  zoomEndDate?: Date;
+  zoomStartDate?: string;
+  zoomEndDate?: string;
 }
 
 export const Chart = (props: ChartProps) => {
@@ -32,8 +32,6 @@ export const Chart = (props: ChartProps) => {
       dataZoom: showZoom ? [{
         type: 'inside',
         filterMode: 'none',
-        startValue: props.zoomStartDate?.toISOString(),
-        endValue: props.zoomEndDate?.toISOString()
       }, {
         type: 'slider',
         filterMode: 'none',
@@ -75,6 +73,23 @@ export const Chart = (props: ChartProps) => {
       chart?.dispose();
     };
   }, [theme]);
+
+  useEffect(() => {
+    if (chartElRef.current) {
+      const chart = getInstanceByDom(chartElRef.current);
+      if (chart && !chart.getOption()) {
+        chart?.setOption(option, props.settings);
+      }
+      chart?.dispatchAction({
+        type: 'dataZoom',
+        dataZoomIndex: 0,
+        start: props.zoomStartDate === undefined ? 0 : undefined,
+        end: props.zoomEndDate === undefined ? 100 : undefined,
+        startValue: props.zoomStartDate,
+        endValue: props.zoomEndDate
+      });
+    }
+  }, [props.zoomStartDate, props.zoomEndDate]);
 
   useEffect(() => {
     if (chartElRef.current) {

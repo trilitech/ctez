@@ -3,7 +3,7 @@ import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
 import React, { useMemo, useState } from "react";
 import { useCtezGraphCurrentPointGql, useCtezGraphGql } from "../../api/analytics";
-import { useThemeColors } from "../../hooks/utilHooks";
+import { useChartZoom, useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
 
@@ -13,96 +13,98 @@ const GraphCtez: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  const { data: historicalData = false } = useCtezGraphGql();
+  const { data: historicalData = [] } = useCtezGraphGql();
   const { data: currentPoint } = useCtezGraphCurrentPointGql();
-  const chartData = historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData;
+  const chartData = useMemo(
+    () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
+    [historicalData, currentPoint]
+  );
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
-  const [activeTab, setActiveTab] = useState('1m');
 
   // graph options
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
   const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);
 
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-  startDate.setMonth(endDate.getMonth() - 1);
+  const [activeTab, setActiveTab, startDate, endDate] = useChartZoom();
 
-  const option: React.ComponentProps<typeof ChartPure>['option'] = {
-    dataset: [{
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'current_avg_price', displayName: 'Avg Price' },
-      ],
-      source: chartData || []
-    }, {
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'ctez_sell_price', displayName: 'Sell Price' },
-      ],
-      source: chartData || []
-    }, {
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'ctez_buy_price', displayName: 'Buy Price' },
-      ],
-      source: chartData || []
-    }, {
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'target_price', displayName: 'Target Price' },
-      ],
-      source: chartData || []
-    }],
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'time',
-    },
-    yAxis: {
-      type: 'value',
-      scale: true,
-    },
-    series: [{
-      type: 'line',
-      symbol: 'none',
-      areaStyle: {
-        color: new graphic.LinearGradient(0, 0, 1, 0, [
-          {
-            offset: 0,
-            color: '#3260EF4D',
-          },
-          {
-            offset: 1,
-            color: '#3560ED14',
-          }
-        ])
+  const option = useMemo(() => {
+    return {
+      dataset: [{
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'current_avg_price', displayName: 'Avg Price' },
+        ],
+        source: chartData
+      }, {
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'ctez_sell_price', displayName: 'Sell Price' },
+        ],
+        source: chartData
+      }, {
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'ctez_buy_price', displayName: 'Buy Price' },
+        ],
+        source: chartData
+      }, {
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'target_price', displayName: 'Target Price' },
+        ],
+        source: chartData
+      }],
+      tooltip: {
+        trigger: 'axis'
       },
-      color: '#0F62FF',
-      datasetIndex: 0,
-      smooth: true
-    }, {
-      type: 'line',
-      symbol: 'none',
-      color: '#f18e8e',
-      datasetIndex: 1,
-      smooth: true
-    }, {
-      type: 'line',
-      symbol: 'none',
-      color: 'rgb(165, 134, 227)',
-      datasetIndex: 2,
-      smooth: true
-    }, {
-      type: 'line',
-      symbol: 'none',
-      color: '#38CB89',
-      datasetIndex: 3,
-      smooth: true
-    }]
-  };
+      xAxis: {
+        type: 'time',
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+      },
+      series: [{
+        type: 'line',
+        symbol: 'none',
+        areaStyle: {
+          color: new graphic.LinearGradient(0, 0, 1, 0, [
+            {
+              offset: 0,
+              color: '#3260EF4D',
+            },
+            {
+              offset: 1,
+              color: '#3560ED14',
+            }
+          ])
+        },
+        color: '#0F62FF',
+        datasetIndex: 0,
+        smooth: true
+      }, {
+        type: 'line',
+        symbol: 'none',
+        color: '#f18e8e',
+        datasetIndex: 1,
+        smooth: true
+      }, {
+        type: 'line',
+        symbol: 'none',
+        color: 'rgb(165, 134, 227)',
+        datasetIndex: 2,
+        smooth: true
+      }, {
+        type: 'line',
+        symbol: 'none',
+        color: '#38CB89',
+        datasetIndex: 3,
+        smooth: true
+      }]
+    } as React.ComponentProps<typeof ChartPure>['option']
+  }, [chartData]);
 
   const lastValue = chartData && chartData[chartData.length - 1]?.target_price;
   const displayValue = (lastValue && !value) ? `${numberToMillionOrBillionFormate(lastValue, 6)} tez` : value ? `${numberToMillionOrBillionFormate(value, 6)} tez` : undefined;
@@ -152,8 +154,8 @@ const GraphCtez: React.FC = () => {
       ? <ChartPure
         option={option}
         showZoom
-        zoomStartDate={activeTab === '1m' ? startDate : undefined}
-        zoomEndDate={activeTab === '1m' ? endDate : undefined}
+        zoomStartDate={startDate}
+        zoomEndDate={endDate}
         style={{ height: 300 }} />
       : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)

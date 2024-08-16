@@ -17,7 +17,6 @@ import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
 import { logger } from '../utils/logger';
 import { openTxSubmittedModal } from '../redux/slices/UiSlice';
 import { useCtezBaseStats } from '../api/queries';
-import { calcSelfTokensToSell } from '../contracts/ctez';
 
 type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
   stats: null | {
@@ -355,6 +354,21 @@ const useThemeColors = (colors: string[]) => {
   return colors.map((x) => `${theme.colorMode}.${x}`);
 };
 
+const useChartZoom = (): ['1m' | 'all', Dispatch<SetStateAction<'1m' | 'all'>>, string | undefined, string | undefined] => {
+  const [activeTab, setActiveTab] = useState<'1m' | 'all'>('1m');
+  const [endDate, startDate] = useMemo(() => {
+    if (activeTab === 'all') {
+      return [undefined, undefined];
+    }
+    const endDateLocal = new Date();
+    const startDateLocal = new Date(endDateLocal);
+    startDateLocal.setMonth(endDateLocal.getMonth() - 1);
+    return [startDateLocal.toISOString(), endDateLocal.toISOString()];
+  }, [activeTab]);
+
+  return [activeTab, setActiveTab, startDate, endDate]
+}
+
 export {
   useOvenStats,
   getOvenSummary,
@@ -363,4 +377,5 @@ export {
   useTxLoader,
   useBakerSelect,
   useThemeColors,
+  useChartZoom
 };

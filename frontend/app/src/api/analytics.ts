@@ -99,9 +99,9 @@ export const useCtezGraphCurrentPointGql = () => {
   );
 };
 
-export const useTvlGraphGql = () => {
+export const useOvensTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
-    'oven_tvl_gql',
+    'ovens_tvl_gql',
     async () => {
       const count = await getCountGql('ca_tvl_history_1d_aggregate');
       const query = `
@@ -110,11 +110,87 @@ export const useTvlGraphGql = () => {
             timestamp: bucket_1d
             tvl: tvl_usd
           }
-        }
+       }
       `;
       const chunks = await getBatchesGql(count, query);
       return chunks.flatMap(response => response.data.data.tvl_history);
     }
+  );
+};
+
+export const getOvensSummaryGql = async () => {
+  const entity = 'oven_summary';
+  const response = await axios({
+    url: GQL_API_URL,
+    method: "POST",
+    data: {
+      query: `
+        query {
+          ${entity} {
+            collateral_locked
+            collateral_ratio
+            created
+            liquidated
+            total
+            total_debt
+          }
+        }
+      `
+    }
+  });
+
+  return response.data.data[entity][0];
+};
+
+export const useOvensSummaryGql = () => {
+  return useQuery<OvensSummaryGql, Error>(
+    'ovens_summary_gql',
+    getOvensSummaryGql,
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const getTezosPriceGql = async () => {
+  const entity = 'quotes'
+  const response = await axios({
+    url: GQL_API_URL,
+    method: "POST",
+    data: {
+      query: `
+        query {
+          ${entity} (order_by: {level: desc}, limit: 1) {
+            usd
+          }
+        }
+      `
+    }
+  });
+
+  return response.data.data[entity][0].usd;
+};
+
+export const useTezosPriceGql = () => {
+  return useQuery<number, Error>(
+    'tezos_price_gql',
+    getTezosPriceGql,
+    { refetchInterval: 30_000 },
+  );
+};
+
+export const useOvensTvlCurrentPointGql = () => {
+  return useQuery<OvenTvlGql, Error>(
+    'ovens_tvl_current_point',
+    async () => {
+      const [summary, price] = await Promise.all([getOvensSummaryGql(), getTezosPriceGql()]);
+
+      const currentPoint: OvenTvlGql = {
+        id: 'now-now-now',
+        timestamp: new Date().toISOString(),
+        tvl: Number((summary.collateral_locked * price).toFixed(2))
+      }
+      return currentPoint;
+    },
+    { refetchInterval: 30_000 },
   );
 };
 
@@ -154,61 +230,6 @@ export const useTopOvensGraphGql = () => {
       return ovens;
     },
     { refetchInterval: 60_000 },
-  );
-};
-
-export const useOvensSummaryGql = () => {
-  return useQuery<OvensSummaryGql, Error>(
-    'ovens_summary_gql',
-    async () => {
-      const entity = 'oven_summary';
-      const response = await axios({
-        url: GQL_API_URL,
-        method: "POST",
-        data: {
-          query: `
-            query {
-              ${entity} {
-                collateral_locked
-                collateral_ratio
-                created
-                liquidated
-                total
-                total_debt
-              }
-            }
-          `
-        }
-      });
-
-      return response.data.data[entity][0];
-    },
-    { refetchInterval: 30_000 },
-  );
-};
-
-export const useTezosPriceGql = () => {
-  return useQuery<number, Error>(
-    'tezos_price_gql',
-    async () => {
-      const entity = 'quotes'
-      const response = await axios({
-        url: GQL_API_URL,
-        method: "POST",
-        data: {
-          query: `
-            query {
-              ${entity} (order_by: {level: desc}, limit: 1) {
-                usd
-              }
-            }
-          `
-        }
-      });
-
-      return response.data.data[entity][0].usd;
-    },
-    { refetchInterval: 30_000 },
   );
 };
 
@@ -271,8 +292,7 @@ export const useTradeVolumeGql = (range: '1d' | '30d') => {
       const data = chunks.flatMap(response => response.data.data.trade_volume);
 
       return data;
-    },
-    { refetchInterval: 30_000 },
+    }
   );
 };
 

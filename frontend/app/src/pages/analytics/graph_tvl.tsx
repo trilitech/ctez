@@ -2,11 +2,10 @@ import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery 
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
-import { useThemeColors } from "../../hooks/utilHooks";
+import { useChartZoom, useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
-import { useOvensSummaryGql, useTezosPriceGql, useTvlGraphGql } from "../../api/analytics";
-import { OvenTvlGql } from "../../interfaces/analytics";
+import { useOvensTvlGraphGql, useOvensTvlCurrentPointGql } from "../../api/analytics";
 
 const GraphTVL: React.FC = () => {
   const [textcolor] = useThemeColors(['homeTxt']);
@@ -14,63 +13,61 @@ const GraphTVL: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  const { data: historyData = false } = useTvlGraphGql();
-  const { data: summary = false } = useOvensSummaryGql();
-  const { data: price = false } = useTezosPriceGql();
-  const chartData = historyData && summary && price
-    ? [...historyData, { id: 'now', timestamp: new Date().toISOString(), tvl: Number((summary.collateral_locked * price).toFixed(2)) } as OvenTvlGql]
-    : historyData;
+  const { data: historicalData = false } = useOvensTvlGraphGql();
+  const { data: currentPoint } = useOvensTvlCurrentPointGql();
+  const chartData = useMemo(
+    () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
+    [historicalData, currentPoint]
+  );
 
   const [value, setValue] = useState<number | undefined>();
   const [time, setTime] = useState<number | undefined>();
 
-  const [activeTab, setActiveTab] = useState('1m');
+  const [activeTab, setActiveTab, startDate, endDate] = useChartZoom();
   // graph options
   const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
   const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);
 
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-  startDate.setMonth(endDate.getMonth() - 1);
-
-  const option: React.ComponentProps<typeof ChartPure>['option'] = {
-    dataset: [{
-      dimensions: [
-        { name: 'timestamp', displayName: '' },
-        { name: 'tvl', displayName: 'TVL' },
-      ],
-      source: chartData || []
-    }],
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'time',
-    },
-    yAxis: {
-      type: 'value',
-      scale: true,
-    },
-    series: [{
-      type: 'line',
-      symbol: 'none',
-      areaStyle: {
-        color: new graphic.LinearGradient(0, 0, 1, 0, [
-          {
-            offset: 0,
-            color: '#3260EF4D',
-          },
-          {
-            offset: 1,
-            color: '#3560ED14',
-          }
-        ])
+  const option = useMemo(() => {
+    return {
+      dataset: [{
+        dimensions: [
+          { name: 'timestamp', displayName: '' },
+          { name: 'tvl', displayName: 'TVL' },
+        ],
+        source: chartData
+      }],
+      tooltip: {
+        trigger: 'axis'
       },
-      color: '#0F62FF',
-      datasetIndex: 0,
-      smooth: true
-    }]
-  };
+      xAxis: {
+        type: 'time',
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+      },
+      series: [{
+        type: 'line',
+        symbol: 'none',
+        areaStyle: {
+          color: new graphic.LinearGradient(0, 0, 1, 0, [
+            {
+              offset: 0,
+              color: '#3260EF4D',
+            },
+            {
+              offset: 1,
+              color: '#3560ED14',
+            }
+          ])
+        },
+        color: '#0F62FF',
+        datasetIndex: 0,
+        smooth: true
+      }]
+    } as React.ComponentProps<typeof ChartPure>['option'];
+  }, [chartData]);
 
   const lastValue = chartData && chartData[chartData.length - 1]?.tvl;
   const displayText = (lastValue && !value) ? `$${numberToMillionOrBillionFormate(lastValue)}` : value ? `$${numberToMillionOrBillionFormate(value)}` : null;
@@ -118,8 +115,8 @@ const GraphTVL: React.FC = () => {
       ? <ChartPure
         option={option}
         showZoom
-        zoomStartDate={activeTab === '1m' ? startDate : undefined}
-        zoomEndDate={activeTab === '1m' ? endDate : undefined}
+        zoomStartDate={startDate}
+        zoomEndDate={endDate}
         style={{ height: 300 }} />
       : <Skeleton height='300px' minWidth='20px' />}
   </Flex>)
