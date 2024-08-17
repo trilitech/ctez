@@ -9,14 +9,14 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import BigNumber from 'bignumber.js';
-import { MdAdd, MdSwapVert } from 'react-icons/md';
+import { MdSwapVert } from 'react-icons/md';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
 import { useWallet } from '../../../wallet/hooks';
-import { useActualCtezStorage, useCtezBaseStats, useCtezStorage, useUserBalance } from '../../../api/queries';
+import { useActualCtezStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
   ConversionFormParams,
@@ -24,13 +24,12 @@ import {
   TFormType,
   TOKEN,
 } from '../../../constants/swap';
-import { tezToCtez, ctezToTez } from '../../../contracts/cfmm';
+import { tezToCtez, ctezToTez,calcSelfTokensToSell } from '../../../contracts/ctez';
 import { logger } from '../../../utils/logger';
 import { useAppSelector } from '../../../redux/store';
 import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
-import { calcSelfTokensToSell, calcSelfTokensToSellOnchain } from '../../../contracts/ctez';
 import TokenInputIcon from '../TokenInputIcon';
 
 const Swap: React.FC = () => {
@@ -133,6 +132,10 @@ const Swap: React.FC = () => {
   });
 
   useEffect(() => {
+    formik.validateForm();
+  }, [userAddress])
+
+  useEffect(() => {
     const calc = async () => {
       if (values.amount && ctezStorage) {
         const swapAmountNat = new BigNumber(values.amount).multipliedBy(1e6).integerValue(BigNumber.ROUND_FLOOR);
@@ -162,7 +165,7 @@ const Swap: React.FC = () => {
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
     if (!userAddress) {
-      return { buttonText: BUTTON_TXT.CONNECT, errorList: errorListLocal };
+      return { buttonText: BUTTON_TXT.CONNECT, errorList: [] };
     }
 
     if (values.amount) {
@@ -303,7 +306,6 @@ const Swap: React.FC = () => {
         type="submit"
         disabled={isSubmitting || errorList.length > 0}
         isLoading={isSubmitting}
-        leftIcon={buttonText === BUTTON_TXT.CONNECT ? <MdAdd /> : undefined}
       >
         {buttonText}
       </Button>

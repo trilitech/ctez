@@ -2,12 +2,16 @@ import {
   OpKind,
   TransactionWalletOperation,
   WalletContract,
+  WalletOperation,
   WalletParamsWithKind,
 } from '@taquito/taquito';
 import { BigNumber } from 'bignumber.js';
 import {
+  AddLiquidityParams,
   AllOvenDatum,
+  CollectFromLiquidityParams,
   CTezStorage,
+  ctezToTezParams,
   Depositor,
   depositors,
   EditDepositorOps,
@@ -16,6 +20,9 @@ import {
   HalfDexLQTData,
   Oven,
   OvenStorage,
+  RemoveLiquidityParams,
+  TezToCtezParams,
+  TokenToTokenParams,
 } from '../interfaces';
 import { CTEZ_ADDRESS } from '../utils/globals';
 import { logger } from '../utils/logger';
@@ -23,6 +30,7 @@ import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
 import { getTezosInstance } from './client';
 import { executeMethod, initContract } from './utils';
 import { getAllOvensAPI, getOvenByAddressAPI, getUserOvensAPI } from '../api/tzkt';
+import { getCTezFa12Contract } from './fa12';
 
 let cTez: WalletContract;
 
@@ -40,8 +48,20 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
 };
 
 export const getActualCtezStorage = async (): Promise<CTezStorage> => {
-  const storage: CTezStorage = await cTez.contractViews.get_current_state().executeView({ viewCaller: cTez.address });
-  return storage;
+  const [storage, actualStorage] = await Promise.all([cTez.storage<CTezStorage>(),cTez.contractViews.get_current_state().executeView({ viewCaller: cTez.address })]);
+  return {
+    context: actualStorage.context,
+    last_update: actualStorage.last_update,
+    ovens: storage.ovens,
+    sell_ctez: {
+      ...actualStorage.sell_ctez,
+      liquidity_owners: storage.sell_ctez.liquidity_owners
+    },
+    sell_tez: {
+      ...actualStorage.sell_tez,
+      liquidity_owners: storage.sell_tez.liquidity_owners
+    }
+  };
 };
 
 export const getOvenStorage = async (ovenAddress: string): Promise<OvenStorage> => {
@@ -399,4 +419,163 @@ export const isOven = async (ovenAddress: string): Promise<boolean> => {
     logger.error(error);
   }
   return false;
+};
+
+type FA12TokenType = 'ctez' | 'lqt';
+
+export const getTokenAllowanceOps = async (
+  tokenContract: WalletContract,
+  userAddress: string,
+  newAllowance: number,
+  tokenType: FA12TokenType = 'ctez',
+): Promise<WalletParamsWithKind[]> => {
+  const batchOps: WalletParamsWithKind[] = [];
+  const maxTokensDeposited = tokenType === 'ctez' ? newAllowance * 1e6 : newAllowance;
+  const currentAllowance = new BigNumber(
+    (await tokenContract.contractViews.viewAllowance({ owner: userAddress, spender: CTEZ_ADDRESS }).executeView({viewCaller: tokenContract.address})) ?? 0,
+  )
+    .shiftedBy(-6)
+    .toNumber();
+  if (currentAllowance < newAllowance) {
+    if (currentAllowance > 0) {
+      batchOps.push({
+        kind: OpKind.TRANSACTION,
+        ...tokenContract.methods.approve(CTEZ_ADDRESS, 0).toTransferParams(),
+      });
+    }
+    batchOps.push({
+      kind: OpKind.TRANSACTION,
+      ...tokenContract.methods.approve(CTEZ_ADDRESS, maxTokensDeposited).toTransferParams(),
+    });
+  }
+  return batchOps;
+};
+
+export const addCtezLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+  const tezos = getTezosInstance();
+  const CTezFa12 = await getCTezFa12Contract();
+  const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
+    CTezFa12,
+    args.owner,
+    args.amount,
+  );
+  const batch = tezos.wallet.batch([
+    ...batchOps,
+    {
+      kind: OpKind.TRANSACTION,
+      ...cTez.methods
+        .add_ctez_liquidity(
+          args.owner,
+          args.amount * 1e6,
+          args.minLqtMinted.toString(10),
+          args.deadline.toISOString(),
+        )
+        .toTransferParams(),
+      amount: 0,
+    },
+    {
+      kind: OpKind.TRANSACTION,
+      ...CTezFa12.methods.approve(CTEZ_ADDRESS, 0).toTransferParams(),
+    },
+  ]);
+  const hash = await batch.send();
+  return hash;
+};
+
+export const addTezLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+  const hash = await cTez.methods.add_tez_liquidity(
+    args.owner,
+    args.minLqtMinted.toString(10),
+    args.deadline.toISOString(),
+  ).send({amount: args.amount})
+  return hash;
+};
+
+export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
+  return args.isCtezSide ? addCtezLiquidity(args) : addTezLiquidity(args);
+};
+
+export const removeLiquidity = async (
+  args: RemoveLiquidityParams,
+  userAddress: string,
+): Promise<WalletOperation> => {
+  const tezos = getTezosInstance();
+
+  const hash = await cTez.methods[args.isCtezSide ? 'remove_ctez_liquidity' : 'remove_tez_liquidity'](
+    args.to,
+    args.lqtBurned.toString(10),
+    args.minSelfReceived * 1e6,
+    args.minProceedsReceived * 1e6,
+    args.minSubsidyReceived * 1e6,
+    args.deadline.toISOString(),
+  ).send();
+  return hash;
+};
+
+export const collectFromLiquidity = async (
+  args: CollectFromLiquidityParams,
+): Promise<WalletOperation> => {
+  const hash = await cTez.methods[args.isCtezSide ? 'collect_from_ctez_liquidity' : 'collect_from_tez_liquidity'](
+    args.to,
+  ).send();
+  return hash;
+};
+
+export const tezToCtez = async (args: TezToCtezParams): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(
+    cTez,
+    'tez_to_ctez',
+    [args.to, Math.floor(args.minCtezBought * 1e6), args.deadline.toISOString()],
+    undefined,
+    args.tezSold * 1e6,
+    true,
+  );
+  return operation;
+};
+
+export const ctezToTez = async (
+  args: ctezToTezParams,
+  userAddress: string,
+): Promise<WalletOperation> => {
+  const tezos = getTezosInstance();
+  const CTezFa12 = await getCTezFa12Contract();
+  const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
+    CTezFa12,
+    userAddress,
+    args.ctezSold,
+  );
+
+  const batch = tezos.wallet.batch([
+    ...batchOps,
+    {
+      kind: OpKind.TRANSACTION,
+      ...cTez.methods
+        .ctez_to_tez(
+          args.to,
+          args.ctezSold * 1e6,
+          Math.floor(args.minTezBought * 1e6),
+          args.deadline.toISOString(),
+        )
+        .toTransferParams(),
+    },
+    {
+      kind: OpKind.TRANSACTION,
+      ...CTezFa12.methods.approve(CTEZ_ADDRESS, 0).toTransferParams(),
+    },
+  ]);
+  const batchOperation = await batch.send();
+  return batchOperation;
+};
+
+export const tokenToToken = async (
+  args: TokenToTokenParams,
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'tokenToToken', [
+    args.outputCfmmContract,
+    args.minTokensBought * 1e6,
+    args.to,
+    args.tokensSold * 1e6,
+    args.deadline.toISOString(),
+  ]);
+  return operation;
 };

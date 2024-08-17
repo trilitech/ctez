@@ -9,7 +9,6 @@ import { APP_NAME, NETWORK, RPC_URL, RPC_PORT, CTEZ_ADDRESS } from './utils/glob
 import { getBeaconInstance, isWalletConnected } from './wallet';
 import { AppRouter } from './router';
 import { initCTez } from './contracts/ctez';
-import { initCfmm } from './contracts/cfmm';
 import { logger } from './utils/logger';
 import { getNodePort, getNodeURL } from './utils/settingUtils';
 import ModalContainer from './components/modals/ModalContainer';
@@ -38,7 +37,6 @@ const App: React.FC = () => {
         initTezos(nodeUrl ?? RPC_URL, nodePort ?? RPC_PORT);
         await checkWalletConnection();
         CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
-        CTEZ_ADDRESS && (await initCfmm(CTEZ_ADDRESS));
       } catch (error : any) {
         logger.error(error);
       }

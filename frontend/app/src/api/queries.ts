@@ -1,7 +1,6 @@
 import { AxiosError } from 'axios';
 import { useQueries, useQuery } from 'react-query';
 import { UseQueryResult } from 'react-query/types/react/types';
-import { getCfmmStorage } from '../contracts/cfmm';
 import {
   getActualCtezStorage,
   getAllOvens,
@@ -17,7 +16,6 @@ import {
   AllOvenDatum,
   Baker,
   BaseStats,
-  CfmmStorage,
   CTezStorage,
   Oven,
   OvenStorage,
@@ -63,18 +61,7 @@ export const useUserBalance = (userAddress?: string) => {
     },
   );
 };
-export const useCfmmStorage = () => {
-  return useQuery<CfmmStorage, AxiosError, CfmmStorage>(
-    ['cfmmStorage'],
-    async () => {
-      return getCfmmStorage();
-    },
-    {
-      refetchInterval: 30000,
-      staleTime: 3000,
-    },
-  );
-};
+
 
 export const useCtezStorage = () => {
   return useQuery<CTezStorage, AxiosError, CTezStorage>(

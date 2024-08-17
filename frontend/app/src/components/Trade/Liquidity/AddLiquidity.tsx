@@ -10,7 +10,7 @@ import { useCtezStorage, useUserBalance } from '../../../api/queries';
 
 import { AddLiquidityParams, HalfDex } from '../../../interfaces';
 import { ADD_BTN_TXT, IAddLiquidityForm } from '../../../constants/liquidity';
-import { addLiquidity } from '../../../contracts/cfmm';
+import { addLiquidity } from '../../../contracts/ctez';
 import { logger } from '../../../utils/logger';
 import { BUTTON_TXT, TOKEN } from '../../../constants/swap';
 import Button from '../../button';

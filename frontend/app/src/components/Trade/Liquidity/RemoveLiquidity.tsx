@@ -6,17 +6,15 @@ import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
 import BigNumber from 'bignumber.js';
 import { RemoveLiquidityParams } from '../../../interfaces';
-import { removeLiquidity } from '../../../contracts/cfmm';
+import { removeLiquidity } from '../../../contracts/ctez';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
 import { useWallet } from '../../../wallet/hooks';
-import { useActualCtezStorage, useCtezStorage, useUserLqtData } from '../../../api/queries';
+import { useActualCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import {
-  formatNumber,
   formatNumberStandard,
-  inputFormatNumberStandard,
 } from '../../../utils/numbers';
 import { BUTTON_TXT, TOKEN } from '../../../constants/swap';
 import { calcRedeemedAmount } from './utlils';
@@ -32,8 +30,7 @@ const RemoveLiquidity: React.FC = () => {
     minSubsidyReceived: 0,
   });
   const toast = useToast();
-  const { data: ctezStorage } = useCtezStorage();
-  const { data: actualCtezStorage } = useActualCtezStorage();
+  const { data: ctezStorage } = useActualCtezStorage();
   const { t } = useTranslation(['common']);
   const [text2, inputbg, text4, maxColor] = useThemeColors([
     'text2',
@@ -56,9 +53,9 @@ const RemoveLiquidity: React.FC = () => {
           minProceedsReceived: 0,
           minSubsidyReceived: 0,
         });
-      } else if (ctezStorage && actualCtezStorage && userAddress) {
-        const dex = isCtezSide ? actualCtezStorage.sell_ctez : actualCtezStorage.sell_tez;
-        const account = await (isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez).liquidity_owners.get(userAddress);
+      } else if (ctezStorage && userAddress) {
+        const dex = isCtezSide ?ctezStorage.sell_ctez : ctezStorage.sell_tez;
+        const account = await dex.liquidity_owners.get(userAddress);
         const slippageFactor = (1 - slippage * 0.01);
         const lqtBurnedNat = BigNumber.min(lqtBurned, lqtBalance).multipliedBy(1e6);
         const minSelfReceived = calcRedeemedAmount(lqtBurnedNat, dex.self_reserves, dex.total_liquidity_shares, new BigNumber(0)).multipliedBy(slippageFactor);
@@ -72,7 +69,7 @@ const RemoveLiquidity: React.FC = () => {
         });
       }
     },
-    [ctezStorage, actualCtezStorage, slippage, side],
+    [ctezStorage, slippage, side],
   );
 
   const initialValues: IRemoveLiquidityForm = {
