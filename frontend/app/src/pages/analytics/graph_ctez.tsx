@@ -57,7 +57,8 @@ const GraphCtez: React.FC = () => {
         source: chartData
       }],
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
+        valueFormatter: (v: unknown) => `${numberToMillionOrBillionFormate(v, 6)} tez`
       },
       xAxis: {
         type: 'time',

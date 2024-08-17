@@ -38,7 +38,8 @@ const GraphTVL: React.FC = () => {
         source: chartData
       }],
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
+        valueFormatter: (v: unknown) => `$${numberToMillionOrBillionFormate(v)}`
       },
       xAxis: {
         type: 'time',
