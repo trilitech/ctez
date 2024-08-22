@@ -13,9 +13,6 @@ import { useActualCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
-import {
-  formatNumberStandard,
-} from '../../../utils/numbers';
 import { BUTTON_TXT, TOKEN } from '../../../constants/swap';
 import { calcRedeemedAmount } from './utlils';
 import DexSideSelector, { DexSide } from './DexSideSelector';
@@ -25,9 +22,9 @@ const RemoveLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [side, setSide] = React.useState<DexSide>('ctez')
   const [otherValues, setOtherValues] = useState({
-    minSelfReceived: 0,
-    minProceedsReceived: 0,
-    minSubsidyReceived: 0,
+    minSelfReceived: '0',
+    minProceedsReceived: '0',
+    minSubsidyReceived: '0',
   });
   const toast = useToast();
   const { data: ctezStorage } = useActualCtezStorage();
@@ -49,9 +46,9 @@ const RemoveLiquidity: React.FC = () => {
     async (lqtBurned: BigNumber) => {
       if (!lqtBurned) {
         setOtherValues({
-          minSelfReceived: 0,
-          minProceedsReceived: 0,
-          minSubsidyReceived: 0,
+          minSelfReceived: '0',
+          minProceedsReceived: '0',
+          minSubsidyReceived: '0',
         });
       } else if (ctezStorage && userAddress) {
         const dex = isCtezSide ?ctezStorage.sell_ctez : ctezStorage.sell_tez;
@@ -63,9 +60,9 @@ const RemoveLiquidity: React.FC = () => {
         const minSubsidyReceived = calcRedeemedAmount(lqtBurnedNat, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0)).multipliedBy(slippageFactor);
 
         setOtherValues({
-          minSelfReceived: formatNumberStandard(minSelfReceived.dividedBy(1e6).toNumber()),
-          minProceedsReceived: formatNumberStandard(minProceedsReceived.dividedBy(1e6).toNumber()),
-          minSubsidyReceived: formatNumberStandard(minSubsidyReceived.dividedBy(1e6).toNumber()),
+          minSelfReceived: minSelfReceived.dividedBy(1e6).toFixed(6, BigNumber.ROUND_CEIL),
+          minProceedsReceived: minProceedsReceived.dividedBy(1e6).toFixed(6, BigNumber.ROUND_CEIL),
+          minSubsidyReceived: minSubsidyReceived.dividedBy(1e6).toFixed(6, BigNumber.ROUND_CEIL),
         });
       }
     },
@@ -111,9 +108,9 @@ const RemoveLiquidity: React.FC = () => {
           deadline,
           to: userAddress,
           lqtBurned: new BigNumber(formData.lqtBurned).multipliedBy(1e6),
-          minSelfReceived: otherValues.minSelfReceived,
-          minProceedsReceived: otherValues.minProceedsReceived,
-          minSubsidyReceived: otherValues.minSubsidyReceived,
+          minSelfReceived: new BigNumber(otherValues.minSelfReceived).multipliedBy(1e6),
+          minProceedsReceived: new BigNumber(otherValues.minProceedsReceived).multipliedBy(1e6),
+          minSubsidyReceived: new BigNumber(otherValues.minSubsidyReceived).multipliedBy(1e6),
           isCtezSide,
         };
         const result = await removeLiquidity(data, userAddress);

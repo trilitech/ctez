@@ -17,9 +17,9 @@ export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;
   lqtBurned: BigNumber;
-  minSelfReceived : number;
-  minProceedsReceived: number;
-  minSubsidyReceived: number;
+  minSelfReceived : BigNumber;
+  minProceedsReceived: BigNumber;
+  minSubsidyReceived: BigNumber;
   isCtezSide: boolean;
 }
 

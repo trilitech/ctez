@@ -10,9 +10,6 @@ import { useWallet } from '../../../wallet/hooks';
 import { useActualCtezStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
-import {
-  formatNumberStandard,
-} from '../../../utils/numbers';
 import { calcRedeemedAmount } from './utlils';
 import DexSideSelector, { DexSide } from './DexSideSelector';
 import TokenInputIcon from '../TokenInputIcon';
@@ -22,8 +19,8 @@ const CollectFromLiquidity: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [side, setSide] = React.useState<DexSide>('ctez')
   const [otherValues, setOtherValues] = useState({
-    proceedsReceived: 0,
-    subsidyReceived: 0,
+    proceedsReceived: '0',
+    subsidyReceived: '0',
   });
   const toast = useToast();
   const { data: ctezStorage } = useActualCtezStorage();
@@ -42,18 +39,18 @@ const CollectFromLiquidity: React.FC = () => {
     async () => {
       if (!lqtBalance) {
         setOtherValues({
-          proceedsReceived: 0,
-          subsidyReceived: 0,
+          proceedsReceived: '0',
+          subsidyReceived: '0',
         });
       } else if (ctezStorage && userAddress) {
         const dex = isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez;
         const account = await dex.liquidity_owners.get(userAddress);
-        const proceedsReceived = calcRedeemedAmount(lqtBalance, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed || new BigNumber(0));
-        const subsidyReceived = calcRedeemedAmount(lqtBalance, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed || new BigNumber(0));
+        const proceedsReceived = calcRedeemedAmount(lqtBalance, dex.proceeds_reserves, dex.total_liquidity_shares, account?.proceeds_owed ?? new BigNumber(0));
+        const subsidyReceived = calcRedeemedAmount(lqtBalance, dex.subsidy_reserves, dex.total_liquidity_shares, account?.subsidy_owed ?? new BigNumber(0));
 
         setOtherValues({
-          proceedsReceived: formatNumberStandard(proceedsReceived.toNumber() / 1e6),
-          subsidyReceived: formatNumberStandard(subsidyReceived.toNumber() / 1e6),
+          proceedsReceived: proceedsReceived.dividedBy(1e6).toFixed(6, BigNumber.ROUND_CEIL),
+          subsidyReceived: subsidyReceived.dividedBy(1e6).toFixed(6, BigNumber.ROUND_CEIL),
         });
       }
     },
@@ -97,7 +94,7 @@ const CollectFromLiquidity: React.FC = () => {
       return { buttonText: COLLECT_BTN_TXT.CONNECT, errorList: [] };
     }
     if (lqtBalance.isGreaterThan(0)) {
-      if (!otherValues.proceedsReceived && !otherValues.subsidyReceived) {
+      if (new BigNumber(otherValues.proceedsReceived).isZero() && new BigNumber(otherValues.subsidyReceived).isZero()) {
         return { buttonText: COLLECT_BTN_TXT.NO_WITHDRAWS, errorList: [COLLECT_BTN_TXT.NO_WITHDRAWS] };
       }
       return { buttonText: COLLECT_BTN_TXT.REDEEM, errorList: [] };

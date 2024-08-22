@@ -503,10 +503,10 @@ export const removeLiquidity = async (
 
   const hash = await cTez.methods[args.isCtezSide ? 'remove_ctez_liquidity' : 'remove_tez_liquidity'](
     args.to,
-    args.lqtBurned.toString(10),
-    args.minSelfReceived * 1e6,
-    args.minProceedsReceived * 1e6,
-    args.minSubsidyReceived * 1e6,
+    args.lqtBurned.integerValue().toString(10),
+    args.minSelfReceived.integerValue().toString(10),
+    args.minProceedsReceived.integerValue().toString(10),
+    args.minSubsidyReceived.integerValue().toString(10),
     args.deadline.toISOString(),
   ).send();
   return hash;
