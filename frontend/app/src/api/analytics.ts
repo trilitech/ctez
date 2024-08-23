@@ -1,7 +1,5 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
-import { getAllOvens } from "../contracts/ctez";
-import { getOvenSummary } from "../hooks/utilHooks";
 import {
   CtezStatsGql, OneLineGraph, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql,
   SwapTransactionsGql, TradeVolumeGql, TvlData, TvlDataALL, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto,
@@ -103,14 +101,14 @@ export const useOvensTvlGraphGql = () => {
   return useQuery<OvenTvlGql[], Error>(
     'ovens_tvl_gql',
     async () => {
-      const count = await getCountGql('ca_tvl_history_1d_aggregate');
+      const count = await getCountGql('ovens_tvl_bucket_day_aggregate');
       const query = `
         query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
-          tvl_history: ca_tvl_history_1d(where: {bucket_1d: {_gte: $from, _lte: $to}}) {
-            timestamp: bucket_1d
+          tvl_history: ovens_tvl_bucket_day(where: {timestamp: {_gte: $from, _lte: $to}, partial: {_is_null: true}}) {
+            timestamp: timestamp
             tvl: tvl_usd
           }
-       }
+        }
       `;
       const chunks = await getBatchesGql(count, query);
       return chunks.flatMap(response => response.data.data.tvl_history);
@@ -242,7 +240,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
       const count = await getCountGql(`${entity}_aggregate`, filter);
       const query = `
         query {
-          ${entity}(${filter}, order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(${filter}, order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
             account
             amount
             id
@@ -250,7 +248,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
             oven {
               address
             }
-            router_stats {
+            price_history {
               target_price
               timestamp
             }
@@ -264,9 +262,9 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
         amount: dto.amount,
         id: dto.id,
         oven_address: dto.oven.address,
-        target_price: dto.router_stats.target_price,
+        target_price: dto.price_history.target_price,
         transaction_hash: dto.transaction_hash,
-        timestamp: dto.router_stats.timestamp,
+        timestamp: dto.price_history.timestamp,
       } as OvenTransactionGql)));
 
       return data;
@@ -333,12 +331,12 @@ export const useAddLiquidityTransactionsGql = () => {
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
-          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
             account
             dex
             self_amount
             id
-            router_stats {
+            price_history {
               timestamp
             }
             transaction_hash
@@ -351,7 +349,7 @@ export const useAddLiquidityTransactionsGql = () => {
         account: dto.account,
         dex: dto.dex,
         self_amount: dto.self_amount,
-        timestamp: dto.router_stats.timestamp,
+        timestamp: dto.price_history.timestamp,
         transaction_hash: dto.transaction_hash
       } as AddLiquidityTransactionsGql)));
 
@@ -369,7 +367,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
-          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
             dex
             account
             id
@@ -377,7 +375,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
             self_redeemed
             subsidy_redeemed
             transaction_hash
-            router_stats {
+            price_history {
               timestamp
             }
           }
@@ -391,7 +389,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
         self_redeemed: dto.self_redeemed,
         proceeds_redeemed: dto.proceeds_redeemed,
         subsidy_redeemed: dto.subsidy_redeemed,
-        timestamp: dto.router_stats.timestamp,
+        timestamp: dto.price_history.timestamp,
         transaction_hash: dto.transaction_hash
       } as RemoveLiquidityTransactionsGql)));
 
@@ -409,14 +407,14 @@ export const useCollectFromLiquidityTransactionsGql = () => {
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
-          ${entity}(order_by: {router_stats: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
             dex
             account
             id
             proceeds_withdrawn
             subsidy_withdrawn
             transaction_hash
-            router_stats {
+            price_history {
               timestamp
             }
           }
@@ -429,7 +427,7 @@ export const useCollectFromLiquidityTransactionsGql = () => {
         dex: dto.dex,
         proceeds_withdrawn: dto.proceeds_withdrawn,
         subsidy_withdrawn: dto.subsidy_withdrawn,
-        timestamp: dto.router_stats.timestamp,
+        timestamp: dto.price_history.timestamp,
         transaction_hash: dto.transaction_hash
       } as CollectFromLiquidityTransactionsGql)));
 

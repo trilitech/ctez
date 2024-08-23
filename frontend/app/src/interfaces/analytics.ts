@@ -58,7 +58,7 @@ export interface OvenTransactionDtoGql {
   oven: {
     address: string;
   };
-  router_stats: {
+  price_history: {
     target_price: number;
     timestamp: string;
   };
@@ -97,7 +97,7 @@ export interface AddLiquidityTransactionsDto {
   dex: 'sell_ctez' | 'sell_tez';
   self_amount: string;
   id: string;
-  router_stats: {
+  price_history: {
     timestamp: string;
   },
   transaction_hash: string;
@@ -119,7 +119,7 @@ export interface RemoveLiquidityTransactionsDto {
   proceeds_redeemed: string;
   subsidy_redeemed: string;
   id: string;
-  router_stats: {
+  price_history: {
     timestamp: string;
   },
   transaction_hash: string;
@@ -142,7 +142,7 @@ export interface CollectFromLiquidityTransactionsDto {
   proceeds_withdrawn: string;
   subsidy_withdrawn: string;
   id: string;
-  router_stats: {
+  price_history: {
     timestamp: string;
   },
   transaction_hash: string;
