@@ -12,8 +12,8 @@ const GraphAMMVolume: React.FC = () => {
     const [background] = useThemeColors([
         'cardbg2',
     ]);
-    const { data: chartData1d = false } = useTradeVolumeGql('1d');
-    const { data: chartData30d = false } = useTradeVolumeGql('30d');
+    const { data: chartData1d = false } = useTradeVolumeGql('day');
+    const { data: chartData30d = false } = useTradeVolumeGql('month');
 
     const [value, setValue] = useState<number | undefined>();
     const [time, setTime] = useState<number | undefined>();

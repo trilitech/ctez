@@ -1,9 +1,9 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
 import {
-  CtezStatsGql, OneLineGraph, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql,
-  SwapTransactionsGql, TradeVolumeGql, TvlData, TvlDataALL, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto,
-  RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql
+  CtezStatsGql, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql,
+  SwapTransactionsGql, TradeVolumeGql, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto,
+  RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql, AmmTvlGql
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 
@@ -97,21 +97,24 @@ export const useCtezGraphCurrentPointGql = () => {
   );
 };
 
-export const useOvensTvlGraphGql = () => {
+// TODO: refactor
+export const useOvensTvlGraphGql = (range: 'day' | 'month' | 'hour') => {
   return useQuery<OvenTvlGql[], Error>(
-    'ovens_tvl_gql',
+    ['ovens_tvl_gql', range],
     async () => {
-      const count = await getCountGql('ovens_tvl_bucket_day_aggregate');
+      const entry = `ovens_tvl_bucket_${range}`;
+      const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_is_null: true}}';
+      const count = await getCountGql(`${entry}_aggregate`, filter);
       const query = `
-        query tvl_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
-          tvl_history: ovens_tvl_bucket_day(where: {timestamp: {_gte: $from, _lte: $to}, partial: {_is_null: true}}) {
-            timestamp: timestamp
+        query {
+          ${entry}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            timestamp
             tvl: tvl_usd
           }
         }
       `;
       const chunks = await getBatchesGql(count, query);
-      return chunks.flatMap(response => response.data.data.tvl_history);
+      return chunks.flatMap(response => response.data.data[entry]);
     }
   );
 };
@@ -273,15 +276,39 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
   );
 };
 
-export const useTradeVolumeGql = (range: '1d' | '30d') => {
+export const useAmmTvlGql = (range: 'day' | 'month' | 'hour') => {
+  return useQuery<AmmTvlGql[], Error>(
+    ['amm_tvl_gql', range],
+    async () => {
+      const entity = `amm_tvl_bucket_${range}`;
+      const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_is_null: true}}';
+      const count = await getCountGql(`${entity}_aggregate`, filter);
+      const query = `
+        query {
+         ${entity}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            timestamp
+            tvl: tvl_usd
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(count, query);
+      const data = chunks.flatMap(response => response.data.data[entity]);
+
+      return data;
+    }
+  );
+};
+
+export const useTradeVolumeGql = (range: 'day' | 'month' | 'hour') => {
   return useQuery<TradeVolumeGql[], Error>(
     ['trade_volume_gql', range],
     async () => {
-      const count = await getCountGql(`ca_trade_volume_history_${range}_aggregate`);
+      const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_is_null: true}}';
+      const count = await getCountGql(`trade_volume_bucket_${range}_aggregate`, filter);
       const query = `
-        query trade_volume_chart_query($from: timestamptz="2018-07-01",$to: timestamptz="NOW()") {
-          trade_volume: ca_trade_volume_history_${range}(where: {bucket_${range}: {_gte: $from, _lte: $to}}) {
-            timestamp: bucket_${range}
+        query {
+          trade_volume: trade_volume_bucket_${range}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            timestamp
             volume_usd
           }
         }
@@ -436,45 +463,3 @@ export const useCollectFromLiquidityTransactionsGql = () => {
     { refetchInterval: 30_000 },
   );
 };
-
-const analyticsAPI = axios.create({
-  baseURL: 'https://analyticsapi.ctez.app'
-});
-
-export const useCtezGraphAMMTVL = () => {
-  return useQuery<OneLineGraph[], Error>(
-    'ctez_graph_TVL_on',
-    async () => {
-      const data = await analyticsAPI.get('/tvl');
-      const ctezgraphTVL: TvlData[] = data.data;
-      ctezgraphTVL.sort((a, b) => a.epochTimestamp - b.epochTimestamp);
-      const data1: OneLineGraph[] = ctezgraphTVL.map((e) => {
-        return <OneLineGraph>{
-          value: e.ammTvl,
-          time: e.epochTimestamp
-        }
-      })
-      return data1;
-    },
-    { refetchInterval: 30_000 },
-  );
-};
-export const useCtezGraphAMMTVLAll = () => {
-  return useQuery<OneLineGraph[], Error>(
-    'ctez_graph_TVL_all_on',
-    async () => {
-      const data = await analyticsAPI.get('/tvl_all');
-      const ctezgraphTVL: TvlDataALL[] = data.data;
-      ctezgraphTVL.sort((a, b) => a.epochTimestampFrom - b.epochTimestampFrom);
-      const data1: OneLineGraph[] = ctezgraphTVL.map((e) => {
-        return <OneLineGraph>{
-          value: e.ammTvl,
-          time: e.epochTimestampFrom
-        }
-      })
-      return data1;
-    },
-    { refetchInterval: 30_000 },
-  );
-};
-

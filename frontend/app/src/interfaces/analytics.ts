@@ -1,26 +1,3 @@
-export interface TvlData {
-  ovenTvl: number;
-  epochTimestamp: number;
-  timestamp: Date;
-  ammTvl: number;
-  id: number;
-}
-
-export interface TvlDataALL {
-  ammTvl: number;
-  epochTimestampFrom: any;
-  epochTimestampTo: any;
-  id: number;
-  timestampFrom: Date;
-  timestampTo: Date;
-  ovenTvl: number;
-}
-
-export interface OneLineGraph {
-  value: number | string;
-  time: number | string | Date;
-}
-
 export interface CtezStatsGql {
   id: string;
   timestamp: string;
@@ -78,6 +55,12 @@ export interface OvenTransactionGql {
 export interface TradeVolumeGql {
   id: string;
   volume_usd: number;
+  timestamp: string;
+}
+
+export interface AmmTvlGql {
+  id: string;
+  tvl: number;
   timestamp: string;
 }
 

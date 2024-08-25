@@ -13,7 +13,7 @@ const GraphTVL: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  const { data: historicalData = false } = useOvensTvlGraphGql();
+  const { data: historicalData = false } = useOvensTvlGraphGql('day');
   const { data: currentPoint } = useOvensTvlCurrentPointGql();
   const chartData = useMemo(
     () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
