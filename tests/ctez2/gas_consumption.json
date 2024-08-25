@@ -20,12 +20,12 @@
         "paid_storage_size_diff": 80
     },
     "collect_from_ctez_liquidity": {
-        "consumed_gas": 6034,
+        "consumed_gas": 6036,
         "consumed_mutez": 1195,
         "paid_storage_size_diff": 1
     },
     "collect_from_tez_liquidity": {
-        "consumed_gas": 8177,
+        "consumed_gas": 8178,
         "consumed_mutez": 1158,
         "paid_storage_size_diff": 0
     },
@@ -35,7 +35,7 @@
         "paid_storage_size_diff": 1286
     },
     "ctez_to_tez": {
-        "consumed_gas": 5995,
+        "consumed_gas": 5994,
         "consumed_mutez": 66969,
         "paid_storage_size_diff": 7
     },
@@ -50,17 +50,17 @@
         "paid_storage_size_diff": 0
     },
     "oven_deposit": {
-        "consumed_gas": 6865,
-        "consumed_mutez": 1204,
+        "consumed_gas": 6878,
+        "consumed_mutez": 1205,
         "paid_storage_size_diff": 1
     },
     "remove_ctez_liquidity": {
-        "consumed_gas": 8774,
+        "consumed_gas": 8776,
         "consumed_mutez": 1259,
         "paid_storage_size_diff": 0
     },
     "remove_tez_liquidity": {
-        "consumed_gas": 8766,
+        "consumed_gas": 8768,
         "consumed_mutez": 1257,
         "paid_storage_size_diff": 0
     },
