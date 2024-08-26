@@ -32,8 +32,7 @@ const getCountGql = async (entity: string, args = ''): Promise<number> => {
   return response.data.data[entity].aggregate.count as number;
 }
 
-const getBatchesGql = async (count: number, queryTemplate: string, limit = 1000): Promise<AxiosResponse<any>[]> => {
-  const batchSize = 1000;
+const getBatchesGql = async (count: number, queryTemplate: string, batchSize = 1000): Promise<AxiosResponse<any>[]> => {
   const chunkPromises = Array.from(Array(Math.ceil(count / batchSize)), (_, i) => {
     const chunkQuery = queryTemplate
       .replace('<LIMIT>', batchSize.toString())
@@ -97,7 +96,6 @@ export const useCtezGraphCurrentPointGql = () => {
   );
 };
 
-// TODO: refactor
 export const useOvensTvlGraphGql = (range: 'day' | 'month' | 'hour') => {
   return useQuery<OvenTvlGql[], Error>(
     ['ovens_tvl_gql', range],
@@ -240,7 +238,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
     async () => {
       const entity = 'oven_transaction_history';
       const filter = `where: {transaction_type: {_eq: "${type}"}}`;
-      const count = await getCountGql(`${entity}_aggregate`, filter);
+      const count = 1000; // await getCountGql(`${entity}_aggregate`, filter);
       const query = `
         query {
           ${entity}(${filter}, order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -259,7 +257,7 @@ export const useOvensTransactionsGql = (type: 'deposit' | 'burn' | 'mint' | 'wit
         }
       `;
 
-      const chunks = await getBatchesGql(count, query);
+      const chunks = await getBatchesGql(count, query, 1000);
       const data = chunks.flatMap(response => response.data.data[entity].map((dto: OvenTransactionDtoGql) => ({
         account: dto.account,
         amount: dto.amount,
@@ -325,7 +323,7 @@ export const useSwapTransactionsGql = () => {
   return useQuery<SwapTransactionsGql[], Error>(
     ['swap_transactions_gql'],
     async () => {
-      const count = await getCountGql('swap_transaction_history_aggregate');
+      const count = 1000; // await getCountGql('swap_transaction_history_aggregate');
       const entity = 'swap_transaction_history';
       const query = `
         query {
@@ -341,7 +339,7 @@ export const useSwapTransactionsGql = () => {
           }
         }
       `;
-      const chunks = await getBatchesGql(count, query);
+      const chunks = await getBatchesGql(count, query, 1000);
       const data = chunks.flatMap(response => response.data.data[entity]);
 
       return data;
@@ -355,7 +353,7 @@ export const useAddLiquidityTransactionsGql = () => {
     ['add_liquidity_transactions_gql'],
     async () => {
       const entity = 'add_liquidity_transaction_history';
-      const count = await getCountGql(`${entity}_aggregate`);
+      const count = 1000; // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
           ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -370,7 +368,7 @@ export const useAddLiquidityTransactionsGql = () => {
           }
         }
       `;
-      const chunks = await getBatchesGql(count, query);
+      const chunks = await getBatchesGql(count, query, 1000);
       const data = chunks.flatMap(response => response.data.data[entity].map((dto: AddLiquidityTransactionsDto) => ({
         id: dto.id,
         account: dto.account,
@@ -391,7 +389,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
     ['remove_liquidity_transactions_gql'],
     async () => {
       const entity = 'remove_liquidity_transaction_history';
-      const count = await getCountGql(`${entity}_aggregate`);
+      const count = 1000 // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
           ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -408,7 +406,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
           }
         }
       `;
-      const chunks = await getBatchesGql(count, query);
+      const chunks = await getBatchesGql(count, query, 1000);
       const data = chunks.flatMap(response => response.data.data[entity].map((dto: RemoveLiquidityTransactionsDto) => ({
         id: dto.id,
         account: dto.account,
@@ -431,7 +429,7 @@ export const useCollectFromLiquidityTransactionsGql = () => {
     ['collect_from_liquidity_transactions_gql'],
     async () => {
       const entity = 'collect_from_liquidity_transaction_history';
-      const count = await getCountGql(`${entity}_aggregate`);
+      const count = 1000; // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
           ${entity}(order_by: {price_history: {timestamp: desc}}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -447,7 +445,7 @@ export const useCollectFromLiquidityTransactionsGql = () => {
           }
         }
       `;
-      const chunks = await getBatchesGql(count, query);
+      const chunks = await getBatchesGql(count, query, 1000);
       const data = chunks.flatMap(response => response.data.data[entity].map((dto: CollectFromLiquidityTransactionsDto) => ({
         id: dto.id,
         account: dto.account,
