@@ -65,10 +65,10 @@ class Ctez2CtezToTezTestCase(Ctez2BaseTestCase):
     @parameterized.expand(range(0, 2))
     def test_should_fail_if_sell_token_amount_too_small(self, sell_amount) -> None:
         ctez2, _, sender, receiver, *_ = self.default_setup(
-            tez_liquidity = 100_000_000,
+            tez_liquidity = 1
         )
 
-        with self.raises_michelson_error(Ctez2.Errors.SMALL_SELL_AMOUNT):
+        with self.raises_michelson_error(Ctez2.Errors.INSUFFICIENT_TOKENS_BOUGHT):
             ctez2.using(sender).ctez_to_tez(receiver, sell_amount, 0, self.get_future_timestamp()).send()
 
     def test_should_not_fail_if_bought_token_amount_is_zero(self) -> None:

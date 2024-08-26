@@ -115,14 +115,14 @@ let sell_tez_env : Half_dex.environment = {
   transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
   get_target_self_reserves = fun (c) -> max (Float64.mul c._Q c.target) 1n;
-  multiply_by_target = fun (c) (amt) -> Float64.mul amt c.target;
+  div_by_target = fun (c) (amt) -> Float64.mul amt c.target;
 }
 
 let sell_ctez_env : Half_dex.environment = {
   transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
-  multiply_by_target = fun (c) (amt) -> Float64.div amt c.target;
+  div_by_target = fun (c) (amt) -> Float64.div amt c.target;
 }
 
 (* housekeeping *)
@@ -444,5 +444,4 @@ let calc_sell_amount
   let dex, env = if is_sell_ctez_dex 
     then (s.sell_ctez, sell_ctez_env) 
     else (s.sell_tez, sell_tez_env) in
-  Half_dex.calc_self_tokens_to_sell dex s.context env proceeds_amount
-
+  Half_dex.Curve.swap_amount dex s.context env proceeds_amount

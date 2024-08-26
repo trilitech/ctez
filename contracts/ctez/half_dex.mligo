@@ -21,71 +21,8 @@ type environment = {
   transfer_self : Context.t -> address -> address -> nat -> operation; 
   transfer_proceeds : Context.t -> address -> nat -> operation; 
   get_target_self_reserves : Context.t -> nat;
-  multiply_by_target : Context.t -> nat -> nat;
+  div_by_target : Context.t -> nat -> nat;
 }
-
-module Curve = struct
-  (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the 
-      characteristic quantity [u = min(q/Q, 1)] where [q] is the current amount of the dex's 'self'
-      token and [Q] is the target amount.
-
-      The marginal price function is given as [dp/du(u) = target * (21 - 3 * u + 3 * u^2 - u^3) / 20]. 
-      Meaning the price of dex's 'self' token in 'proceed' token units is given by
-      {v
-        p(u_0 -> u_1) = ∫_{u_0}^{u_1} dp/du(u) du 
-                      = [target * (21 * u - 3 * u^2 / 2 + u^3 - u^4 / 4) / 20]_{u_1}^{u_0}
-      v}
-      for [u_1 < u_0]
-
-      For a swap we need to determine [y] for a given [x] such that [p(q/q -> (q - y) / Q) = x] where
-      [x] is the amount of 'proceed' token units to be traded for [y] 'self' token units.
-
-      Solving the above equation for [y] gives irrational solutions. We instead use Newton's method to
-      find an approximate solution. The Newton step is given as
-      {v
-        y_{i + 1} = y_i - p(q/Q, (q - y_i)/Q) / p'(q/Q, (q - y_i)/Q)
-                  = FullySimplify[%]
-                  = 3 y_i⁴ + 6 y_i² (q - Q)² + 8 y_i³ (-q + Q) + 80 Q³ x 
-                    -----------------------------------------------------------
-                    4 ((y_i - q)³ + 3 (y_i - q)² Q + 3 (y_i - q) Q² + 21 Q³)
-      v}
-
-      Note that since marginal price function is generally very nearly linear in the region [0, 1], 
-      so Newton converges stupidly fast.
-  *)
-
-  let newton_step (x : nat) (y : nat) (q : nat) (_Q : nat) : int =
-      (* Computes
-          3 y⁴ + 6 y² (q - Q)² + 8 y³ (-q + Q) + 80 Q³ x 
-          ---------------------------------------------------
-          4 ((y - q)³ + 3 (y - q)² Q + 3 (y - q) Q² + 21 Q³)
-      *)
-      let dq = min y q in
-      let q_m_Q = q - _Q in
-      let dq_m_q = dq - q in
-      let dq_m_q_sq = dq_m_q * dq_m_q in
-      let dq_m_q_cu = dq_m_q_sq * dq_m_q in
-      let _Q_sq = _Q * _Q in
-      let _Q_cu = _Q_sq * _Q in
-      let num = 3 * dq * dq * dq * dq + 6 * dq * dq * q_m_Q * q_m_Q + 8 * dq * dq * dq * (-q_m_Q) + 80 * _Q_cu * x in
-      let denom = 4 * (dq_m_q_cu + 3 * dq_m_q_sq * _Q + 3 * dq_m_q * _Q_sq + 21 * _Q_cu) in
-      num / denom
-
-  (** [swap_amount x q _Q] returns the swap amount for trading [x] units of the proceeds token 
-      for a half dex with total quantity [q] and target quantity [_Q]. 
-  *)
-  let swap_amount (x : nat) (q : nat) (_Q : nat) : nat = 
-    let q = min q _Q in
-    (* Initial guess for [y] is [x] *)
-    let y = x in
-    let y = clamp_nat (newton_step x y q _Q) in 
-    let y = clamp_nat (newton_step x y q _Q) in
-    let y = clamp_nat (newton_step x y q _Q) in
-    let result = y - y / 1_000_000_000 - 1 in
-    match is_nat result with
-    | None -> failwith Errors.small_sell_amount
-    | Some x -> x
-end
 
 type liquidity_owner = { 
   liquidity_shares : nat; (** the amount of liquidity shares owned by the account. *)
@@ -286,6 +223,89 @@ let remove_liquidity
     else ops in
   ops, t
 
+module Curve = struct
+  (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the 
+      characteristic quantity [u = min(q/Q, 1)] where [q] is the current amount of the dex's 'self'
+      token and [Q] is the target amount.
+
+      The marginal price function is given as [dp/du(u) = target * (21 - 3 * u + 3 * u^2 - u^3) / 20]. 
+      Meaning the price of dex's 'self' token in 'proceed' token units is given by
+      {v
+        p(u_0 -> u_1) = ∫_{u_0}^{u_1} dp/du(u) du 
+                      = [target * (21 * u - 3 * u^2 / 2 + u^3 - u^4 / 4) / 20]_{u_1}^{u_0}
+      v}
+      for [u_1 < u_0]
+
+      For a swap we need to determine [y] for a given [x] such that [p(q/q -> (q - y) / Q) = x] where
+      [x] is the amount of 'proceed' token units to be traded for [y] 'self' token units.
+
+      Solving the above equation for [y] gives irrational solutions. We instead use Newton's method to
+      find an approximate solution. The Newton step is given as
+      {v
+        y_{i + 1} = y_i - p(q/Q, (q - y_i)/Q) / p'(q/Q, (q - y_i)/Q)
+                  = FullySimplify[%]
+                  = 3 y_i⁴ + 6 y_i² (q - Q)² + 8 y_i³ (-q + Q) + 80 Q³ x 
+                    -----------------------------------------------------------
+                    4 ((y_i - q)³ + 3 (y_i - q)² Q + 3 (y_i - q) Q² + 21 Q³)
+      v}
+
+      Note that since marginal price function is generally very nearly linear in the region [0, 1], 
+      so Newton converges stupidly fast.
+  *)
+
+  [@inline]
+  let newton_step (x : nat) (y : nat) (q : nat) (_Q : nat) : int =
+      (* Computes
+          3 y⁴ + 6 y² (q - Q)² + 8 y³ (-q + Q) + 80 Q³ x 
+          ---------------------------------------------------
+          4 ((y - q)³ + 3 (y - q)² Q + 3 (y - q) Q² + 21 Q³)
+      *)
+      let dq = min y q in
+      let q_m_Q = q - _Q in
+      let dq_m_q = dq - q in
+      let dq_m_q_sq = dq_m_q * dq_m_q in
+      let dq_m_q_cu = dq_m_q_sq * dq_m_q in
+      let _Q_sq = _Q * _Q in
+      let _Q_cu = _Q_sq * _Q in
+      let num = 3 * dq * dq * dq * dq + 6 * dq * dq * q_m_Q * q_m_Q + 8 * dq * dq * dq * (-q_m_Q) + 80 * _Q_cu * x in
+      let denom = 4 * (dq_m_q_cu + 3 * dq_m_q_sq * _Q + 3 * dq_m_q * _Q_sq + 21 * _Q_cu) in
+      num / denom
+
+  [@inline]
+  let swap_using_exceed_liquidity (x : nat) (q : nat) (_Q : nat) : nat * nat =
+    let non_targeted_q = clamp_nat (q - _Q) in
+    let untaxed_y, rest_x = (min x non_targeted_q, clamp_nat (x - non_targeted_q)) in
+    rest_x, untaxed_y 
+    
+  [@inline]
+  let swap_using_incentivized_liquidity (x : nat) (q : nat) (_Q : nat) : nat =
+     let q = min q _Q in
+      (* Initial guess for [y] is [x] *)
+      let y = x in
+      let y = clamp_nat (newton_step x y q _Q) in 
+      let y = clamp_nat (newton_step x y q _Q) in
+      let y = clamp_nat (newton_step x y q _Q) in
+      clamp_nat (y - y / 1_000_000_000 - 1)
+
+  (** [swap_amount x q _Q] returns the swap amount for trading [x] units of the proceeds token 
+      for a half dex with total quantity [q] and target quantity [_Q]. 
+  *)
+  [@inline]
+  let swap_amount
+      (t : t) 
+      (ctxt : Context.t) 
+      (env : environment) 
+      (proceeds_amount : nat)
+      : nat =
+    let x = env.div_by_target ctxt proceeds_amount in
+    let q = t.self_reserves in
+    let _Q = env.get_target_self_reserves ctxt in
+    let x, y = swap_using_exceed_liquidity x q _Q in
+    if x = 0n 
+      then y
+      else y + (swap_using_incentivized_liquidity x q _Q)
+end
+
 type swap = {
   [@annot:to]
   to_: address; (** address that will own the 'self' tokens in the swap *)
@@ -294,15 +314,6 @@ type swap = {
   deadline : timestamp; (** deadline for the transaction *)
 }
 
-let calc_self_tokens_to_sell
-    (t : t) 
-    (ctxt : Context.t) 
-    (env : environment) 
-    (proceeds_amount : nat)
-    : nat =
-  let trade_amount = env.multiply_by_target ctxt proceeds_amount in
-  Curve.swap_amount trade_amount t.self_reserves (env.get_target_self_reserves ctxt)
-
 let swap 
     (t : t) 
     (ctxt : Context.t) 
@@ -310,8 +321,8 @@ let swap
     ({ to_; proceeds_amount; min_self; deadline } : swap)
     : t with_operations =
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
-  let self_to_sell = calc_self_tokens_to_sell t ctxt env proceeds_amount in
-  let () = Assert.Error.assert (self_to_sell >= min_self) Errors.insufficient_tokens_bought in
+  let self_to_sell = Curve.swap_amount t ctxt env proceeds_amount in
+  let () = Assert.Error.assert ((self_to_sell >= min_self) && (self_to_sell > 0n)) Errors.insufficient_tokens_bought in
   let t = { 
     t with
     self_reserves = subtract_nat t.self_reserves self_to_sell Errors.insufficient_tokens_liquidity; 
