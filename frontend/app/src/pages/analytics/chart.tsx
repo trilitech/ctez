@@ -2,6 +2,7 @@ import { init, getInstanceByDom, EChartsOption, ECharts, SetOptionOpts } from 'e
 import React, { useRef, useEffect, CSSProperties, useMemo } from 'react';
 import clsx from 'clsx'
 import { useColorMode } from '@chakra-ui/react';
+import useResizeObserver from '@react-hook/resize-observer'
 
 interface ChartProps {
   option: EChartsOption;
@@ -61,18 +62,18 @@ export const Chart = (props: ChartProps) => {
       chart = init(chartElRef.current, theme);
     }
 
-    const handleResize = () => {
-      setTimeout(() => {
-        chart?.resize();
-      });
-    };
-    window.addEventListener('resize', handleResize);
-
     return () => {
-      window.removeEventListener('resize', handleResize);
       chart?.dispose();
     };
   }, [theme]);
+
+  useResizeObserver(chartElRef.current, () => {
+    if (chartElRef.current) {
+      const chart = getInstanceByDom(chartElRef.current);
+      setTimeout(() => chart?.resize(), 0);
+      setTimeout(() => chart?.resize(), 1000);
+    }
+  });
 
   useEffect(() => {
     if (chartElRef.current) {

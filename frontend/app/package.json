@@ -8,6 +8,7 @@
     "@date-io/date-fns": "2.x",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
+    "@react-hook/resize-observer": "^2.0.2",
     "@reduxjs/toolkit": "^1.6.1",
     "@taquito/beacon-wallet": "^12.1.0",
     "@taquito/taquito": "^12.1.0",
