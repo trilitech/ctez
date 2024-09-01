@@ -274,12 +274,13 @@ module Curve = struct
   [@inline]
   let swap_using_exceed_liquidity (x : nat) (q : nat) (_Q : nat) : nat * nat =
     let non_targeted_q = clamp_nat (q - _Q) in
-    let untaxed_y, rest_x = (min x non_targeted_q, clamp_nat (x - non_targeted_q)) in
+    let rest_x = clamp_nat (x - non_targeted_q) in
+    let untaxed_y = min x non_targeted_q in
     rest_x, untaxed_y 
     
   [@inline]
   let swap_using_incentivized_liquidity (x : nat) (q : nat) (_Q : nat) : nat =
-     let q = min q _Q in
+      let q = min q _Q in
       (* Initial guess for [y] is [x] *)
       let y = x in
       let y = clamp_nat (newton_step x y q _Q) in 
