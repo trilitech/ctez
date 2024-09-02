@@ -131,28 +131,28 @@ const SignIn: React.FC = () => {
                     </Tr>
                   </>
                 )}
-                {typeof userLqtData?.tezDexLqt !== 'undefined' && (
+                {/* {typeof userLqtData?.tezDexLqt !== 'undefined' && (
                   <Tr>
                     <Td>Tez LQT:</Td>
                     <Td textAlign="right">
                       {userLqtData.tezDexLqt.dividedBy(1e6).toString(10)}
                     </Td>
                   </Tr>
-                )}
+                )} */}
                 {typeof userLqtData?.tezDexLqtShare !== 'undefined' && (
                   <Tr>
                     <Td>Tez LQT Pool share:</Td>
                     <Td textAlign="right">{userLqtData?.tezDexLqtShare.toFixed(2)}%</Td>
                   </Tr>
                 )}
-                {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
+                {/* {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
                   <Tr>
                     <Td>Ctez LQT:</Td>
                     <Td textAlign="right">
                       {userLqtData?.ctezDexLqt.dividedBy(1e6).toString(10)}
                     </Td>
                   </Tr>
-                )}
+                )} */}
                 {typeof userLqtData?.ctezDexLqtShare !== 'undefined' && (
                   <Tr>
                     <Td>Ctez LQT Pool share:</Td>

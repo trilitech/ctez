@@ -263,7 +263,7 @@ const Swap: React.FC = () => {
           />
           <TokenInputIcon token={formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez} />
         </InputGroup>
-        <Flex justifyContent="space-between" fontSize="xs" mt={1}>
+        <Flex justifyContent="space-between" fontSize="xs" mt={1} wrap="wrap">
           <Text color={text4} fontSize="xs">
             Balance:{' '}
             {formType === FORM_TYPE.CTEZ_TEZ
