@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery } from "@chakra-ui/react";
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
-import { useTradeVolumeGql } from "../../api/analytics";
+import { useTradeVolumeCurrentPointGql, useTradeVolumeGql } from "../../api/analytics";
 import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
@@ -12,13 +12,20 @@ const GraphAMMVolume: React.FC = () => {
     const [background] = useThemeColors([
         'cardbg2',
     ]);
-    const { data: chartData1d = false } = useTradeVolumeGql('day');
-    const { data: chartData30d = false } = useTradeVolumeGql('month');
+    const { data: historicalData1d = false } = useTradeVolumeGql('day');
+    const { data: currentPoint1d = false } = useTradeVolumeCurrentPointGql('day');
+    const { data: historicalData30d = false } = useTradeVolumeGql('month');
+    const { data: currentPoint30d = false } = useTradeVolumeCurrentPointGql('month');
 
     const [value, setValue] = useState<number | undefined>();
     const [time, setTime] = useState<number | undefined>();
     const [activeTab, setActiveTab] = useState('1d');
-    const chartData = activeTab === '1m' ? chartData30d : chartData1d;
+    const historicalData = activeTab === '1m' ? historicalData30d : historicalData1d;
+    const currentPoint = activeTab === '1m' ? currentPoint30d : currentPoint1d;
+    const chartData = useMemo(
+        () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
+        [historicalData, currentPoint, activeTab]
+    );
     // graph options
     const dateFormat = useMemo(() => format('MMM d, yyyy'), []);
     const dateFormat2 = useMemo(() => format('MMM, yyyy'), []);

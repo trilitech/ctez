@@ -38,9 +38,10 @@ const OvenTable: React.FC = () => {
                     <Td isNumeric borderBottom={0} textAlign='left'>{numberToMillionOrBillionFormate(overData.total)}</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.created)}</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.liquidated)}</Td>
-                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(stats.totalBalance)} tez</Td>
-                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(stats.totalOutstandingCtez)} ctez</Td>
+                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.collateral_locked)} tez</Td>
+                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.total_debt)} ctez</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate((100 * (stats.totalBalance * 15) / (baseStats.currentTarget * 16)) / stats.totalOutstandingCtez)} %</Td>
+                    {/* <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.collateral_ratio)} %</Td> */}
                 </Tr> : <Tr>
                     <Td isNumeric><SkeletonText pr={6} noOfLines={1} spacing="1" /></Td>
                     <Td isNumeric><SkeletonText pr={6} noOfLines={1} spacing="1" /></Td>

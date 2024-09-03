@@ -2,7 +2,7 @@ import { Button, ButtonGroup, Flex, Skeleton, SkeletonText, Text, useMediaQuery 
 import React, { useMemo, useState } from "react";
 import { format } from 'date-fns/fp';
 import { graphic } from "echarts";
-import { useAmmTvlGql, useOvensTvlCurrentPointGql } from "../../api/analytics";
+import { useAmmTvlCurrentPointGql, useAmmTvlGql } from "../../api/analytics";
 import { useChartZoom, useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 import { ChartPure } from "./chart";
@@ -14,7 +14,7 @@ const GraphAMMTVL: React.FC = () => {
       'cardbg2',
     ]);
     const { data: historicalData = false } = useAmmTvlGql('day');
-    const currentPoint = undefined;
+    const { data: currentPoint = false } = useAmmTvlCurrentPointGql('day');
     const chartData = useMemo(
       () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
       [historicalData, currentPoint]

@@ -9,6 +9,16 @@ import { getBaseStats } from "./contracts";
 
 const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
 
+const getGqlResponse = async (query: string): Promise<AxiosResponse<any>> => {
+  return axios({
+    url: GQL_API_URL,
+    method: "POST",
+    data: {
+      query
+    }
+  });
+}
+
 const getCountGql = async (entity: string, args = ''): Promise<number> => {
   const header = `${entity}${args && `(${args})`}`;
   const query = `
@@ -21,14 +31,7 @@ const getCountGql = async (entity: string, args = ''): Promise<number> => {
     }
   `;
 
-  const response = await axios({
-    url: GQL_API_URL,
-    method: "POST",
-    data: {
-      query
-    }
-  });
-
+  const response = await getGqlResponse(query);
   return response.data.data[entity].aggregate.count as number;
 }
 
@@ -38,13 +41,7 @@ const getBatchesGql = async (count: number, queryTemplate: string, batchSize = 1
       .replace('<LIMIT>', batchSize.toString())
       .replace('<OFFSET>', (i * batchSize).toString());
 
-    return axios({
-      url: GQL_API_URL,
-      method: "POST",
-      data: {
-        query: chunkQuery
-      }
-    });
+    return getGqlResponse(chunkQuery);
   });
 
   return Promise.all(chunkPromises);
@@ -54,13 +51,13 @@ export const useCtezGraphGql = () => {
   return useQuery<CtezStatsGql[], Error>(
     'ctez_graph_gql',
     async () => {
-      const entity = 'router_stats';
+      const entity = 'protocol_price_history';
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
           ${entity}(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
             timestamp
-            current_avg_price
+            current_avg_price: ctez_avg_price
             target_price
             annual_drift_percent
             ctez_sell_price
@@ -150,7 +147,7 @@ export const useOvensSummaryGql = () => {
 };
 
 export const getTezosPriceGql = async () => {
-  const entity = 'quotes'
+  const entity = 'xtz_block_quote'
   const response = await axios({
     url: GQL_API_URL,
     method: "POST",
@@ -297,22 +294,67 @@ export const useAmmTvlGql = (range: 'day' | 'month' | 'hour') => {
   );
 };
 
+export const useAmmTvlCurrentPointGql = (range: 'day' | 'month' | 'hour') => {
+  return useQuery<AmmTvlGql, Error>(
+    ['amm_tvl_current_point_gql', range],
+    async () => {
+      const entity = `amm_tvl_bucket_${range}`;
+      const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_eq: true}}';
+      const query = `
+        query {
+         ${entity}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            timestamp
+            tvl: tvl_usd
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(1, query);
+      const data = chunks.flatMap(response => response.data.data[entity])[0];
+
+      return data;
+    }
+  );
+};
+
 export const useTradeVolumeGql = (range: 'day' | 'month' | 'hour') => {
   return useQuery<TradeVolumeGql[], Error>(
     ['trade_volume_gql', range],
     async () => {
+      const entry = `trade_volume_bucket_${range}`;
       const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_is_null: true}}';
-      const count = await getCountGql(`trade_volume_bucket_${range}_aggregate`, filter);
+      const count = await getCountGql(`${entry}_aggregate`, filter);
       const query = `
         query {
-          trade_volume: trade_volume_bucket_${range}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entry}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
             timestamp
             volume_usd
           }
         }
       `;
       const chunks = await getBatchesGql(count, query);
-      const data = chunks.flatMap(response => response.data.data.trade_volume);
+      const data = chunks.flatMap(response => response.data.data[entry]);
+
+      return data;
+    }
+  );
+};
+
+export const useTradeVolumeCurrentPointGql = (range: 'day' | 'month' | 'hour') => {
+  return useQuery<TradeVolumeGql, Error>(
+    ['trade_volume_current_point_gql', range],
+    async () => {
+      const entry = `trade_volume_bucket_${range}`;
+      const filter = 'where: {timestamp: {_gte: "2018-07-01", _lte: "NOW()"}, partial: {_eq: true}}';
+      const query = `
+        query {
+          ${entry}(${filter}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+            timestamp
+            volume_usd
+          }
+        }
+      `;
+      const chunks = await getBatchesGql(1, query);
+      const data = chunks.flatMap(response => response.data.data[entry])[0];
 
       return data;
     }
