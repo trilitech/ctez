@@ -48,7 +48,7 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
 };
 
 export const getActualCtezStorage = async (): Promise<CTezStorage> => {
-  const [storage, actualStorage] = await Promise.all([cTez.storage<CTezStorage>(), cTez.contractViews.get_current_state().executeView({ viewCaller: cTez.address })]);
+  const [storage, actualStorage] = await Promise.all([cTez.storage<CTezStorage>(),cTez.contractViews.get_current_state().executeView({ viewCaller: cTez.address })]);
   return {
     context: actualStorage.context,
     last_update: actualStorage.last_update,
@@ -81,71 +81,58 @@ export const getUserHalfDexLqtBalance = async (userAddress: string, ctezDex: boo
   return { lqt, lqtShare }
 }
 
-const clampNat = (val: BigNumber): BigNumber => {
-  return val.isPositive() ? val : new BigNumber(0);
-};
+export const calcSelfTokensToSell = (isSellCtezDex: boolean, storage: CTezStorage, proceedsAmount: BigNumber): number => {
+  const clampNat = (val: BigNumber): BigNumber => {
+    return val.isPositive() ? val : new BigNumber(0);
+  };
 
-const newtonStep = (x: BigNumber, y: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
-  /* Computes
-      3 y⁴ + 6 y² (q - Q)² + 8 y³ (-q + Q) + 80 Q³ x 
-      ---------------------------------------------------
-      4 ((y - q)³ + 3 (y - q)² Q + 3 (y - q) Q² + 21 Q³)
-  */
-  const dq = BigNumber.min(y, q);
-  const q_m_Q = q.minus(Q);
-  const dq_m_q = dq.minus(q);
-  const dq_m_q_sq = dq_m_q.multipliedBy(dq_m_q);
-  const dq_m_q_cu = dq_m_q_sq.multipliedBy(dq_m_q);
-  const Q_sq = Q.multipliedBy(Q);
-  const Q_cu = Q_sq.multipliedBy(Q);
-  const num = new BigNumber(3).multipliedBy(dq.pow(4))
-    .plus(new BigNumber(6).multipliedBy(dq.pow(2)).multipliedBy(q_m_Q.pow(2)))
-    .plus(new BigNumber(8).multipliedBy(dq.pow(3)).multipliedBy(-q_m_Q))
-    .plus(new BigNumber(80).multipliedBy(Q_cu).multipliedBy(x));
-  const denom = new BigNumber(4).multipliedBy(
-    dq_m_q_cu.plus(new BigNumber(3).multipliedBy(dq_m_q_sq).multipliedBy(Q))
-      .plus(new BigNumber(3).multipliedBy(dq_m_q).multipliedBy(Q_sq))
-      .plus(new BigNumber(21).multipliedBy(Q_cu))
-  );
-  return num.dividedToIntegerBy(denom)
-}
+  const newton_step = (x: BigNumber, y: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
+    /* Computes
+        3 y⁴ + 6 y² (q - Q)² + 8 y³ (-q + Q) + 80 Q³ x 
+        ---------------------------------------------------
+        4 ((y - q)³ + 3 (y - q)² Q + 3 (y - q) Q² + 21 Q³)
+    */
+    const dq = BigNumber.min(y, q);
+    const q_m_Q = q.minus(Q);
+    const dq_m_q = dq.minus(q);
+    const dq_m_q_sq = dq_m_q.multipliedBy(dq_m_q);
+    const dq_m_q_cu = dq_m_q_sq.multipliedBy(dq_m_q);
+    const Q_sq = Q.multipliedBy(Q);
+    const Q_cu = Q_sq.multipliedBy(Q);
+    const num = new BigNumber(3).multipliedBy(dq.pow(4))
+      .plus(new BigNumber(6).multipliedBy(dq.pow(2)).multipliedBy(q_m_Q.pow(2)))
+      .plus(new BigNumber(8).multipliedBy(dq.pow(3)).multipliedBy(-q_m_Q))
+      .plus(new BigNumber(80).multipliedBy(Q_cu).multipliedBy(x));
+    const denom = new BigNumber(4).multipliedBy(
+      dq_m_q_cu.plus(new BigNumber(3).multipliedBy(dq_m_q_sq).multipliedBy(Q))
+        .plus(new BigNumber(3).multipliedBy(dq_m_q).multipliedBy(Q_sq))
+        .plus(new BigNumber(21).multipliedBy(Q_cu))
+    );
+    return num.dividedToIntegerBy(denom)
+  }
 
-const getSwapAmountUsingExceedLiquidity = (x: BigNumber, q: BigNumber, Q: BigNumber): [BigNumber, BigNumber] => {
-  const non_targeted_q = clampNat(q.minus(Q));
-  const rest_x = clampNat(x.minus(non_targeted_q));
-  const untaxed_y = BigNumber.min(x, non_targeted_q);
-  return [rest_x, untaxed_y]
-}
+  const getSwapAmount = (x: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
+    q = BigNumber.min(q, Q);
+    let y = x;
+    y = clampNat(newton_step(x, y, q, Q));
+    y = clampNat(newton_step(x, y, q, Q));
+    y = clampNat(newton_step(x, y, q, Q));
+    const result = y.minus(y.dividedToIntegerBy(1_000_000_000)).minus(1);
+    return result.isPositive() ? result : new BigNumber(0);
+  };
 
-const getSwapAmountUsingIncentivizedLiquidity = (x: BigNumber, q: BigNumber, Q: BigNumber): BigNumber => {
-  q = BigNumber.min(q, Q);
-  let y = x;
-  y = clampNat(newtonStep(x, y, q, Q));
-  y = clampNat(newtonStep(x, y, q, Q));
-  y = clampNat(newtonStep(x, y, q, Q));
-  const result = y.minus(y.dividedToIntegerBy(1_000_000_000)).minus(1);
-  return result.isPositive() ? result : new BigNumber(0);
-};
-
-export const calcSelfTokensToSell = (isSellCtezDex: boolean, storage: CTezStorage, proceedsAmountNat: BigNumber): number => {
   const dex = isSellCtezDex ? storage.sell_ctez : storage.sell_tez;
-  const x = isSellCtezDex
-    ? proceedsAmountNat.multipliedBy(2 ** 64).dividedToIntegerBy(storage.context.target)
-    : proceedsAmountNat.multipliedBy(storage.context.target).dividedToIntegerBy(2 ** 64);
+  const tradeAmount = isSellCtezDex 
+  ? proceedsAmount.multipliedBy(2**64).dividedToIntegerBy(storage.context.target).integerValue() 
+  : proceedsAmount.multipliedBy(storage.context.target).dividedToIntegerBy(2**64).integerValue();
 
-  const q = dex.self_reserves;
-  const Q = isSellCtezDex
-    /* eslint-disable */
-    ? storage.context._Q
-    /* eslint-disable */
-    : BigNumber.max(storage.context._Q.multipliedBy(storage.context.target).dividedToIntegerBy(2 ** 64), 1);
+  const targetSelfReserves = isSellCtezDex 
+  /* eslint-disable */
+  ? storage.context._Q 
+  /* eslint-disable */
+  : BigNumber.max(storage.context._Q.multipliedBy(storage.context.target).dividedToIntegerBy(2**64).integerValue(), 1);
 
-  const [rest_x, y] = getSwapAmountUsingExceedLiquidity(x, q, Q);
-  const result = rest_x.isZero()
-    ? y
-    : y.plus(getSwapAmountUsingIncentivizedLiquidity(rest_x, q, Q));
-
-  return result.toNumber();
+  return getSwapAmount(tradeAmount, dex.self_reserves, targetSelfReserves).integerValue().toNumber();
 };
 
 export const calcSelfTokensToSellOnchain = async (isSellCtezDex: boolean, proceedsAmount: BigNumber): Promise<number> => {
@@ -445,7 +432,7 @@ export const getTokenAllowanceOps = async (
   const batchOps: WalletParamsWithKind[] = [];
   const maxTokensDeposited = tokenType === 'ctez' ? newAllowance * 1e6 : newAllowance;
   const currentAllowance = new BigNumber(
-    (await tokenContract.contractViews.viewAllowance({ owner: userAddress, spender: CTEZ_ADDRESS }).executeView({ viewCaller: tokenContract.address })) ?? 0,
+    (await tokenContract.contractViews.viewAllowance({ owner: userAddress, spender: CTEZ_ADDRESS }).executeView({viewCaller: tokenContract.address})) ?? 0,
   )
     .shiftedBy(-6)
     .toNumber();
@@ -500,7 +487,7 @@ export const addTezLiquidity = async (args: AddLiquidityParams): Promise<WalletO
     args.owner,
     args.minLqtMinted.toString(10),
     args.deadline.toISOString(),
-  ).send({ amount: args.amount })
+  ).send({amount: args.amount})
   return hash;
 };
 
