@@ -17,6 +17,7 @@ export interface OvenTvlGql {
 export interface OvenDonutGql {
   ctez_outstanding: number;
   address: string;
+  fee_index: number;
 }
 
 export interface OvensSummaryGql {

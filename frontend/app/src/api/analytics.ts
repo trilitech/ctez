@@ -7,6 +7,7 @@ import {
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
 import { INDEXER_URL as GQL_API_URL } from "../utils/globals"; 
+import { getOvenCtezOutstandingAndFeeIndex } from "../utils/ovenUtils";
 
 const getGqlResponse = async (query: string): Promise<AxiosResponse<any>> => {
   return axios({
@@ -193,33 +194,45 @@ export const useTopOvensGraphGql = () => {
   return useQuery<OvenDonutGql[], Error>(
     'top_ovens_gql',
     async () => {
-      const response = await axios({
-        url: GQL_API_URL,
-        method: "POST",
-        data: {
-          query: `
-            query {
-              oven(order_by: {ctez_outstanding: desc}, limit: 25) {
-                ctez_outstanding,
-                address
-                id: address
-              }
-              oven_aggregate(order_by: {ctez_outstanding: desc}, offset: 25) {
-                aggregate {
-                  sum {
-                    ctez_outstanding
-                  }
+      const [response, baseStats] = await Promise.all([
+        axios({
+          url: GQL_API_URL,
+          method: "POST",
+          data: {
+            query: `
+              query {
+                oven(order_by: {ctez_outstanding: desc}, limit: 25) {
+                  ctez_outstanding,
+                  address
+                  id: address 
+                  fee_index
+                }
+                oven_summary {
+                  total_debt
                 }
               }
-            }
-          `
-        }
+            `
+          }
+        }),
+        getBaseStats(),
+      ]);
+
+
+      let topOvensTotalOutstandingCtez = 0;
+      const ovens = response.data.data.oven.map((oven: OvenDonutGql) => {
+        const { ctezOutstanding: ctezOutstandingNat } = getOvenCtezOutstandingAndFeeIndex(oven.ctez_outstanding * 1e6, oven.fee_index, baseStats.ctezDexFeeIndex, baseStats.tezDexFeeIndex);
+        const ctezOutstanding = ctezOutstandingNat / 1e6
+        topOvensTotalOutstandingCtez += ctezOutstanding;
+        return {
+          ...oven,
+          ctez_outstanding: ctezOutstanding
+        } as OvenDonutGql
       });
 
-      const ovens = response.data.data.oven;
       const othersItem: OvenDonutGql = {
         address: 'Others',
-        ctez_outstanding: response.data.data.oven_aggregate.aggregate.sum.ctez_outstanding
+        ctez_outstanding: Number(response.data.data.oven_summary[0].total_debt) - topOvensTotalOutstandingCtez,
+        fee_index: 0
       };
       ovens.push(othersItem);
       return ovens;
