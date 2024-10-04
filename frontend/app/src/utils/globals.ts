@@ -13,3 +13,4 @@ export const CTEZ_CONTRACT_BIGMAP = process.env.REACT_APP_CTEZ_CONTRACT_BIGMAP ?
 export const TOTAL_OVEN_IMAGES = 11;
 export const DEFAULT_SLIPPAGE = 0.2;
 export const DEFAULT_DEALINE = 20;
+export const INDEXER_URL = process.env.REACT_APP_INDEXER_URL;

@@ -6,8 +6,7 @@ import {
   RemoveLiquidityTransactionsDto, RemoveLiquidityTransactionsGql, CollectFromLiquidityTransactionsDto, CollectFromLiquidityTransactionsGql, AmmTvlGql
 } from "../interfaces/analytics";
 import { getBaseStats } from "./contracts";
-
-const GQL_API_URL = 'https://ctez-v2-indexer.dipdup.net/v1/graphql';
+import { INDEXER_URL as GQL_API_URL } from "../utils/globals"; 
 
 const getGqlResponse = async (query: string): Promise<AxiosResponse<any>> => {
   return axios({
