@@ -6,6 +6,7 @@ import { useThemeColors } from '../../hooks/utilHooks';
 import { trimAddress, trimSizeMap } from '../../utils/addressUtils';
 import { NETWORK } from '../../utils/globals';
 import { numberToMillionOrBillionFormate } from '../../utils/numberFormate';
+import './pi-chart.css';
 
 const RenderActiveShape = (props: any) => {
   function toDegrees(angle: number) {
@@ -161,8 +162,9 @@ const PiChart = ({
   return (
     <ResponsiveContainer height={largerScreen ? DEFAULT_HEIGHT : DEFAULT_HEIGHT_MOBILE} width='100%'>
 
-      <PieChart >
+      <PieChart className="pie-chart">
         <Pie
+          style={{ outline: 'none' }} 
           data={data}
           dataKey="ctez_outstanding" 
           nameKey="ctez_outstanding"
@@ -170,14 +172,14 @@ const PiChart = ({
           cy="50%"
           innerRadius={largerScreen ? "58%" : '35%'}
           outerRadius={largerScreen ? "70%" : '50%'}
-
+          focusable={false}
           fill="#82ca9d"
           activeIndex={activeIndex}
           activeShape={<RenderActiveShape textColor={theme.colorMode === 'dark' ? '#FFFFFF' : '#4E5D78'} />}
           onMouseEnter={onPieEnter}
         >
           {data.map((_, index) => (
-            <Cell key={`cell-${index}`} fill={ColorPalet[index % ColorPalet.length]} />
+            <Cell key={`cell-${index}`} fill={ColorPalet[index % ColorPalet.length]} style={{ outline: 'none' }} />
           ))}
         </Pie>
       </PieChart>
