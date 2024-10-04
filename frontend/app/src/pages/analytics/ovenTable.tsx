@@ -1,8 +1,7 @@
-import { SkeletonText, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useMediaQuery } from "@chakra-ui/react";
+import { SkeletonText, Table, TableContainer, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
 import React from "react";
 import { useOvensSummaryGql } from "../../api/analytics";
-import { useAllOvenData, useCtezBaseStats } from "../../api/queries";
-import { useOvenSummary, useSortedOvensList, useThemeColors } from "../../hooks/utilHooks";
+import { useThemeColors } from "../../hooks/utilHooks";
 import { numberToMillionOrBillionFormate } from "../../utils/numberFormate";
 
 const OvenTable: React.FC = () => {
@@ -10,10 +9,6 @@ const OvenTable: React.FC = () => {
         'cardbg2',
     ]);
     const { data: overData = false } = useOvensSummaryGql();
-    const { data } = useAllOvenData();
-    const sortedOvens = useSortedOvensList(data);
-    const { stats } = useOvenSummary(sortedOvens);
-    const { data: baseStats } = useCtezBaseStats()
 
     return (<TableContainer
         backgroundColor={background}
@@ -34,14 +29,13 @@ const OvenTable: React.FC = () => {
                 </Tr>
             </Thead>
             <Tbody >
-                {overData && stats && baseStats ? <Tr>
+                {overData ? <Tr>
                     <Td isNumeric borderBottom={0} textAlign='left'>{numberToMillionOrBillionFormate(overData.total)}</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.created)}</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.liquidated)}</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.collateral_locked)} tez</Td>
                     <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.total_debt)} ctez</Td>
-                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate((100 * (stats.totalBalance * 15) / (baseStats.currentTarget * 16)) / stats.totalOutstandingCtez)} %</Td>
-                    {/* <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.collateral_ratio)} %</Td> */}
+                    <Td isNumeric borderBottom={0} textAlign='right'>{numberToMillionOrBillionFormate(overData.collateral_ratio)} %</Td>
                 </Tr> : <Tr>
                     <Td isNumeric><SkeletonText pr={6} noOfLines={1} spacing="1" /></Td>
                     <Td isNumeric><SkeletonText pr={6} noOfLines={1} spacing="1" /></Td>
