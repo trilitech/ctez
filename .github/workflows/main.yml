@@ -24,6 +24,8 @@ jobs:
         with:
           path: ./.venv
           key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Use correct python version
+        run: poetry env use 3.10
       - name: Install the project dependencies
         run: poetry install
       - name: Run the automated tests
