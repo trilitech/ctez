@@ -343,7 +343,8 @@
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                              (lambda (pair nat int nat address) nat)
-                             (lambda (pair nat int nat address) (lambda nat nat)))
+                             (lambda (pair nat int nat address) (lambda nat nat))
+                             bool)
                        address
                        nat
                        nat
@@ -602,24 +603,24 @@
              DUP 4 ;
              COMPARE ;
              GT ;
-             IF { DIG 2 ;
-                  DUP 6 ;
+             IF { DUP 3 ;
+                  DUP 7 ;
                   SELF_ADDRESS ;
-                  DUP 9 ;
+                  DUP 10 ;
                   PAIR 4 ;
-                  DIG 8 ;
+                  DIG 9 ;
                   SWAP ;
                   EXEC ;
                   CONS }
-                { DIG 2 ; DIG 8 ; DROP 2 } ;
+                { DIG 8 ; DROP } ;
              PUSH nat 0 ;
-             DUP 4 ;
+             DUP 5 ;
              COMPARE ;
              GT ;
-             IF { DIG 2 ;
-                  DUP 5 ;
+             IF { DUP 4 ;
                   DUP 7 ;
                   DUP 9 ;
+                  DUP 11 ;
                   GET 3 ;
                   SWAP ;
                   EXEC ;
@@ -628,16 +629,16 @@
                   SWAP ;
                   EXEC ;
                   CONS }
-                { DIG 2 ; DROP } ;
+                {} ;
              PUSH nat 0 ;
-             DUP 4 ;
+             DUP 6 ;
              COMPARE ;
              GT ;
-             IF { DIG 2 ;
-                  DIG 3 ;
-                  SELF_ADDRESS ;
-                  DIG 5 ;
+             IF { DUP 5 ;
                   DIG 6 ;
+                  SELF_ADDRESS ;
+                  DIG 8 ;
+                  DUP 10 ;
                   CAR ;
                   SWAP ;
                   EXEC ;
@@ -648,7 +649,19 @@
                   SWAP ;
                   EXEC ;
                   CONS }
-                { DIG 2 ; DIG 3 ; DIG 4 ; DIG 5 ; DROP 4 } ;
+                { DIG 5 ; DIG 6 ; DROP 2 } ;
+             DIG 5 ;
+             GET 8 ;
+             DIG 3 ;
+             DIG 4 ;
+             DIG 5 ;
+             PAIR 4 ;
+             EMIT %remove_liquidity
+               (pair (nat %self_redeemed)
+                     (nat %proceeds_redeemed)
+                     (nat %subsidy_redeemed)
+                     (bool %is_sell_ctez_dex)) ;
+             CONS ;
              PAIR } ;
          DUP 7 ;
          DUP 7 ;
@@ -666,7 +679,8 @@
                           (lambda address (lambda address (lambda nat operation))))
                        (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                        (lambda (pair nat int nat address) nat)
-                       (lambda (pair nat int nat address) (lambda nat nat)))
+                       (lambda (pair nat int nat address) (lambda nat nat))
+                       bool)
                  address
                  nat
                  nat
@@ -692,7 +706,7 @@
              DUP 2 ;
              DUP 6 ;
              DUP 8 ;
-             GET 6 ;
+             GET 7 ;
              SWAP ;
              EXEC ;
              SWAP ;
@@ -1056,7 +1070,8 @@
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                              (lambda (pair nat int nat address) nat)
-                             (lambda (pair nat int nat address) (lambda nat nat)))
+                             (lambda (pair nat int nat address) (lambda nat nat))
+                             bool)
                        address))
            (pair (list operation)
                  (big_map address (pair nat nat nat))
@@ -1203,24 +1218,24 @@
              DUP 4 ;
              COMPARE ;
              GT ;
-             IF { DIG 2 ;
-                  DUP 5 ;
+             IF { DUP 3 ;
+                  DUP 6 ;
                   SELF_ADDRESS ;
-                  DUP 8 ;
+                  DUP 9 ;
                   PAIR 4 ;
-                  DIG 7 ;
+                  DIG 8 ;
                   SWAP ;
                   EXEC ;
                   CONS }
-                { DIG 2 ; DIG 7 ; DROP 2 } ;
+                { DIG 7 ; DROP } ;
              PUSH nat 0 ;
-             DUP 4 ;
+             DUP 5 ;
              COMPARE ;
              GT ;
-             IF { DIG 2 ;
-                  DIG 3 ;
-                  DIG 4 ;
+             IF { DUP 4 ;
                   DIG 5 ;
+                  DIG 6 ;
+                  DUP 8 ;
                   GET 3 ;
                   SWAP ;
                   EXEC ;
@@ -1229,7 +1244,15 @@
                   SWAP ;
                   EXEC ;
                   CONS }
-                { DIG 2 ; DIG 3 ; DIG 4 ; DIG 5 ; DROP 4 } ;
+                { DIG 4 ; DIG 5 ; DROP 2 } ;
+             DIG 4 ;
+             GET 8 ;
+             DIG 3 ;
+             DIG 4 ;
+             PAIR 3 ;
+             EMIT %collect_from_liquidity
+               (pair (nat %proceeds_redeemed) (nat %subsidy_redeemed) (bool %is_sell_ctez_dex)) ;
+             CONS ;
              PAIR } ;
          DUP 8 ;
          DUP 8 ;
@@ -1342,6 +1365,7 @@
            (contract (pair int address))
            { CONTRACT %mintOrBurn (pair int address) ;
              IF_NONE { PUSH string "MISSING_MINT_OR_BURN_ENTRYPOINT" ; FAILWITH } {} } ;
+         PUSH bool False ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -1358,7 +1382,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 6 ;
+         DUP 7 ;
          APPLY ;
          LAMBDA
            (pair (pair nat (lambda (pair nat nat) nat)) (pair nat int nat address))
@@ -1376,8 +1400,8 @@
              LSR ;
              PAIR ;
              EXEC } ;
-         DUP 8 ;
-         DUP 8 ;
+         DUP 9 ;
+         DUP 9 ;
          PAIR ;
          APPLY ;
          LAMBDA
@@ -1417,7 +1441,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 14 ;
+         DUP 15 ;
          APPLY ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -1451,9 +1475,10 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 16 ;
+         DUP 17 ;
          APPLY ;
-         PAIR 4 ;
+         PAIR 5 ;
+         PUSH bool True ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -1479,7 +1504,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 7 ;
+         DUP 8 ;
          APPLY ;
          LAMBDA (pair nat int nat address) nat { GET 5 } ;
          LAMBDA
@@ -1506,9 +1531,9 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 16 ;
+         DUP 17 ;
          APPLY ;
-         DIG 15 ;
+         DIG 16 ;
          DROP ;
          LAMBDA
            (pair (lambda (pair (pair nat int nat address) address address nat) operation)
@@ -1568,9 +1593,9 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 16 ;
+         DUP 17 ;
          APPLY ;
-         PAIR 4 ;
+         PAIR 5 ;
          LAMBDA
            (pair nat
                  (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
@@ -1661,13 +1686,15 @@
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                              (lambda (pair nat int nat address) nat)
-                             (lambda (pair nat int nat address) (lambda nat nat)))
+                             (lambda (pair nat int nat address) (lambda nat nat))
+                             bool)
                        (pair (lambda
                                 (pair nat int nat address)
                                 (lambda address (lambda address (lambda nat operation))))
                              (lambda (pair nat int nat address) (lambda address (lambda nat operation)))
                              (lambda (pair nat int nat address) nat)
-                             (lambda (pair nat int nat address) (lambda nat nat)))
+                             (lambda (pair nat int nat address) (lambda nat nat))
+                             bool)
                        (lambda address (contract (pair int address)))
                        nat
                        (lambda (pair nat nat) nat))
@@ -2736,6 +2763,7 @@
              GT ;
              IF { SWAP ; DROP } { DROP } } ;
          PUSH nat 64 ;
+         PUSH bool False ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -2752,7 +2780,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 2 ;
+         DUP 3 ;
          APPLY ;
          LAMBDA
            (pair (pair nat (lambda (pair nat nat) nat)) (pair nat int nat address))
@@ -2770,8 +2798,8 @@
              LSR ;
              PAIR ;
              EXEC } ;
-         DUP 4 ;
-         DUP 4 ;
+         DUP 5 ;
+         DUP 5 ;
          PAIR ;
          APPLY ;
          LAMBDA
@@ -2837,7 +2865,7 @@
                      APPLY ;
                      SWAP ;
                      DROP } } } ;
-         PAIR 4 ;
+         PAIR 5 ;
          LAMBDA
            (pair nat
                  (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
@@ -3125,6 +3153,7 @@
              GT ;
              IF { SWAP ; DROP } { DROP } } ;
          PUSH nat 64 ;
+         PUSH bool False ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -3141,7 +3170,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 2 ;
+         DUP 3 ;
          APPLY ;
          LAMBDA
            (pair (pair nat (lambda (pair nat nat) nat)) (pair nat int nat address))
@@ -3159,8 +3188,8 @@
              LSR ;
              PAIR ;
              EXEC } ;
-         DUP 4 ;
-         DUP 4 ;
+         DUP 5 ;
+         DUP 5 ;
          PAIR ;
          APPLY ;
          LAMBDA
@@ -3226,7 +3255,7 @@
                      APPLY ;
                      SWAP ;
                      DROP } } } ;
-         PAIR 4 ;
+         PAIR 5 ;
          LAMBDA
            (pair nat
                  (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
@@ -3549,6 +3578,7 @@
              GT ;
              IF { SWAP ; DROP } { DROP } } ;
          PUSH nat 64 ;
+         PUSH bool False ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -3565,7 +3595,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 2 ;
+         DUP 3 ;
          APPLY ;
          LAMBDA
            (pair (pair nat (lambda (pair nat nat) nat)) (pair nat int nat address))
@@ -3583,8 +3613,8 @@
              LSR ;
              PAIR ;
              EXEC } ;
-         DUP 4 ;
-         DUP 4 ;
+         DUP 5 ;
+         DUP 5 ;
          PAIR ;
          APPLY ;
          LAMBDA
@@ -3624,7 +3654,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 6 ;
+         DUP 7 ;
          APPLY ;
          LAMBDA
            (pair (lambda (pair address nat) operation) (pair nat int nat address))
@@ -3658,9 +3688,10 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 8 ;
+         DUP 9 ;
          APPLY ;
-         PAIR 4 ;
+         PAIR 5 ;
+         PUSH bool True ;
          LAMBDA
            (pair nat (pair nat int nat address))
            (lambda nat nat)
@@ -3686,7 +3717,7 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 3 ;
+         DUP 4 ;
          APPLY ;
          LAMBDA (pair nat int nat address) nat { GET 5 } ;
          LAMBDA
@@ -3713,9 +3744,9 @@
              APPLY ;
              SWAP ;
              DROP } ;
-         DUP 8 ;
+         DUP 9 ;
          APPLY ;
-         DIG 7 ;
+         DIG 8 ;
          DROP ;
          LAMBDA
            (pair (lambda (pair (pair nat int nat address) address address nat) operation)
@@ -3775,11 +3806,11 @@
              SWAP ;
              DIG 2 ;
              DROP 2 } ;
-         DUP 8 ;
+         DUP 9 ;
          APPLY ;
-         DIG 7 ;
+         DIG 8 ;
          DROP ;
-         PAIR 4 ;
+         PAIR 5 ;
          LAMBDA
            (pair nat
                  (pair nat nat nat (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat))
@@ -4030,7 +4061,7 @@
          DIG 3 ;
          DUP 2 ;
          DUP 5 ;
-         GET 6 ;
+         GET 7 ;
          SWAP ;
          EXEC ;
          SWAP ;

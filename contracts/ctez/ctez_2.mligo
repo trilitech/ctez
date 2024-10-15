@@ -116,6 +116,7 @@ let sell_tez_env : Half_dex.environment = {
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
   get_target_self_reserves = fun (c) -> max (Float64.mul c._Q c.target) 1n;
   div_by_target = fun (c) (amt) -> Float64.mul amt c.target;
+  is_sell_ctez_dex = false;
 }
 
 let sell_ctez_env : Half_dex.environment = {
@@ -123,6 +124,7 @@ let sell_ctez_env : Half_dex.environment = {
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
   div_by_target = fun (c) (amt) -> Float64.div amt c.target;
+  is_sell_ctez_dex = true;
 }
 
 (* housekeeping *)

@@ -5,12 +5,12 @@
         "paid_storage_size_diff": 82
     },
     "add_ctez_liquidity_without_subsidies": {
-        "consumed_gas": 6518,
+        "consumed_gas": 6519,
         "consumed_mutez": 21026,
         "paid_storage_size_diff": 80
     },
     "add_tez_liquidity_with_subsidies": {
-        "consumed_gas": 4663,
+        "consumed_gas": 4664,
         "consumed_mutez": 21338,
         "paid_storage_size_diff": 82
     },
@@ -20,22 +20,22 @@
         "paid_storage_size_diff": 80
     },
     "collect_from_ctez_liquidity": {
-        "consumed_gas": 5995,
-        "consumed_mutez": 1191,
+        "consumed_gas": 6097,
+        "consumed_mutez": 1201,
         "paid_storage_size_diff": 1
     },
     "collect_from_tez_liquidity": {
-        "consumed_gas": 8137,
-        "consumed_mutez": 1154,
+        "consumed_gas": 8239,
+        "consumed_mutez": 1164,
         "paid_storage_size_diff": 0
     },
     "create_oven": {
-        "consumed_gas": 4300,
+        "consumed_gas": 4301,
         "consumed_mutez": 386613,
         "paid_storage_size_diff": 1286
     },
     "ctez_to_tez": {
-        "consumed_gas": 5953,
+        "consumed_gas": 5954,
         "consumed_mutez": 66965,
         "paid_storage_size_diff": 7
     },
@@ -45,23 +45,23 @@
         "paid_storage_size_diff": 67
     },
     "mint_or_burn": {
-        "consumed_gas": 5191,
+        "consumed_gas": 5192,
         "consumed_mutez": 811,
         "paid_storage_size_diff": 0
     },
     "oven_deposit": {
-        "consumed_gas": 6887,
-        "consumed_mutez": 1206,
+        "consumed_gas": 6901,
+        "consumed_mutez": 1208,
         "paid_storage_size_diff": 1
     },
     "remove_ctez_liquidity": {
-        "consumed_gas": 8735,
-        "consumed_mutez": 1255,
+        "consumed_gas": 8838,
+        "consumed_mutez": 1265,
         "paid_storage_size_diff": 0
     },
     "remove_tez_liquidity": {
-        "consumed_gas": 8727,
-        "consumed_mutez": 1253,
+        "consumed_gas": 8829,
+        "consumed_mutez": 1264,
         "paid_storage_size_diff": 0
     },
     "tez_to_ctez": {
@@ -70,7 +70,7 @@
         "paid_storage_size_diff": 76
     },
     "withdraw_from_oven": {
-        "consumed_gas": 5858,
+        "consumed_gas": 5859,
         "consumed_mutez": 932,
         "paid_storage_size_diff": 0
     }

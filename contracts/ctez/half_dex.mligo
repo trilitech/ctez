@@ -1,6 +1,7 @@
 #include "../common/stdctez.mligo"
 #import "../common/errors.mligo" "Errors"
 #import "context.mligo" "Context"
+#import "events.mligo" "Events"
 
 (** A half dex is defined by:
       - An ordered liquidity share [(tau_0, tau_1)]
@@ -17,11 +18,12 @@
       - applying the target price to swap amount
 *)
 
-type environment = { 
+type environment = {
   transfer_self : Context.t -> address -> address -> nat -> operation; 
   transfer_proceeds : Context.t -> address -> nat -> operation; 
   get_target_self_reserves : Context.t -> nat;
   div_by_target : Context.t -> nat -> nat;
+  is_sell_ctez_dex : bool;
 }
 
 type liquidity_owner = { 
@@ -221,6 +223,15 @@ let remove_liquidity
   let ops = if ( self_redeemed > 0n ) 
     then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops 
     else ops in
+
+  let event_params: Events.remove_liquidity = {
+    self_redeemed;
+    proceeds_redeemed;
+    subsidy_redeemed;
+    is_sell_ctez_dex = env.is_sell_ctez_dex;
+  } in
+  let ops = Tezos.emit "%remove_liquidity" event_params :: ops in
+
   ops, t
 
 module Curve = struct
@@ -383,4 +394,13 @@ let collect_proceeds_and_subsidy
   let ops = if (proceeds_redeemed > 0n) 
     then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
     else ops in
+
+  
+  let event_params: Events.collect_from_liquidity = {
+    proceeds_redeemed;
+    subsidy_redeemed;
+    is_sell_ctez_dex = env.is_sell_ctez_dex;
+  } in
+  let ops = Tezos.emit "%collect_from_liquidity" event_params :: ops in
+
   ops, t
