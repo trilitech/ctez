@@ -37,11 +37,19 @@ class Fa12(ContractHelper):
         metadata = metadata if metadata != None else dict()
         metadata = Metadata.make(**metadata)
 
+        for _from, _, _ in allowances:
+            if not balances.get(_from):
+                balances[_from] = 0
+
+        ledger = {
+            get_address(owner): {
+                'amount': amount,
+                'allowances': {get_address(spender): allowance for _from, spender, allowance in allowances if get_address(_from) == get_address(owner)}
+            } for owner, amount in balances.items()
+        }
+
         storage = {
-            'tokens': {
-                get_address(addressable): amount for addressable, amount in balances.items()
-            }, 
-            'allowances': allowances_value, 
+            'ledger': ledger,
             'admin': get_address(admin), 
             'total_supply': sum(balances.values()),
             'metadata': metadata

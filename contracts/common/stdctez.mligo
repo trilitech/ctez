@@ -48,3 +48,9 @@ let subtract_nat (a: nat) (b : nat) (error : string) : nat =
   match is_nat (a - b) with
     | Some (r) -> r
     | None -> failwith error
+
+[@inline]
+let add_int_to_nat (a: nat) (b : int) (error : string) : nat =
+  match is_nat (a + b) with
+    | Some (r) -> r
+    | None -> failwith error
