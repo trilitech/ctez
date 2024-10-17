@@ -14,7 +14,7 @@ const GraphDrift: React.FC = () => {
     'cardbg2',
   ]);
 
-  const { data: historicalData = [] } = useCtezGraphGql();
+  const { data: historicalData = [] } = useCtezGraphGql('day');
   const { data: currentPoint } = useCtezGraphCurrentPointGql();
   const chartData = useMemo(
     () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,

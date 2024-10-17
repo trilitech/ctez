@@ -47,11 +47,11 @@ const getBatchesGql = async (count: number, queryTemplate: string, batchSize = 1
   return Promise.all(chunkPromises);
 }
 
-export const useCtezGraphGql = () => {
+export const useCtezGraphGql = (range: 'day' | 'month' | 'hour') => {
   return useQuery<CtezStatsGql[], Error>(
-    'ctez_graph_gql',
+    ['ctez_graph_gql', range],
     async () => {
-      const entity = 'protocol_price_history';
+      const entity = `protocol_price_bucket_${range}`;
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
