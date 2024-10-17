@@ -25,6 +25,7 @@
 [@inline] let not_undercollateralized = "NOT_UNDERCOLLATERALIZED"
 [@inline] let missing_total_supply_view = "MISSING_TOTAL_SUPPLY_VIEW"
 [@inline] let insufficient_tez_in_oven = "INSUFFICIENT_TEZ_IN_OVEN"
+[@inline] let only_originator_can_call = "ONLY_ORIGINATOR_CAN_CALL"
 
 (* oven *)
 [@inline] let only_main_contract_can_call = "ONLY_MAIN_CONTRACT_CAN_CALL"

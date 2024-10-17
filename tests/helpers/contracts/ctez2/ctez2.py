@@ -35,6 +35,7 @@ class Ctez2(ContractHelper):
         EXCESSIVE_CTEZ_BURNING = 'EXCESSIVE_CTEZ_BURNING'
         EXCESSIVE_CTEZ_MINTING = 'EXCESSIVE_CTEZ_MINTING'
         NOT_UNDERCOLLATERALIZED = 'NOT_UNDERCOLLATERALIZED'
+        ONLY_ORIGINATOR_CAN_CALL = "ONLY_ORIGINATOR_CAN_CALL"
 
     class Context(NamedTuple):
         target: int
@@ -96,7 +97,8 @@ class Ctez2(ContractHelper):
                 '_Q' : 1,
                 'ctez_fa12_address' : NULL_ADDRESS,
             },
-            'metadata': metadata
+            'metadata': metadata,
+            'originator': get_address(client)
         }
         
         filename = join(get_build_dir(), 'ctez_2.tz')

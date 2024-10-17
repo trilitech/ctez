@@ -75,7 +75,8 @@
              (nat %subsidy_reserves)
              (nat %fee_index))
           (pair %context (nat %target) (int %drift) (nat %_Q) (address %ctez_fa12_address))
-          (big_map %metadata string bytes)) ;
+          (big_map %metadata string bytes)
+          (address %originator)) ;
   code { LAMBDA
            (pair address nat)
            operation
@@ -1281,7 +1282,8 @@
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair nat int nat address)
-                 (big_map string bytes))
+                 (big_map string bytes)
+                 address)
            (pair mutez nat address nat)
            { UNPAIR ;
              DUP 2 ;
@@ -1703,14 +1705,16 @@
                        (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                        (pair nat int nat address)
-                       (big_map string bytes)))
+                       (big_map string bytes)
+                       address))
            (pair (list operation)
                  (big_map (pair nat address) (pair mutez nat address nat))
                  timestamp
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair (big_map address (pair nat nat nat)) nat nat nat nat nat nat nat)
                  (pair nat int nat address)
-                 (big_map string bytes))
+                 (big_map string bytes)
+                 address)
            { UNPAIR ;
              UNPAIR 6 ;
              DIG 6 ;
@@ -2715,6 +2719,13 @@
                                                              PUSH string "TEZ_IN_TRANSACTION_DISALLOWED" ;
                                                              PUSH mutez 0 ;
                                                              AMOUNT ;
+                                                             COMPARE ;
+                                                             EQ ;
+                                                             IF { DROP } { FAILWITH } ;
+                                                             PUSH string "ONLY_ORIGINATOR_CAN_CALL" ;
+                                                             DUP 3 ;
+                                                             GET 12 ;
+                                                             SENDER ;
                                                              COMPARE ;
                                                              EQ ;
                                                              IF { DROP } { FAILWITH } ;

@@ -76,6 +76,7 @@ type storage = {
   sell_tez  : Half_dex.t;
   context : Context.t;
   metadata : (string, bytes) big_map;
+  originator : address;
 }
 
 type result = storage with_operations
@@ -216,6 +217,7 @@ let set_ctez_fa12_address
     (s : storage) 
     : result =
   let () = assert_no_tez_in_transaction () in
+  let () = Assert.Error.assert (Tezos.get_sender () = s.originator) Errors.only_originator_can_call in
   let () = Assert.Error.assert (s.context.ctez_fa12_address = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address)) Errors.ctez_fa12_address_already_set in
   ([], { s with context = { s.context with ctez_fa12_address }})
 
