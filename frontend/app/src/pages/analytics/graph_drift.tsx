@@ -71,7 +71,7 @@ const GraphDrift: React.FC = () => {
   }, [chartData]);
 
   const lastValue = chartData && chartData[chartData.length - 1]?.annual_drift_percent;
-  const displayText = lastValue && !value ? `${numberToMillionOrBillionFormate(lastValue, 2)} %` : value ? `${numberToMillionOrBillionFormate(value, 2)} %` : null;
+  const displayText = lastValue !== undefined && !value ? `${numberToMillionOrBillionFormate(lastValue, 2)} %` : value ? `${numberToMillionOrBillionFormate(value, 2)} %` : null;
 
   return (<Flex direction='column'
     borderRadius={16}
