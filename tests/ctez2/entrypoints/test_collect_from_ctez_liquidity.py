@@ -37,9 +37,9 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
 
     @parameterized.expand([
-        ("owner_without_debts", lambda o0, o1, o2: o0, 5248754, 340),
-        ("owner_with_debts", lambda o0, o1, o2: o1, 0, 198),
-        ("owner_with_more_debts", lambda o0, o1, o2: o2, 0, 79),
+        ("owner_without_debts", lambda o0, o1, o2: o0, 5248754, 339),
+        ("owner_with_debts", lambda o0, o1, o2: o1, 0, 197),
+        ("owner_with_more_debts", lambda o0, o1, o2: o2, 0, 78),
     ])
     def test_should_collect_tokens_correctly(
         self, 
@@ -66,7 +66,7 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance + expected_proceeds_collected
         assert current_owner_account.liquidity_shares == prev_owner_account.liquidity_shares 
         assert current_owner_account.proceeds_owed == prev_owner_account.proceeds_owed + expected_proceeds_collected == 5248754
-        assert current_owner_account.subsidy_owed == prev_owner_account.subsidy_owed + expected_subsidy_collected == 340
+        assert current_owner_account.subsidy_owed == prev_owner_account.subsidy_owed + expected_subsidy_collected == 339
 
         assert current_ctez_dex.total_liquidity_shares == prev_ctez_dex.total_liquidity_shares
         assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
@@ -118,7 +118,7 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
         current_ctez_dex = ctez2.get_sell_ctez_dex()
         current_owner_account = ctez2.get_ctez_liquidity_owner(liquidity_owner)
 
-        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + 340
+        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + 339
         assert self.get_balance_mutez(liquidity_owner) == prev_receiver_tez_balance + 5248754 - get_consumed_mutez(liquidity_owner, opg)
         assert current_owner_account.liquidity_shares == prev_owner_account.liquidity_shares 
         assert current_owner_account.proceeds_owed == 5248754
@@ -127,4 +127,4 @@ class Ctez2CollectFromCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_ctez_dex.total_liquidity_shares == prev_ctez_dex.total_liquidity_shares
         assert current_ctez_dex.self_reserves == prev_ctez_dex.self_reserves
         assert current_ctez_dex.proceeds_reserves == prev_ctez_dex.proceeds_reserves
-        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves
+        assert current_ctez_dex.subsidy_reserves == prev_ctez_dex.subsidy_reserves - 339 + 340 

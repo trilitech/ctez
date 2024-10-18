@@ -226,13 +226,13 @@ class Ctez2RemoveTezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_tez_dex.self_reserves == prev_tez_dex.self_reserves - 5_000_000
         assert current_tez_dex.proceeds_reserves == prev_tez_dex.proceeds_reserves - 2624377
         assert current_tez_dex.proceeds_debts == prev_tez_dex.proceeds_debts - 2624377
-        assert current_tez_dex.subsidy_reserves == prev_tez_dex.subsidy_reserves - 146
+        assert current_tez_dex.subsidy_reserves == prev_tez_dex.subsidy_reserves - 145
         assert current_tez_dex.subsidy_debts == prev_tez_dex.subsidy_debts - 94
         assert current_account.liquidity_shares == 7500000 # 50% of shares have been removed
         assert current_account.proceeds_owed == 2624377 # 50% of debts have been removed
         assert current_account.subsidy_owed == 0 # 146 earned - 94 debts = 52 to send and 0 is rest debt
         assert self.get_balance_mutez(depositor_1) == prev_depositor_tez_balance + 5_000_000 - get_consumed_mutez(depositor_1, opg) # 50% of deposited self token
-        assert ctez_token.view_balance(depositor_1) == prev_depositor_ctez_balance + 52 # earned subsidy
+        assert ctez_token.view_balance(depositor_1) == prev_depositor_ctez_balance + 51 # earned subsidy
 
     def test_should_fail_if_insufficient_amount_received(self) -> None:
         ctez2, _, depositor_0, *_ = self.prepare_tez_dex_liquidity()

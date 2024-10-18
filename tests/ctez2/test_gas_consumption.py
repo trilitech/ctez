@@ -70,7 +70,7 @@ class Ctez2GasConsumptionTestCase(Ctez2BaseTestCase):
 
         self.recorder.add_element(self.manager, 'collect_from_ctez_liquidity', opg)
 
-        assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + 340
+        assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + 339
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance + 5248754
 
     def test_collect_from_tez_liquidity_gas(self) -> None:
@@ -84,7 +84,7 @@ class Ctez2GasConsumptionTestCase(Ctez2BaseTestCase):
 
         self.recorder.add_element(self.manager, 'collect_from_tez_liquidity', opg)
 
-        assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + 5248754 + 292
+        assert ctez_token.view_balance(receiver) == prev_receiver_ctez_balance + 5248754 + 291
         assert self.get_balance_mutez(receiver) == prev_receiver_tez_balance
 
     def test_remove_ctez_liquidity_gas(self) -> None:
@@ -100,7 +100,7 @@ class Ctez2GasConsumptionTestCase(Ctez2BaseTestCase):
 
         self.recorder.add_element(self.manager, 'remove_ctez_liquidity', opg)
 
-        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + deposit_amount + 340
+        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + deposit_amount + 339
         assert self.get_balance_mutez(liquidity_owner) == prev_receiver_tez_balance + 5248754 - get_consumed_mutez(liquidity_owner, opg)
 
     def test_remove_tez_liquidity_gas(self) -> None:
@@ -116,7 +116,7 @@ class Ctez2GasConsumptionTestCase(Ctez2BaseTestCase):
 
         self.recorder.add_element(self.manager, 'remove_tez_liquidity', opg)
 
-        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + 5248754 + 292
+        assert ctez_token.view_balance(liquidity_owner) == prev_receiver_ctez_balance + 5248754 + 291
         assert self.get_balance_mutez(liquidity_owner) == prev_receiver_tez_balance + deposit_amount - get_consumed_mutez(liquidity_owner, opg)
 
     def test_ctez_to_tez_gas(self) -> None:

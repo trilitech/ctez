@@ -66,8 +66,8 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=1, amount=1_001_252), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=1, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_252),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=999_999, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_252),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=1_000_000, expected_proceeds=0),
         ]
     ),
     (
@@ -79,8 +79,8 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=1, amount=1_001_252), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=1, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=1_000_000, expected_proceeds=0),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_252),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=999_999, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_252),
         ]
     ),
     (
@@ -95,9 +95,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_254),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=1, expected_proceeds=1_001_251),
-            RemoveAllLiquidity(sender_id=2, expected_self_token=999_998, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
+            RemoveAllLiquidity(sender_id=2, expected_self_token=1_000_000, expected_proceeds=1),
         ]
     ),
     (
@@ -112,9 +112,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_254),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
             RemoveAllLiquidity(sender_id=2, expected_self_token=999_999, expected_proceeds=0),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=1, expected_proceeds=1_001_252),
         ]
     ),
     (
@@ -129,9 +129,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=1, expected_proceeds=1_001_252),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_253),
-            RemoveAllLiquidity(sender_id=2, expected_self_token=999_998, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
+            RemoveAllLiquidity(sender_id=2, expected_self_token=1_000_000, expected_proceeds=1),
         ]
     ),
     (
@@ -146,9 +146,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=1, expected_proceeds=1_001_252),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
             RemoveAllLiquidity(sender_id=2, expected_self_token=999_999, expected_proceeds=0),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_254),
         ]
     ),
     (
@@ -163,9 +163,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=2, expected_self_token=1_000_000, expected_proceeds=0),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_254),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
+            RemoveAllLiquidity(sender_id=2, expected_self_token=999_999, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=1, expected_proceeds=1_001_252),
         ]
     ),
     (
@@ -180,9 +180,9 @@ lqt_test_cases: List[Tuple[str, List[Action]]] = [
             Swap(sender_id=2, amount=1_001_253), # dex reserves from 1_000_000 to 0
             CheckDexReserves(amount=0),
             Deposit(sender_id=2, amount=1_000_000),
-            RemoveAllLiquidity(sender_id=2, expected_self_token=1_000_000, expected_proceeds=0),
-            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_252),
-            RemoveAllLiquidity(sender_id=0, expected_self_token=0, expected_proceeds=1_001_253),
+            RemoveAllLiquidity(sender_id=2, expected_self_token=999_999, expected_proceeds=0),
+            RemoveAllLiquidity(sender_id=1, expected_self_token=0, expected_proceeds=1_001_251),
+            RemoveAllLiquidity(sender_id=0, expected_self_token=1, expected_proceeds=1_001_254),
         ]
     ),
 ]

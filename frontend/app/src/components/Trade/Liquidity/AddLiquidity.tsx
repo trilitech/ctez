@@ -23,7 +23,7 @@ import TokenInputIcon from '../TokenInputIcon';
 const calcLiquidityMinted = (depositAmount: number, dex: HalfDex): BigNumber => {
   const numerator = BigNumber.max(dex.total_liquidity_shares, 1);
   const denominator = BigNumber.max(dex.self_reserves, 1);
-  return new BigNumber(depositAmount).multipliedBy(numerator).dividedBy(denominator).integerValue(BigNumber.ROUND_CEIL);
+  return new BigNumber(depositAmount).multipliedBy(numerator).dividedBy(denominator).integerValue(BigNumber.ROUND_FLOOR);
 }
 
 const AddLiquidity: React.FC = () => {

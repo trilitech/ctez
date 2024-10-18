@@ -1,4 +1,4 @@
-from math import ceil
+from math import ceil, floor
 from tests.ctez2.base import Ctez2BaseTestCase
 from tests.helpers.addressable import Addressable
 from tests.helpers.contracts.ctez2.ctez2 import Ctez2
@@ -124,7 +124,7 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         def deposit_ctez(depositor: Addressable, deposit_amount: int):
             prev_sell_ctez_dex = ctez2.get_sell_ctez_dex()
 
-            liquidity_shares = ceil(deposit_amount * prev_sell_ctez_dex.total_liquidity_shares / prev_sell_ctez_dex.self_reserves)
+            liquidity_shares = floor(deposit_amount * prev_sell_ctez_dex.total_liquidity_shares / prev_sell_ctez_dex.self_reserves)
             depositor.bulk(
                 ctez_token.approve(ctez2, deposit_amount),
                 ctez2.add_ctez_liquidity(depositor, deposit_amount, liquidity_shares, self.get_future_timestamp())
@@ -159,10 +159,10 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
         assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
-        assert current_sell_ctez_dex.total_liquidity_shares == 111_123
+        assert current_sell_ctez_dex.total_liquidity_shares == 111_122
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_1 == 99_906
-        assert current_sell_ctez_dex.proceeds_reserves == 11_780
-        assert current_sell_ctez_dex.proceeds_debts == 1_180
+        assert current_sell_ctez_dex.proceeds_reserves == 11_779
+        assert current_sell_ctez_dex.proceeds_debts == 1_179
         assert current_sell_ctez_dex.subsidy_reserves == 69
         assert current_sell_ctez_dex.subsidy_debts == 7
 
@@ -170,9 +170,9 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert depositor_0_account.proceeds_owed == 0           # because there were no proceeds in dex on first deposit
         assert depositor_0_account.subsidy_owed == 0            # because there were no subsidies in dex on first deposit
 
-        assert depositor_1_account.liquidity_shares == 11_123   # which is 11_123/111_123(~10.001%) of total_liquidity_shares
-        assert depositor_1_account.proceeds_owed == 1_180       # which is 11_123/111_123(~10.001%) of proceeds_reserves(11_780)
-        assert depositor_1_account.subsidy_owed == 7            # which is 11_123/111_123(~10.001%) of subsidy_reserves(69)
+        assert depositor_1_account.liquidity_shares == 11_122   # which is 11_122/111_122(~10.009%) of total_liquidity_shares
+        assert depositor_1_account.proceeds_owed == 1_179       # which is 11_122/111_122(~10.009%) of proceeds_reserves(11_779)
+        assert depositor_1_account.subsidy_owed == 7            # which is 11_122/111_122(~10.009%) of subsidy_reserves(69)
 
         # second deposit (depositor_2 swap tez->ctez and deposit ctez)
         deposit_amount_2 = 5_000
@@ -189,24 +189,24 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
         assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
-        assert current_sell_ctez_dex.total_liquidity_shares == 116_981
+        assert current_sell_ctez_dex.total_liquidity_shares == 116_979
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_2 == 99_861
-        assert current_sell_ctez_dex.proceeds_reserves == 17_981
-        assert current_sell_ctez_dex.proceeds_debts == 1_180 + 901
+        assert current_sell_ctez_dex.proceeds_reserves == 17_980
+        assert current_sell_ctez_dex.proceeds_debts == 1_179 + 901
         assert current_sell_ctez_dex.subsidy_reserves == 138
         assert current_sell_ctez_dex.subsidy_debts == 7 + 7
 
-        assert depositor_0_account.liquidity_shares == 100_000  # has 85.48% of liquidity
+        assert depositor_0_account.liquidity_shares == 100_000  # has 85.49% of liquidity
         assert depositor_0_account.proceeds_owed == 0           # should be unchanged
         assert depositor_0_account.subsidy_owed == 0            # should be unchanged
 
-        assert depositor_1_account.liquidity_shares == 11_123   # has 9.51% of liquidity
-        assert depositor_1_account.proceeds_owed == 1_180       # should be unchanged 
+        assert depositor_1_account.liquidity_shares == 11_122   # has 9.51% of liquidity
+        assert depositor_1_account.proceeds_owed == 1_179       # should be unchanged 
         assert depositor_1_account.subsidy_owed == 7            # should be unchanged
 
-        assert depositor_2_account.liquidity_shares == 5_858    # has 5.01% of liquidity
-        assert depositor_2_account.proceeds_owed == 901         # which is 5_858/116_981(~5.01%) of proceeds_reserves(17_981)
-        assert depositor_2_account.subsidy_owed == 7            # which is 5_858/116_981(~5.01%) of subsidy_reserves(138)
+        assert depositor_2_account.liquidity_shares == 5_857    # has 5.01% of liquidity
+        assert depositor_2_account.proceeds_owed == 901         # which is 5_857/116_979(~5.01%) of proceeds_reserves(17_980)
+        assert depositor_2_account.subsidy_owed == 7            # which is 5_857/116_979(~5.01%) of subsidy_reserves(138)
 
         # third deposit (depositor_1 deposits ctez)
         deposit_amount_3 = 20_000
@@ -224,10 +224,10 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert current_sell_tez_dex.self_reserves == prev_sell_tez_dex.self_reserves
         assert current_sell_tez_dex.proceeds_reserves == prev_sell_tez_dex.proceeds_reserves
 
-        assert current_sell_ctez_dex.total_liquidity_shares == 140_410
+        assert current_sell_ctez_dex.total_liquidity_shares == 140_407
         assert current_sell_ctez_dex.self_reserves == prev_sell_ctez_dex.self_reserves + deposit_amount_3 == 119_861
-        assert current_sell_ctez_dex.proceeds_reserves == 21_583
-        assert current_sell_ctez_dex.proceeds_debts == 4782 + 901
+        assert current_sell_ctez_dex.proceeds_reserves == 21_581
+        assert current_sell_ctez_dex.proceeds_debts == 4780 + 901
         assert current_sell_ctez_dex.subsidy_reserves == 242
         assert current_sell_ctez_dex.subsidy_debts == 48 + 7
 
@@ -236,10 +236,10 @@ class Ctez2AddCtezLiquidityTestCase(Ctez2BaseTestCase):
         assert depositor_0_account.subsidy_owed == 0            # should be unchanged
 
         # should add new shares and new debts to exist account 
-        assert depositor_1_account.liquidity_shares == 34_552   # has 24.61% of liquidity (prev(11_123) + 23_429)
-        assert depositor_1_account.proceeds_owed == 4782        # which is prev(1_180) + 23_429/140_410(~24.61%) of proceeds_reserves(21_583)
+        assert depositor_1_account.liquidity_shares == 34_550   # has 24.61% of liquidity (prev(11_122) + 23_428)
+        assert depositor_1_account.proceeds_owed == 4780        # which is prev(1_180) + 23_429/140_410(~24.61%) of proceeds_reserves(21_583)
         assert depositor_1_account.subsidy_owed == 48           # which is prev(7) + 23_429/140_410(~24.61%) of subsidy_reserves(242)
 
-        assert depositor_2_account.liquidity_shares == 5_858    # has 4.17% of liquidity
+        assert depositor_2_account.liquidity_shares == 5_857    # has 4.17% of liquidity
         assert depositor_2_account.proceeds_owed == 901         # should be unchanged
         assert depositor_2_account.subsidy_owed == 7            # should be unchanged

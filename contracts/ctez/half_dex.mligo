@@ -69,9 +69,7 @@ let get_redeemed_tokens (lqt : nat) (token_reserves : nat) (total_lqt : nat) : n
         RX_i(t_0, t_1) := r_i / total(t_0, t_1)
   *)
   (* In the absence of liquidity in the DEX, we assume a minimum amount of liquidity *)
-  ceil_div 
-    (lqt * token_reserves) 
-    (max total_lqt 1n)
+  (lqt * token_reserves) / (max total_lqt 1n)
 
 [@inline]
 let get_deposited_lqt (token_amount : nat) (token_reserves: nat) (total_lqt: nat) : nat = 
@@ -81,9 +79,7 @@ let get_deposited_lqt (token_amount : nat) (token_reserves: nat) (total_lqt: nat
       x = (lqt * total(t_0, t_1)) / reserve
   *)
   (* In the absence of liquidity in the DEX, we assume a minimum amount of liquidity *)
-  ceil_div 
-    (token_amount * (max total_lqt 1n))
-    (max token_reserves 1n)
+  (token_amount * (max total_lqt 1n)) / (max token_reserves 1n)
 
 [@inline]
 let get_deposited_tokens (new_total_lqt: nat) (prev_total_lqt : nat) (token_reserves: nat) : nat * nat =

@@ -15,7 +15,7 @@
         "paid_storage_size_diff": 82
     },
     "add_tez_liquidity_without_subsidies": {
-        "consumed_gas": 3586,
+        "consumed_gas": 3585,
         "consumed_mutez": 20730,
         "paid_storage_size_diff": 80
     },
@@ -50,7 +50,7 @@
         "paid_storage_size_diff": 74
     },
     "oven_deposit": {
-        "consumed_gas": 6836,
+        "consumed_gas": 6833,
         "consumed_mutez": 1201,
         "paid_storage_size_diff": 1
     },
