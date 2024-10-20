@@ -756,6 +756,13 @@ let get_half_dex_state (dex: Half_dex.t) =
     fee_index = dex.fee_index;
   }
 
+(** 
+  Returns the actual state of the contract storage with applied housekeeping.
+  (recalculates target, drift, ctez outstanding (subsidies) and fee indexes in dexes)
+
+  Return:
+    - The current state of the contract
+*)
 [@view]
 let get_current_state () (s : storage) = 
   let _, s = get_actual_state s in
@@ -766,13 +773,31 @@ let get_current_state () (s : storage) =
     sell_tez = get_half_dex_state s.sell_tez;
   }
 
+(**
+  Returns the actual state of the oven with applied housekeeping and recalculated actual outstanding ctez.
+  (due to lazy calculations, the oven state stored in the storage may be outdated; 
+  use this view to get the current state of the oven, including applied fees to the outstanding ctez, as of the current time)
+  Parameters:
+    - handle: The unique identifier of the oven
+  Return:
+    - The current state of the oven
+*)
 [@view]
 let get_oven_state (handle : Oven.handle) (s : storage) : oven =
   let _, s = get_actual_state s in
   get_oven handle s
 
+
+(**
+  Calculates the number of self tokens received in exchange for a given amount of proceeds.
+  Parameters:
+    - is_sell_ctez_dex: Whether the dex is selling ctez dex or selling tez dex
+    - proceeds_amount: The amount of proceeds that will be bought by the dex
+  Return:
+    - The number of self tokens that will be sold by the dex
+*)
 [@view]
-let calc_sell_amount 
+let calc_tokens_to_sell
     ({ is_sell_ctez_dex ; proceeds_amount } : calc_sell_amount) 
     (s : storage) 
     : nat =
