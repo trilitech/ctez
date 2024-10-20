@@ -1,5 +1,6 @@
 #include "../common/stdctez.mligo"
 #import "../common/errors.mligo" "Errors"
+#import "../common/constants.mligo" "Constants"
 #import "../oven.mligo" "Oven"
 #import "half_dex.mligo" "Half_dex"
 #import "context.mligo" "Context"
@@ -211,6 +212,18 @@ let do_housekeeping (s : storage) : result =
 
 (* Entrypoint Functions *)
 
+(** 
+  Sets the address of the FA1.2 ctez token contract 
+  Parameters: 
+    - ctez_fa12_address: address of the FA1.2 contract
+  Pre-conditions: Only the originator can call this entrypoint. The ctez_fa12_address must not be set yet.
+  Post-conditions: The ctez_fa12_address is set to the given address.
+  Errors: 
+    - "TEZ_IN_TRANSACTION_DISALLOWED" if there is a tez in transaction
+    - "ONLY_ORIGINATOR_CAN_CALL" if not called by the originator
+    - "CTEZ_FA12_ADDRESS_ALREADY_SET" if the ctez_fa12_address is already set
+  Return: Updated storage with the new ctez_fa12_address 
+*)
 [@entry]
 let set_ctez_fa12_address 
     (ctez_fa12_address : address) 
@@ -218,9 +231,29 @@ let set_ctez_fa12_address
     : result =
   let () = assert_no_tez_in_transaction () in
   let () = Assert.Error.assert (Tezos.get_sender () = s.originator) Errors.only_originator_can_call in
-  let () = Assert.Error.assert (s.context.ctez_fa12_address = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address)) Errors.ctez_fa12_address_already_set in
+  let () = Assert.Error.assert (s.context.ctez_fa12_address = Constants.null_address) Errors.ctez_fa12_address_already_set in
   ([], { s with context = { s.context with ctez_fa12_address }})
 
+(**
+  Creates a new oven with tez deposit and selected delegate.
+  Parameters: 
+    - id: The unique identifier for the oven
+    - delegate: The optional delegate for the oven
+    - depositors: The list of authorized depositors for the oven (Any or Whitelist of addresses)
+  Pre-conditions: The the oven with the same id and the same owner must not already exist in the ovens big map.
+  Post-conditions:
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies)
+    - A new oven entry is created with the specified parameters and added to the ovens big map.
+    - A new oven contract is originated with the specified parameters and with tez balance equal to the deposit.
+  Errors:
+    - "OVEN_ALREADY_EXISTS": Thrown if the handle for the oven already exists in the ovens big map.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12
+    - origination_op: The origination operation for the new oven
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping)
+      * the new oven
+*)
 [@entry]
 let create_oven 
     ({ id; delegate; depositors } : create_oven) 
@@ -240,6 +273,30 @@ let create_oven
   let ovens = Big_map.update handle (Some oven) s.ovens in
   (List.append house_ops [origination_op], { s with ovens })
 
+(* 
+  Allows oven owners to withdraw tez from their oven to a recipient while maintaining sufficient collateralization.
+  Parameters: 
+  - id: The unique identifier of the oven.
+  - amount: The amount of tez to withdraw.
+  - to: The address of the recipient.
+  Pre-conditions: 
+  - The transaction must not contain any tez.
+  - The oven identified by "id" must exist and belong to the sender.
+  Post-conditions: 
+  - Housekeeping: recalculates target, drift, ctez outstanding (subsidies)
+  - The specified amount of tez is transferred to the recipient.
+  - The oven's tez balance is updated.
+  Errors: 
+  - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+  - "OVEN_NOT_EXISTS": Thrown if sender doesn't have the the oven with specified "id".
+  - "EXCESSIVE_TEZ_WITHDRAWAL": Thrown when the remaining tez balance causes undercollateralization after withdrawal.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12
+    - withdraw_op: The operation to withdraw the specified amount of tez from the oven to the specified recipient
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping)
+      * the updated oven
+*)
 [@entry]
 let withdraw_from_oven
     ({ id; amount; to_ } : withdraw) 
@@ -261,6 +318,25 @@ let withdraw_from_oven
   let withdraw_op = Tezos.Next.Operation.transaction (amount, to_) 0mutez oven_contract in
   (List.append house_ops [withdraw_op], s)
 
+(**
+  Registers a deposit to an existing oven by increasing its tez balance. 
+  This entrypoint is intended to be called by the oven contract itself.
+  Parameters: 
+    - handle: The unique identifier for the oven.
+    - amount: The amount of tez to be deposited into the oven.
+  Pre-conditions: The sender of the transaction must be the oven contract itself.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies)
+    - The tez balance of the specified oven is increased by the deposit amount.
+  Errors:
+    - "OVEN_NOT_EXISTS": Thrown if there is no oven with the specified "handle".
+    - "ONLY_OVEN_CAN_CALL": Thrown if the sender is not the oven contract itself.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping)
+      * updated oven with the new tez balance.
+*)
 [@entry]
 let register_oven_deposit 
     ({ handle; amount } : Oven.register_deposit) 
@@ -275,7 +351,33 @@ let register_oven_deposit
   let ovens = Big_map.update handle (Some oven) s.ovens in
   house_ops, { s with ovens = ovens }
 
-(* liquidate the oven by burning "quantity" ctez *)
+(**
+  Description: Liquidates an oven when it is under-collateralized, transferring the collateral to a specified recipient.
+  Parameters: 
+    - handle: The unique identifier of the oven
+    - quantity: The amount of ctez to burn
+    - to: The address of the recipient of the collateral
+  Pre-conditions: 
+    - The transaction must not contain any tez.
+    - The oven identified by the handle must exist and be under-collateralized.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies)
+    - The specified quantity of ctez is burned.
+    - The extracted tez balance is transferred to the recipient.
+    - The oven's ctez outstanding and tez balance are updated.
+  Errors: 
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+    - "OVEN_NOT_EXISTS": Thrown if the oven with the specified handle does not exist.
+    - "NOT_UNDERCOLLATERALIZED": Thrown if the oven is not under-collateralized.
+    - "EXCESSIVE_CTEZ_BURNING": Thrown if the quantity of ctez to burn exceeds the oven's outstanding ctez.
+    - "INSUFFICIENT_TEZ_IN_OVEN": Thrown if the extracted balance exceeds the oven's tez balance.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - A list of operations including the burning of ctez and transfer of collateral.
+    - updated storage with:
+      * updated target, drift, ctez outstanding (housekeeping)
+      * modified oven state.
+*)
 [@entry]
 let liquidate_oven
     ({ handle; quantity; to_ } : liquidate)
@@ -288,8 +390,7 @@ let liquidate_oven
   let () = Assert.Error.assert (is_under_collateralized oven target) Errors.not_undercollateralized in
   let remaining_ctez = match is_nat (oven.ctez_outstanding - quantity) with
     | None -> (failwith Errors.excessive_ctez_burning : nat)
-    | Some n -> n  in
-  (* get 32/31 of the target price, meaning there is a 1/31 penalty for the oven owner for being liquidated *)
+    | Some n -> n in
   let extracted_balance = (Float64.mul (32n * quantity) target) * 1mutez / 31n in
   let new_balance = match oven.tez_balance - extracted_balance with
     | None -> (failwith Errors.insufficient_tez_in_oven : tez)
@@ -303,6 +404,30 @@ let liquidate_oven
   let op_burn_ctez = Tezos.Next.Operation.transaction (-quantity, Tezos.get_sender ()) 0mutez ctez_mint_or_burn in
   List.append house_ops [op_burn_ctez ; op_take_collateral], s
 
+(** 
+  Mint or burn ctez tokens in an oven.
+  Parameters:
+    - id: The unique identifier of the oven.
+    - quantity: The amount of ctez to mint or burn.
+  Pre-conditions:
+    - The transaction must not contain any tez.
+    - The oven identified by "id" must exist and belong to the sender.
+  Post-conditions:
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies)
+    - The specified amount of ctez is minted or burned in the oven.
+    - The oven's ctez balance (ctez_outstanding) is updated.
+  Errors:
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+    - "OVEN_NOT_EXISTS": Thrown if sender doesn't have the the oven with specified "id".
+    - "EXCESSIVE_CTEZ_BURNING": Thrown when the specified quantity exceeds the oven's outstanding ctez.
+    - "EXCESSIVE_CTEZ_MINTING": Thrown when the remaining ctez balance causes undercollateralization after minting.
+  Return:
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - mint_or_burn_op: The operation to mint or burn the specified amount of ctez in the oven.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping)
+      * updated oven ctez_outstanding balance
+*)
 [@entry]
 let mint_or_burn 
     ({id ; quantity } : mint_or_burn)
@@ -325,6 +450,29 @@ let mint_or_burn
 
 (* dex *)
 
+(**
+  Adds tez liquidity to the dex.
+  Parameters: 
+    - owner: The address of the liquidity provider (who will own the liquidity shares).
+    - min_liquidity: The minimum liquidity shares expected to be minted.
+    - deadline: The latest time by which the transaction must be included.
+  Pre-conditions: 
+    - The transaction must contain tez to deposit.
+    - The current time must be less than or equal to the deadline.
+    - The minted liquidity shares must be greater than or equal to the minimum required.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The tez is deposited into the liquidity pool, and liquidity shares are minted for the specified owner.
+    - The contract's tez balance is increased by the amount sent in the transaction.
+  Errors: 
+    - "INSUFFICIENT_LIQUIDITY_CREATED": Thrown if the minted liquidity shares are below the minimum required.
+    - "DEADLINE_HAS_PASSED": Thrown if the current time exceeds the deadline.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated selling tez dex with the new liquidity state.
+*)
 [@entry]
 let add_tez_liquidity 
     ({ owner; min_liquidity; deadline } : add_tez_liquidity) 
@@ -337,6 +485,33 @@ let add_tez_liquidity
   house_ops, { s with sell_tez }
 
 [@entry]
+(** 
+  Adds ctez liquidity to the dex.
+  Parameters: 
+    - owner: The address of the liquidity provider (who will own the liquidity shares).
+    - amount_deposited: The amount of ctez to add to the dex.
+    - min_liquidity: The minimum liquidity shares expected to be minted.
+    - deadline: The latest time by which the transaction must be included.
+  Pre-conditions: 
+    - The transaction must not contain any tez.
+    - The current time must be less than or equal to the deadline.
+    - The minted liquidity shares must be greater than or equal to the minimum required.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The ctez is deposited into the liquidity pool, and liquidity shares are minted for the specified owner.
+    - The sender's ctez balance is decreased by the amount of ctez added to the dex.
+    - The contract ctez balance is increased by the amount of ctez added to the dex.
+  Errors: 
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+    - "INSUFFICIENT_LIQUIDITY_CREATED": Thrown if the amount of liquidity created is less than the minimum specified.
+    - "DEADLINE_HAS_PASSED": Thrown if the deadline has passed.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - transfer_ctez_op: The operation to transfer the specified amount of ctez from the user to the contract.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated selling tez dex with the new liquidity state.
+*)
 let add_ctez_liquidity 
     ({ owner; amount_deposited; min_liquidity; deadline } : add_ctez_liquidity) 
     (s : storage) 
@@ -348,6 +523,40 @@ let add_ctez_liquidity
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
   List.append house_ops [transfer_ctez_op], { s with sell_ctez }
 
+(*
+  Removes tez liquidity from the dex.
+  Parameters: 
+    - to: The address to receive the tokens
+    - liquidity_redeemed: The amount of liquidity shares to burn
+    - min_self_received: The minimum amount of tez to receive
+    - min_proceeds_received: The minimum amount of ctez to receive
+    - min_subsidy_received: The minimum amount of ctez subsidy to receive
+    - deadline: The deadline for the transaction
+  Pre-conditions: 
+    - The transaction must not contain any tez.
+    - The current time must be less than or equal to the deadline.
+    - The received amounts should be greater than or equal to the corresponding minimum amounts specified in the parameters.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The owner state are updated in tez dex.
+    - The owner's tez balance is increased by the self_received amount.
+    - The owner's ctez balance is increased by the proceeds_received + subsidy_received amounts.
+    - The contract's tez balance is decreased by the self_received amount.
+    - The contract's ctez balance is decreased by the proceeds_received + subsidy_received amounts.
+  Errors: 
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+    - "INSUFFICIENT_LIQUIDITY": Thrown if the amount of owner liquidity is less than the liquidity_redeemed specified.
+    - "INSUFFICIENT_SELF_RECEIVED": Thrown if the self_received amount is less than the min_self_received specified.
+    - "INSUFFICIENT_PROCEEDS_RECEIVED": Thrown if the proceeds_received amount is less than the min_proceeds_received specified.
+    - "INSUFFICIENT_SUBSIDY_RECEIVED": Thrown if the subsidy_received amount is less than the min_subsidy_received specified.
+    - "DEADLINE_HAS_PASSED": Thrown if the current time exceeds the deadline.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - ops: transfer operations for self tokens (tez), proceeds (ctez) and subsidy (ctez) from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated tez dex state and liquidity owner state.
+*)
 [@entry]
 let remove_tez_liquidity 
     (p : Half_dex.remove_liquidity) 
@@ -358,6 +567,40 @@ let remove_tez_liquidity
   let (ops, sell_tez) = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
   List.append house_ops ops, { s with sell_tez }
 
+(*
+  Removes ctez liquidity from the dex.
+  Parameters: 
+    - to: The address to receive the tokens
+    - liquidity_redeemed: The amount of liquidity shares to burn
+    - min_self_received: The minimum amount of ctez to receive
+    - min_proceeds_received: The minimum amount of tez to receive
+    - min_subsidy_received: The minimum amount of ctez subsidy to receive
+    - deadline: The deadline for the transaction
+  Pre-conditions: 
+    - The transaction must not contain any tez.
+    - The current time must be less than or equal to the deadline.
+    - The received amounts should be greater than or equal to the corresponding minimum amounts specified in the parameters.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The owner state are updated in tez dex.
+    - The owner's ctez balance is increased by the self_received + subsidy_received amounts.
+    - The owner's tez balance is increased by the proceeds_received amount.
+    - The contract's ctez balance is decreased by the self_received + subsidy_received amounts.
+    - The contract's tez balance is decreased by the proceeds_received amount.
+  Errors: 
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+    - "INSUFFICIENT_LIQUIDITY": Thrown if the amount of owner liquidity is less than the liquidity_redeemed specified.
+    - "INSUFFICIENT_SELF_RECEIVED": Thrown if the self_received amount is less than the min_self_received specified.
+    - "INSUFFICIENT_PROCEEDS_RECEIVED": Thrown if the proceeds_received amount is less than the min_proceeds_received specified.
+    - "INSUFFICIENT_SUBSIDY_RECEIVED": Thrown if the subsidy_received amount is less than the min_subsidy_received specified.
+    - "DEADLINE_HAS_PASSED": Thrown if the current time exceeds the deadline.
+  Return: 
+    - Minting operations for subsidies in Ctez fa12.
+    - ops: transfer operations for self tokens (ctez), proceeds (tez) and subsidy (ctez) from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated ctez dex state and liquidity owner state.
+*)
 [@entry]
 let remove_ctez_liquidity 
     (p : Half_dex.remove_liquidity) 
@@ -368,6 +611,24 @@ let remove_ctez_liquidity
   let (ops, sell_ctez) = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
   List.append house_ops ops, { s with sell_ctez }
 
+(**
+  Collects proceeds and subsidy from tez dex.
+  Parameters:
+    - to: The address to which the proceeds and subsidy will be sent.
+  Pre-conditions:
+    - The transaction must not contain any tez.
+  Post-conditions:
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The proceeds (ctez) and subsidy (ctez) are transferred to the address specified in the parameter.
+  Errors:
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+  Return:
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - ops: transfer operations proceeds (ctez) and subsidy (ctez) from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated selling tez dex state and liquidity owner state.
+*)
 [@entry]
 let collect_from_tez_liquidity
     (p : Half_dex.collect_proceeds_and_subsidy) 
@@ -378,6 +639,24 @@ let collect_from_tez_liquidity
   let (ops, sell_tez) = Half_dex.collect_proceeds_and_subsidy s.sell_tez s.context sell_tez_env p in
   List.append house_ops ops, { s with sell_tez }
 
+(**
+  Collects proceeds and subsidy from ctez dex.
+  Parameters:
+    - to: The address to which the proceeds and subsidy will be sent.
+  Pre-conditions:
+    - The transaction must not contain any tez.
+  Post-conditions:
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The proceeds (tez) and subsidy (ctez) are transferred to the address specified in the parameter.
+  Errors:
+    - "TEZ_IN_TRANSACTION_DISALLOWED": Thrown if the transaction contains tez.
+  Return:
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - ops: transfer operations proceeds (tez) and subsidy (ctez) from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated selling tez dex state and liquidity owner state.
+*)
 [@entry]
 let collect_from_ctez_liquidity 
     (p : Half_dex.collect_proceeds_and_subsidy) 
@@ -388,6 +667,31 @@ let collect_from_ctez_liquidity
   let (ops, sell_ctez) = Half_dex.collect_proceeds_and_subsidy s.sell_ctez s.context sell_ctez_env p in
   List.append house_ops ops, { s with sell_ctez }
 
+(** 
+  Swaps tez to ctez using the tez dex.
+  Parameters:
+    - to_: The address that will receive the ctez.
+    - min_ctez_bought: The minimum amount of ctez that must be received.
+    - deadline: The deadline for the swap.
+  Pre-conditions: 
+    - The current time must be less than or equal to the deadline.
+    - The received amounts should be greater than or equal to the min_ctez_bought.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The tez dex state is updated with the new liquidity state.
+    - The amount of tez sent in the transaction is transferred from the sender to the contract.
+    - The calculated amount of ctez is transferred from the contract to the receiver.
+  Errors: 
+    - "DEADLINE_HAS_PASSED": Thrown if the current time exceeds the deadline.
+    - "INSUFFICIENT_TOKENS_LIQUIDITY": Thrown if the received amount is greater then the dex self tokens reserves.
+    - "INSUFFICIENT_TOKENS_BOUGHT": Thrown if the received amount is less than the min_ctez_bought.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - ops: transfer operation for ctez token from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated tez dex state.
+*)
 [@entry]
 let tez_to_ctez
     ({to_; min_ctez_bought; deadline} : tez_to_ctez)
@@ -398,6 +702,34 @@ let tez_to_ctez
   let (ops, sell_ctez) = Half_dex.swap s.sell_ctez s.context sell_ctez_env p in
   List.append house_ops ops, { s with sell_ctez }
 
+(** 
+  Swaps ctez to tez using the ctez dex.
+  Parameters:
+    - to_: The address that will receive the ctez.
+    - ctez_sold: The amount of ctez that will be sold.
+    - min_tez_bought: The minimum amount of tez that must be received.
+    - deadline: The deadline for the swap.
+  Pre-conditions: 
+    - The current time must be less than or equal to the deadline.
+    - The received amounts should be greater than or equal to the min_tez_bought.
+  Post-conditions: 
+    - Housekeeping: recalculates target, drift, ctez outstanding (subsidies).
+    - The ctez dex state is updated with the new liquidity state.
+    - The amount of ctez specified in the ctez_sold is transferred from the sender to the contract.
+    - The calculated amount of tez is transferred from the contract to the receiver.
+  Errors: 
+    - "DEADLINE_HAS_PASSED": Thrown if the current time exceeds the deadline.
+    - "INSUFFICIENT_TOKENS_LIQUIDITY": Thrown if the received amount is greater then the dex self tokens reserves.
+    - "INSUFFICIENT_TOKENS_BOUGHT": Thrown if the received amount is less than the min_tez_bought.
+  Return: 
+    - house_ops: Minting operations for subsidies in Ctez fa12.
+    - ops: 
+      * transfer operation for ctez token from the sender to the contract.
+      * transfer operation for tez token from the contract to the receiver specified in the parameters.
+    - updated storage with 
+      * updated target, drift, ctez outstanding (housekeeping).
+      * updated ctez dex state.
+*)
 [@entry]
 let ctez_to_tez
     ({to_; ctez_sold; min_tez_bought; deadline} : ctez_to_tez)
