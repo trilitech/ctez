@@ -65,7 +65,7 @@ type withdraw = {
   to_ : unit contract 
 }
 
-type calc_sell_amount = { 
+type calc_tokens_to_sell = { 
   is_sell_ctez_dex : bool; 
   proceeds_amount : nat;
 }
@@ -798,7 +798,7 @@ let get_oven_state (handle : Oven.handle) (s : storage) : oven =
 *)
 [@view]
 let calc_tokens_to_sell
-    ({ is_sell_ctez_dex ; proceeds_amount } : calc_sell_amount) 
+    ({ is_sell_ctez_dex ; proceeds_amount } : calc_tokens_to_sell) 
     (s : storage) 
     : nat =
   let _, s = get_actual_state s in

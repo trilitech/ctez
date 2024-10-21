@@ -150,7 +150,7 @@ export const calcSelfTokensToSell = (isSellCtezDex: boolean, storage: CTezStorag
 
 export const calcSelfTokensToSellOnchain = async (isSellCtezDex: boolean, proceedsAmount: BigNumber): Promise<number> => {
   try {
-    const amount: BigNumber = await cTez.contractViews.calc_sell_amount({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount.toString(10) })
+    const amount: BigNumber = await cTez.contractViews.calc_tokens_to_sell({ is_sell_ctez_dex: isSellCtezDex, proceeds_amount: proceedsAmount.toString(10) })
       .executeView({ viewCaller: cTez.address });
     return amount.toNumber();
   } catch {

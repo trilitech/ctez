@@ -3518,7 +3518,7 @@
              UPDATE 6 ;
              SWAP ;
              UPDATE 3 } } ;
-  view "calc_sell_amount"
+  view "calc_tokens_to_sell"
        (pair (bool %is_sell_ctez_dex) (nat %proceeds_amount))
        nat
        { LAMBDA
