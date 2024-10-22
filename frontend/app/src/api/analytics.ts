@@ -55,7 +55,7 @@ export const useCtezGraphGql = (range: 'day' | 'month' | 'hour') => {
       const count = await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
-          ${entity}(order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
+          ${entity}(where: {partial: {_is_null: true}}, order_by: {timestamp: asc}, offset: <OFFSET>, limit: <LIMIT>) {
             timestamp
             current_avg_price: ctez_avg_price
             target_price
