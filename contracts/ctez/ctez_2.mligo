@@ -530,17 +530,17 @@ let append_remove_liquidity_event
     (s : storage)
     (ops : operation list)
     : result =
-  let event_id = s.last_event_id + 1n in
+  let id = s.last_event_id + 1n in
   let { self_redeemed; proceeds_redeemed; subsidy_redeemed; } = amounts in
   let event_params: Events.remove_liquidity = {
-    event_id;
+    id;
     is_sell_ctez_dex;
     self_redeemed;
     proceeds_redeemed;
     subsidy_redeemed;
   } in
   let ops = Events.create_remove_liquidity_event_op event_params :: ops in
-  let s = { s with last_event_id = event_id } in
+  let s = { s with last_event_id = id } in
   ops, s
 
 (*
@@ -640,16 +640,16 @@ let append_collect_from_liquidity_event
     (s : storage)
     (ops : operation list)
     : result =
-  let event_id = s.last_event_id + 1n in
+  let id = s.last_event_id + 1n in
   let { proceeds_redeemed; subsidy_redeemed; } = amounts in
   let event_params: Events.collect_from_liquidity = {
-    event_id;
+    id;
     is_sell_ctez_dex;
     proceeds_redeemed;
     subsidy_redeemed;
   } in
   let ops = Events.create_collect_from_liquidity_event_op event_params :: ops in
-  let s = { s with last_event_id = event_id } in
+  let s = { s with last_event_id = id } in
   ops, s
 
 (**

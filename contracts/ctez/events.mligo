@@ -1,5 +1,5 @@
 type remove_liquidity = {
-  event_id: nat; 
+  id: nat; 
   self_redeemed: nat;
   proceeds_redeemed: nat;
   subsidy_redeemed: nat;
@@ -13,7 +13,7 @@ let create_remove_liquidity_event_op
 
 
 type collect_from_liquidity = { 
-  event_id: nat; 
+  id: nat; 
   proceeds_redeemed: nat;
   subsidy_redeemed: nat;
   is_sell_ctez_dex: bool;

@@ -1884,7 +1884,7 @@
              DUP 6 ;
              PAIR 5 ;
              EMIT %remove_liquidity
-               (pair (nat %event_id)
+               (pair (nat %id)
                      (nat %self_redeemed)
                      (nat %proceeds_redeemed)
                      (nat %subsidy_redeemed)
@@ -1929,7 +1929,7 @@
              DUP 5 ;
              PAIR 4 ;
              EMIT %collect_from_liquidity
-               (pair (nat %event_id)
+               (pair (nat %id)
                      (nat %proceeds_redeemed)
                      (nat %subsidy_redeemed)
                      (bool %is_sell_ctez_dex)) ;
