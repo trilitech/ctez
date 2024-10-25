@@ -4,6 +4,7 @@
 #import "../oven.mligo" "Oven"
 #import "half_dex.mligo" "Half_dex"
 #import "context.mligo" "Context"
+#import "events.mligo" "Events"
 
 type add_tez_liquidity = { 
   owner : address;
@@ -76,6 +77,7 @@ type storage = {
   sell_ctez : Half_dex.t;
   sell_tez  : Half_dex.t;
   context : Context.t;
+  last_event_id : nat;
   metadata : (string, bytes) big_map;
   originator : address;
 }
@@ -118,7 +120,6 @@ let sell_tez_env : Half_dex.environment = {
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
   get_target_self_reserves = fun (c) -> max (Float64.mul c._Q c.target) 1n;
   div_by_target = fun (c) (amt) -> Float64.mul amt c.target;
-  is_sell_ctez_dex = false;
 }
 
 let sell_ctez_env : Half_dex.environment = {
@@ -126,7 +127,6 @@ let sell_ctez_env : Half_dex.environment = {
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
   div_by_target = fun (c) (amt) -> Float64.div amt c.target;
-  is_sell_ctez_dex = true;
 }
 
 (* housekeeping *)
@@ -523,6 +523,26 @@ let add_ctez_liquidity
   let transfer_ctez_op = Context.transfer_ctez s.context (Tezos.get_sender ()) (Tezos.get_self_address ()) amount_deposited in
   List.append house_ops [transfer_ctez_op], { s with sell_ctez }
 
+
+let append_remove_liquidity_event 
+    (amounts : Half_dex.remove_liquidity_amounts)
+    (is_sell_ctez_dex : bool)
+    (s : storage)
+    (ops : operation list)
+    : result =
+  let event_id = s.last_event_id + 1n in
+  let { self_redeemed; proceeds_redeemed; subsidy_redeemed; } = amounts in
+  let event_params: Events.remove_liquidity = {
+    event_id;
+    is_sell_ctez_dex;
+    self_redeemed;
+    proceeds_redeemed;
+    subsidy_redeemed;
+  } in
+  let ops = Events.create_remove_liquidity_event_op event_params :: ops in
+  let s = { s with last_event_id = event_id } in
+  ops, s
+
 (*
   Removes tez liquidity from the dex.
   Parameters: 
@@ -564,7 +584,8 @@ let remove_tez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let (ops, sell_tez) = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
+  let { dex = sell_tez; ops; amounts; } = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
+  let (ops, s) = append_remove_liquidity_event amounts False s ops in
   List.append house_ops ops, { s with sell_tez }
 
 (*
@@ -608,8 +629,28 @@ let remove_ctez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let (ops, sell_ctez) = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
+  let { dex = sell_ctez; ops; amounts; } = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
+  let (ops, s) = append_remove_liquidity_event amounts True s ops in
   List.append house_ops ops, { s with sell_ctez }
+
+
+let append_collect_from_liquidity_event 
+    (amounts : Half_dex.collect_proceeds_and_subsidy_amounts)
+    (is_sell_ctez_dex : bool)
+    (s : storage)
+    (ops : operation list)
+    : result =
+  let event_id = s.last_event_id + 1n in
+  let { proceeds_redeemed; subsidy_redeemed; } = amounts in
+  let event_params: Events.collect_from_liquidity = {
+    event_id;
+    is_sell_ctez_dex;
+    proceeds_redeemed;
+    subsidy_redeemed;
+  } in
+  let ops = Events.create_collect_from_liquidity_event_op event_params :: ops in
+  let s = { s with last_event_id = event_id } in
+  ops, s
 
 (**
   Collects proceeds and subsidy from tez dex.
@@ -636,7 +677,8 @@ let collect_from_tez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let (ops, sell_tez) = Half_dex.collect_proceeds_and_subsidy s.sell_tez s.context sell_tez_env p in
+  let { dex = sell_tez; ops; amounts; } = Half_dex.collect_proceeds_and_subsidy s.sell_tez s.context sell_tez_env p in
+  let (ops, s) = append_collect_from_liquidity_event amounts False s ops in
   List.append house_ops ops, { s with sell_tez }
 
 (**
@@ -664,7 +706,8 @@ let collect_from_ctez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let (ops, sell_ctez) = Half_dex.collect_proceeds_and_subsidy s.sell_ctez s.context sell_ctez_env p in
+  let { dex = sell_ctez; ops; amounts; } = Half_dex.collect_proceeds_and_subsidy s.sell_ctez s.context sell_ctez_env p in
+  let (ops, s) = append_collect_from_liquidity_event amounts True s ops in
   List.append house_ops ops, { s with sell_ctez }
 
 (** 

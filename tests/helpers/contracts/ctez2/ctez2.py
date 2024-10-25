@@ -97,6 +97,7 @@ class Ctez2(ContractHelper):
                 '_Q' : 1,
                 'ctez_fa12_address' : NULL_ADDRESS,
             },
+            'last_event_id': 0,
             'metadata': metadata,
             'originator': get_address(client)
         }

@@ -23,7 +23,6 @@ type environment = {
   transfer_proceeds : Context.t -> address -> nat -> operation; 
   get_target_self_reserves : Context.t -> nat;
   div_by_target : Context.t -> nat -> nat;
-  is_sell_ctez_dex : bool;
 }
 
 type liquidity_owner = { 
@@ -117,16 +116,6 @@ let add_liquidity
     subsidy_reserves = subsidy_reserves;
   }
 
-type remove_liquidity = {
-  [@annot:to]
-  to_: address; (** the address to receive the tokens *)
-  liquidity_redeemed : nat; (** the amount of liquidity shares to redeem *)
-  min_self_received : nat; (* minimum amount of tez to receive *)
-  min_proceeds_received : nat; (* minimum amount of ctez to receive *)
-  min_subsidy_received : nat; (* minimum amount of ctez subsidy to receive *)
-  deadline : timestamp; (* deadline for the transaction *)
-}
-
 [@inline]
 let subtract_debt 
     (owner_amount : nat)
@@ -159,6 +148,29 @@ let remove_tokens
   let new_dex_total_debts = subtract_nat (dex_total_debts + new_owner_debt) owner_debt Errors.incorrect_subtraction in
   (new_dex_total_reserves, new_dex_total_debts, new_owner_debt, tokens_redeemed)
 
+
+type remove_liquidity = {
+  [@annot:to]
+  to_: address; (** the address to receive the tokens *)
+  liquidity_redeemed : nat; (** the amount of liquidity shares to redeem *)
+  min_self_received : nat; (* minimum amount of tez to receive *)
+  min_proceeds_received : nat; (* minimum amount of ctez to receive *)
+  min_subsidy_received : nat; (* minimum amount of ctez subsidy to receive *)
+  deadline : timestamp; (* deadline for the transaction *)
+}
+
+type remove_liquidity_amounts = {
+  self_redeemed : nat;
+  proceeds_redeemed : nat;
+  subsidy_redeemed : nat;
+}
+
+type remove_liquidity_result = {
+  dex: t;
+  ops: operation list;
+  amounts: remove_liquidity_amounts;
+}
+
 let remove_liquidity
     (t : t)
     (ctxt : Context.t)
@@ -171,7 +183,7 @@ let remove_liquidity
       min_subsidy_received;
       deadline;
     } : remove_liquidity)
-    : t with_operations =
+    : remove_liquidity_result =
   let () = Assert.Error.assert (Tezos.get_now () <= deadline) Errors.deadline_has_passed in
   let owner = Tezos.get_sender () in
   let liquidity_owner = find_liquidity_owner t owner in
@@ -220,15 +232,82 @@ let remove_liquidity
     then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops 
     else ops in
 
-  let event_params: Events.remove_liquidity = {
-    self_redeemed;
-    proceeds_redeemed;
-    subsidy_redeemed;
-    is_sell_ctez_dex = env.is_sell_ctez_dex;
-  } in
-  let ops = Tezos.emit "%remove_liquidity" event_params :: ops in
+  { 
+    dex = t;
+    ops;
+    amounts = { self_redeemed; proceeds_redeemed; subsidy_redeemed; }
+  }
 
-  ops, t
+
+[@inline]
+let collect_tokens 
+    (liquidity_shares : nat)
+    (total_liquidity_shares: nat)
+    (owner_debts: nat)
+    (dex_reserves : nat)
+    (dex_total_debts : nat)
+    : nat * nat * nat =
+  let owner_tokens = get_redeemed_tokens
+    liquidity_shares
+    dex_reserves
+    total_liquidity_shares in
+  let _, amount_to_withdrawn = subtract_debt owner_tokens owner_debts dex_reserves dex_total_debts in
+  let new_dex_total_debts = dex_total_debts + amount_to_withdrawn in
+  (owner_tokens, amount_to_withdrawn, new_dex_total_debts)
+
+type collect_proceeds_and_subsidy = { to_: address }
+
+type collect_proceeds_and_subsidy_amounts = {
+  proceeds_redeemed : nat;
+  subsidy_redeemed : nat;
+}
+
+type collect_proceeds_and_subsidy_result = {
+  dex: t;
+  ops: operation list;
+  amounts: collect_proceeds_and_subsidy_amounts;
+}
+
+let collect_proceeds_and_subsidy
+    (t : t)
+    (ctxt : Context.t)
+    (env : environment)
+    ({ to_ } : collect_proceeds_and_subsidy)
+    : collect_proceeds_and_subsidy_result =
+  let owner = Tezos.get_sender () in
+  let liquidity_owner = find_liquidity_owner t owner in
+  let liquidity_shares = liquidity_owner.liquidity_shares in
+  let total_liquidity_shares = t.total_liquidity_shares in
+  let proceeds_owed, proceeds_redeemed, proceeds_debts = collect_tokens 
+    liquidity_shares total_liquidity_shares liquidity_owner.proceeds_owed t.proceeds_reserves t.proceeds_debts in
+  let subsidy_owed, subsidy_redeemed, subsidy_debts = collect_tokens 
+    liquidity_shares total_liquidity_shares liquidity_owner.subsidy_owed t.subsidy_reserves t.subsidy_debts in
+  
+  let t = {
+    t with
+    proceeds_debts;
+    subsidy_debts;
+  } in
+  let t = set_liquidity_owner t owner { 
+    liquidity_owner with
+    proceeds_owed;
+    subsidy_owed;
+  } in
+
+  let ops = [] in
+  let ops = if (subsidy_redeemed > 0n) 
+    then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops 
+    else ops in
+  let ops = if (proceeds_redeemed > 0n) 
+    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
+    else ops in
+
+  { 
+    dex = t;
+    ops;
+    amounts = { proceeds_redeemed; subsidy_redeemed; }
+  }
+
 
 module Curve = struct
   (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the 
@@ -338,65 +417,3 @@ let swap
   } in
   let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_to_sell in
   [ receive_self ], t
-
-type collect_proceeds_and_subsidy = { to_: address }
-
-[@inline]
-let collect_tokens 
-    (liquidity_shares : nat)
-    (total_liquidity_shares: nat)
-    (owner_debts: nat)
-    (dex_reserves : nat)
-    (dex_total_debts : nat)
-    : nat * nat * nat =
-  let owner_tokens = get_redeemed_tokens
-    liquidity_shares
-    dex_reserves
-    total_liquidity_shares in
-  let _, amount_to_withdrawn = subtract_debt owner_tokens owner_debts dex_reserves dex_total_debts in
-  let new_dex_total_debts = dex_total_debts + amount_to_withdrawn in
-  (owner_tokens, amount_to_withdrawn, new_dex_total_debts)
-
-let collect_proceeds_and_subsidy
-    (t : t)
-    (ctxt : Context.t)
-    (env : environment)
-    ({ to_ } : collect_proceeds_and_subsidy)
-    : t with_operations =
-  let owner = Tezos.get_sender () in
-  let liquidity_owner = find_liquidity_owner t owner in
-  let liquidity_shares = liquidity_owner.liquidity_shares in
-  let total_liquidity_shares = t.total_liquidity_shares in
-  let proceeds_owed, proceeds_redeemed, proceeds_debts = collect_tokens 
-    liquidity_shares total_liquidity_shares liquidity_owner.proceeds_owed t.proceeds_reserves t.proceeds_debts in
-  let subsidy_owed, subsidy_redeemed, subsidy_debts = collect_tokens 
-    liquidity_shares total_liquidity_shares liquidity_owner.subsidy_owed t.subsidy_reserves t.subsidy_debts in
-  
-  let t = {
-    t with
-    proceeds_debts;
-    subsidy_debts;
-  } in
-  let t = set_liquidity_owner t owner { 
-    liquidity_owner with
-    proceeds_owed;
-    subsidy_owed;
-  } in
-
-  let ops = [] in
-  let ops = if (subsidy_redeemed > 0n) 
-    then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops 
-    else ops in
-  let ops = if (proceeds_redeemed > 0n) 
-    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
-    else ops in
-
-  
-  let event_params: Events.collect_from_liquidity = {
-    proceeds_redeemed;
-    subsidy_redeemed;
-    is_sell_ctez_dex = env.is_sell_ctez_dex;
-  } in
-  let ops = Tezos.emit "%collect_from_liquidity" event_params :: ops in
-
-  ops, t
