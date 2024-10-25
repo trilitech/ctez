@@ -13,8 +13,8 @@ const GraphAMMTVL: React.FC = () => {
     const [background] = useThemeColors([
       'cardbg2',
     ]);
-    const { data: historicalData = false } = useAmmTvlGql('day');
-    const { data: currentPoint = false } = useAmmTvlCurrentPointGql('day');
+    const { data: historicalData = false } = useAmmTvlGql('hour');
+    const { data: currentPoint = false } = useAmmTvlCurrentPointGql('hour');
     const chartData = useMemo(
       () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
       [historicalData, currentPoint]

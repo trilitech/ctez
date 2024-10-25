@@ -13,7 +13,7 @@ const GraphCtez: React.FC = () => {
   const [background] = useThemeColors([
     'cardbg2',
   ]);
-  const { data: historicalData = [] } = useCtezGraphGql('day');
+  const { data: historicalData = [] } = useCtezGraphGql('hour');
   const { data: currentPoint } = useCtezGraphCurrentPointGql();
   const chartData = useMemo(
     () => historicalData && currentPoint ? [...historicalData, currentPoint] : historicalData,
