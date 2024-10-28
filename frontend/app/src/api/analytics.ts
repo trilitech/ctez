@@ -377,8 +377,8 @@ export const useSwapTransactionsGql = () => {
   return useQuery<SwapTransactionsGql[], Error>(
     ['swap_transactions_gql'],
     async () => {
-      const count = 1000; // await getCountGql('swap_transaction_history_aggregate');
       const entity = 'swap_transaction_history';
+      const count = 1000; // await getCountGql(`${entity}_aggregate');
       const query = `
         query {
           ${entity}(order_by: {timestamp: desc}, offset: <OFFSET>, limit: <LIMIT>) {
@@ -406,7 +406,7 @@ export const useAddLiquidityTransactionsGql = () => {
   return useQuery<AddLiquidityTransactionsGql[], Error>(
     ['add_liquidity_transactions_gql'],
     async () => {
-      const entity = 'add_liquidity_transaction_history';
+      const entity = 'liquidity_add_transaction_history';
       const count = 1000; // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
@@ -442,7 +442,7 @@ export const useRemoveLiquidityTransactionsGql = () => {
   return useQuery<RemoveLiquidityTransactionsGql[], Error>(
     ['remove_liquidity_transactions_gql'],
     async () => {
-      const entity = 'remove_liquidity_transaction_history';
+      const entity = 'liquidity_remove_transaction_history';
       const count = 1000 // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
@@ -450,9 +450,11 @@ export const useRemoveLiquidityTransactionsGql = () => {
             dex
             account
             id
-            proceeds_redeemed
-            self_redeemed
-            subsidy_redeemed
+            event {
+              self_redeemed
+              proceeds_redeemed
+              subsidy_redeemed
+            }
             transaction_hash
             price_history {
               timestamp
@@ -465,9 +467,9 @@ export const useRemoveLiquidityTransactionsGql = () => {
         id: dto.id,
         account: dto.account,
         dex: dto.dex,
-        self_redeemed: dto.self_redeemed,
-        proceeds_redeemed: dto.proceeds_redeemed,
-        subsidy_redeemed: dto.subsidy_redeemed,
+        self_redeemed: dto.event.self_redeemed,
+        proceeds_redeemed: dto.event.proceeds_redeemed,
+        subsidy_redeemed: dto.event.subsidy_redeemed,
         timestamp: dto.price_history.timestamp,
         transaction_hash: dto.transaction_hash
       } as RemoveLiquidityTransactionsGql)));
@@ -482,7 +484,7 @@ export const useCollectFromLiquidityTransactionsGql = () => {
   return useQuery<CollectFromLiquidityTransactionsGql[], Error>(
     ['collect_from_liquidity_transactions_gql'],
     async () => {
-      const entity = 'collect_from_liquidity_transaction_history';
+      const entity = 'liquidity_collect_transaction_history';
       const count = 1000; // await getCountGql(`${entity}_aggregate`);
       const query = `
         query {
@@ -490,8 +492,10 @@ export const useCollectFromLiquidityTransactionsGql = () => {
             dex
             account
             id
-            proceeds_withdrawn
-            subsidy_withdrawn
+            event {
+              proceeds_redeemed
+              subsidy_redeemed
+            }
             transaction_hash
             price_history {
               timestamp
@@ -504,8 +508,8 @@ export const useCollectFromLiquidityTransactionsGql = () => {
         id: dto.id,
         account: dto.account,
         dex: dto.dex,
-        proceeds_withdrawn: dto.proceeds_withdrawn,
-        subsidy_withdrawn: dto.subsidy_withdrawn,
+        proceeds_withdrawn: dto.event.proceeds_redeemed,
+        subsidy_withdrawn: dto.event.subsidy_redeemed,
         timestamp: dto.price_history.timestamp,
         transaction_hash: dto.transaction_hash
       } as CollectFromLiquidityTransactionsGql)));

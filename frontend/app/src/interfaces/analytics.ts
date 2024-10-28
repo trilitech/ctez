@@ -100,8 +100,11 @@ export interface RemoveLiquidityTransactionsDto {
   account: string;
   dex: 'sell_ctez' | 'sell_tez';
   self_redeemed: string;
-  proceeds_redeemed: string;
-  subsidy_redeemed: string;
+  event: {
+    self_redeemed: string;
+    proceeds_redeemed: string;
+    subsidy_redeemed: string;
+  },
   id: string;
   price_history: {
     timestamp: string;
@@ -123,8 +126,10 @@ export interface RemoveLiquidityTransactionsGql {
 export interface CollectFromLiquidityTransactionsDto {
   account: string;
   dex: 'sell_ctez' | 'sell_tez';
-  proceeds_withdrawn: string;
-  subsidy_withdrawn: string;
+  event: {
+    proceeds_redeemed: string;
+    subsidy_redeemed: string;
+  },
   id: string;
   price_history: {
     timestamp: string;
