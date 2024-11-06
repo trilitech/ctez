@@ -21,7 +21,7 @@ The **Ctez FA12 token** smart contract is a standard token with a variable suppl
 ## Ovens
 Ovens are smart contracts created by the user through the main Ctez Manager contract. They are used to mint ctez tokens, which are loaned to the user (the oven owner) against collateral in the form of tez tokens. These tez tokens must be deposited and locked in the oven contract.
 
-There is an option to burn ctez tokens and withdraw tez tokens. Additionally, the user can delegate the tez tokens locked in the oven contract to a chosen baker. The rewards from delegation are sent to the oven contract, increasing its balance.
+There is an option to burn ctez tokens and withdraw tez tokens. Additionally, the user can delegate the tez tokens locked in the oven contract to a chosen baker. The rewards from delegation which are usually sent to the oven contract, increase its balance.
 
 The minimum amount of the deposit in tez tokens in an oven is calculated using the following formula:
 
@@ -55,7 +55,10 @@ The DEX also allows exchanging self tokens for proceeds tokens. A user sends a c
 Where the x-axis represents the ratio *q/Q*. Where *q* is the dex liquidity amount (self_reserves amount), *Q* is the target liquidity amount. For sell ctez dex, *Q_ctez = 5%* of Ctez FA12 token total supply. For sell tez dex: *Q_tez = floor(Q_ctez * target_price)*.
 The y-axis represents the coefficient by which the target_price is multiplied. In other words, the marginal price can range from *target_price*, to *1.05 * target_price*. When x > 1, y = 1, meaning that if dex liquidity amount > target liquidity amount, the marginal price is target_price.
 
-See also [formula calculations](https://www.wolframcloud.com/obj/ffee73c9-aebd-44cc-9c84-5d73ac7a9096), [max error calculations](docs/marginal_price_error_calc.py)
+
+Marginal price calculations [wolfram notebook](docs/newton_for_ctez2.nb), [screenshot](docs/marginal_price_calculations.png)
+
+See also [max error calculations](docs/marginal_price_error_calc.py)
 
 ## Target price, drift, subsidy
 Each time any entry point is invoked in the Ctez Manager contract, the *do_housekeeping* function (located in *contracts/ctez/ctez_2.mligo*) is called. This function recalculates the following values in the storage: **target_price**, **drift**, and **subsidy_reserves** in each DEX.

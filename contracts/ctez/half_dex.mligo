@@ -310,33 +310,33 @@ let collect_proceeds_and_subsidy
 
 
 module Curve = struct
-  (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the 
-      characteristic quantity [u = min(q/Q, 1)] where [q] is the current amount of the dex's 'self'
-      token and [Q] is the target amount.
+ (** The marginal price [dp/du] is the derivative of the price function [p(u)] with respect to the
+     characteristic quantity [u = min(q/Q, 1)] where [q] is the current amount of the dex's 'self'
+     token and [Q] is the target amount.
 
-      The marginal price function is given as [dp/du(u) = target * (21 - 3 * u + 3 * u^2 - u^3) / 20]. 
-      Meaning the price of dex's 'self' token in 'proceed' token units is given by
-      {v
-        p(u_0 -> u_1) = ∫_{u_0}^{u_1} dp/du(u) du 
-                      = [target * (21 * u - 3 * u^2 / 2 + u^3 - u^4 / 4) / 20]_{u_1}^{u_0}
-      v}
-      for [u_1 < u_0]
+     The marginal price function is given as [dp/du(u) = Q * (21 - 3 * u + 3 * u^2 - u^3) / 20].
+     Meaning the price of dex's 'self' token in 'proceed' token units is given by
+     {v
+       p(u_0 -> u_1) = ∫_{u_0}^{u_1} dp/du(u) du
+                     = [Q * (21 * u - 3 * u^2 / 2 + u^3 - u^4 / 4) / 20]_{u_1}^{u_0}
+     v}
+     for [u_1 < u_0]
 
-      For a swap we need to determine [y] for a given [x] such that [p(q/q -> (q - y) / Q) = x] where
-      [x] is the amount of 'proceed' token units to be traded for [y] 'self' token units.
+     For a swap we need to determine [y] for a given [x] such that [p(q/Q -> (q - y) / Q) = x] where
+     [x] is the amount of 'proceed' token units to be traded for [y] 'self' token units.
 
-      Solving the above equation for [y] gives irrational solutions. We instead use Newton's method to
-      find an approximate solution. The Newton step is given as
-      {v
-        y_{i + 1} = y_i - p(q/Q, (q - y_i)/Q) / p'(q/Q, (q - y_i)/Q)
-                  = FullySimplify[%]
-                  = 3 y_i⁴ + 6 y_i² (q - Q)² + 8 y_i³ (-q + Q) + 80 Q³ x 
-                    -----------------------------------------------------------
-                    4 ((y_i - q)³ + 3 (y_i - q)² Q + 3 (y_i - q) Q² + 21 Q³)
-      v}
+     Solving the above equation for [y] gives irrational solutions. We instead use Newton's method to
+     find an approximate solution. The Newton step is given as
+     {v
+       y_{i + 1} = y_i - (p(q/Q, (q - y_i)/Q) - x) / p'(q/Q, (q - y_i)/Q)
+                 = FullSimplify[%]
+                 = 3 y_i⁴ + 6 y_i² (q - Q)² + 8 y_i³ (-q + Q) + 80 Q³ x
+                   -----------------------------------------------------------
+                   4 ((y_i - q)³ + 3 (y_i - q)² Q + 3 (y_i - q) Q² + 21 Q³)
+     v}
 
-      Note that since marginal price function is generally very nearly linear in the region [0, 1], 
-      so Newton converges stupidly fast.
+     Note that since marginal price function is generally very nearly linear in the region [0, 1],
+     so Newton converges stupidly fast.
   *)
 
   [@inline]
