@@ -19,7 +19,7 @@
 *)
 
 type environment = {
-  transfer_self : Context.t -> address -> address -> nat -> operation; 
+  transfer_self : Context.t -> address -> nat -> operation; 
   transfer_proceeds : Context.t -> address -> nat -> operation; 
   get_target_self_reserves : Context.t -> nat;
   div_by_target : Context.t -> nat -> nat;
@@ -175,6 +175,7 @@ let remove_liquidity
     (t : t)
     (ctxt : Context.t)
     (env : environment)
+    (is_self_token_tez: bool)
     ({ 
       to_;
       liquidity_redeemed;
@@ -221,17 +222,20 @@ let remove_liquidity
     subsidy_owed;
   }) in
 
-  let ops = [] in
+  let unshift_self_token_transfer (ops: operation list) = if ( self_redeemed > 0n ) 
+    then env.transfer_self ctxt to_ self_redeemed :: ops 
+    else ops in
+
+  let unshift_proceeds_transfer (ops: operation list) = if ( proceeds_redeemed > 0n ) 
+    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
+    else ops in
+
+  let ops = if (is_self_token_tez) 
+    then unshift_proceeds_transfer (unshift_self_token_transfer []) 
+    else unshift_self_token_transfer (unshift_proceeds_transfer []) in
   let ops = if ( subsidy_redeemed > 0n ) 
     then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops 
     else ops in
-  let ops = if ( proceeds_redeemed > 0n ) 
-    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
-    else ops in
-  let ops = if ( self_redeemed > 0n ) 
-    then env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_redeemed :: ops 
-    else ops in
-
   { 
     dex = t;
     ops;
@@ -294,12 +298,11 @@ let collect_proceeds_and_subsidy
     subsidy_owed;
   } in
 
-  let ops = [] in
+  let ops = if (proceeds_redeemed > 0n) 
+    then [env.transfer_proceeds ctxt to_ proceeds_redeemed] 
+    else [] in
   let ops = if (subsidy_redeemed > 0n) 
     then Context.transfer_ctez ctxt (Tezos.get_self_address ()) to_ subsidy_redeemed :: ops 
-    else ops in
-  let ops = if (proceeds_redeemed > 0n) 
-    then env.transfer_proceeds ctxt to_ proceeds_redeemed :: ops 
     else ops in
 
   { 
@@ -415,5 +418,5 @@ let swap
     self_reserves = subtract_nat t.self_reserves self_to_sell Errors.insufficient_tokens_liquidity; 
     proceeds_reserves = t.proceeds_reserves + proceeds_amount
   } in
-  let receive_self = env.transfer_self ctxt (Tezos.get_self_address ()) to_ self_to_sell in
-  [ receive_self ], t
+  let transfer_self = env.transfer_self ctxt to_ self_to_sell in
+  [ transfer_self ], t

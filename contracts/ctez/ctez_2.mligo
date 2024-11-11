@@ -116,14 +116,14 @@ let get_ctez_mint_or_burn (fa12_address : address) : (int * address) contract =
 (* Environments *)
 
 let sell_tez_env : Half_dex.environment = {
-  transfer_self = fun (_) (_) (r) (a) -> Context.transfer_xtz r a;
+  transfer_self = fun (_) (r) (a) -> Context.transfer_xtz r a;
   transfer_proceeds = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
   get_target_self_reserves = fun (c) -> max (Float64.mul c._Q c.target) 1n;
   div_by_target = fun (c) (amt) -> Float64.mul amt c.target;
 }
 
 let sell_ctez_env : Half_dex.environment = {
-  transfer_self = fun (c) (s) (r) (a) -> Context.transfer_ctez c s r a;
+  transfer_self = fun (c) (r) (a) -> Context.transfer_ctez c (Tezos.get_self_address ()) r a;
   transfer_proceeds = fun (_) (r) (a) -> Context.transfer_xtz r a;
   get_target_self_reserves = fun (c) -> c._Q;
   div_by_target = fun (c) (amt) -> Float64.div amt c.target;
@@ -584,7 +584,7 @@ let remove_tez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let { dex = sell_tez; ops; amounts; } = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env p in
+  let { dex = sell_tez; ops; amounts; } = Half_dex.remove_liquidity s.sell_tez s.context sell_tez_env True p in
   let (ops, s) = append_remove_liquidity_event amounts False s ops in
   List.append house_ops ops, { s with sell_tez }
 
@@ -629,7 +629,7 @@ let remove_ctez_liquidity
     : result =
   let house_ops, s = do_housekeeping s in
   let () = assert_no_tez_in_transaction () in
-  let { dex = sell_ctez; ops; amounts; } = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env p in
+  let { dex = sell_ctez; ops; amounts; } = Half_dex.remove_liquidity s.sell_ctez s.context sell_ctez_env False p in
   let (ops, s) = append_remove_liquidity_event amounts True s ops in
   List.append house_ops ops, { s with sell_ctez }
 
