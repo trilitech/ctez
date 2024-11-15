@@ -29,7 +29,7 @@ jobs:
       - name: Install the project dependencies
         run: poetry install
       - name: Run the automated tests
-        run: poetry run execute_every_entrypoint --ctez-address KT1G9uxhbEApw2Z7yvUA4WvqCedG2a48ggzc --delegate tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP
+        run: poetry run execute_every_entrypoint --ctez-address KT1UA7PpRfiTdidWvxxByXPSyYJmcGy3zD4t --delegate tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           RPC_URL: ${{ secrets.RPC_URL }}
