@@ -4,7 +4,7 @@ import { sub, format } from 'date-fns';
 import { getActualCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
 import { getCtezFa12TotalSupply } from '../contracts/fa12';
 import { BaseStats, CTezStorage, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
-import { RPC_URL } from '../utils/globals';
+import { CTEZ_CONTRACT_BIGMAP, RPC_URL } from '../utils/globals';
 import { getOvenCtezOutstandingAndFeeIndex, getUpdatedDexFeeIndex } from '../utils/ovenUtils';
 import { getCTezTzktStorage, getLastBlockOfTheDay, getUserOvensAPI } from './tzkt';
 
@@ -110,7 +110,7 @@ export const getBaseStats = async (): Promise<BaseStats> => {
 
 export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalance> => {
   const data = await getBaseStats();
-  const userOvenData = await getUserOvensAPI(userAddress);
+  const userOvenData = await getUserOvensAPI(userAddress, CTEZ_CONTRACT_BIGMAP);
 
   try {
     return userOvenData.reduce(

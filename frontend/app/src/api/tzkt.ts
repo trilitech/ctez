@@ -77,9 +77,9 @@ export const getAllOvensAPI = async (): Promise<AllOvenDatum[]> => {
   return data;
 };
 
-export const getUserOvensAPI = async (userAddress: string): Promise<AllOvenDatum[]> => {
+export const getUserOvensAPI = async (userAddress: string, bigMapId: string): Promise<AllOvenDatum[]> => {
   const data = await getAllChunks<AllOvenDatum>(
-    `bigmaps/${CTEZ_CONTRACT_BIGMAP}/keys`,
+    `bigmaps/${bigMapId}/keys`,
     1000,
     { 'key.owner': userAddress },
   );

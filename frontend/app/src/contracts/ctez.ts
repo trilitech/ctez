@@ -24,7 +24,7 @@ import {
   TezToCtezParams,
   TokenToTokenParams,
 } from '../interfaces';
-import { CTEZ_ADDRESS } from '../utils/globals';
+import { CTEZ_ADDRESS, CTEZ_CONTRACT_BIGMAP } from '../utils/globals';
 import { logger } from '../utils/logger';
 import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
 import { getTezosInstance } from './client';
@@ -378,7 +378,7 @@ export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] 
     if (!cTez && CTEZ_ADDRESS) {
       await initCTez(CTEZ_ADDRESS);
     }
-    const userOvenData = await getUserOvensAPI(userAddress);
+    const userOvenData = await getUserOvensAPI(userAddress, CTEZ_CONTRACT_BIGMAP);
     return userOvenData;
   } catch (error: any) {
     logger.error(error);

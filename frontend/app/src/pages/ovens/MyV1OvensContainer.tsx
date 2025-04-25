@@ -5,7 +5,7 @@ import OvenCard from '../../components/OvenCard/OvenCard';
 import OvenSummary from '../../components/OvenSummary';
 import { useSortedOvensList } from '../../hooks/utilHooks';
 import { useWallet } from '../../wallet/hooks';
-import { useUserOvenData } from '../../api/queries';
+import { useUserOvenData } from '../../api/v1/queries';
 
 
 const MyV1OvensContainer: React.FC = () => {
