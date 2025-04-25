@@ -25,7 +25,10 @@ import Button from '../../components/button';
 import { setClear, setSearchValue, setSortBy } from '../../redux/slices/OvenSlice';
 import AllOvensContainer from './AllOvensContainer';
 import MyOvensContainer from './MyOvensContainer';
+import MyV1OvensContainer from './MyV1OvensContainer';
 import { useThemeColors } from '../../hooks/utilHooks';
+
+enum OvensSubView { All, My, MyV1 }
 
 const OvensPage: React.FC = () => {
   const location = useLocation();
@@ -34,8 +37,14 @@ const OvensPage: React.FC = () => {
   const [mobileScreen] = useMediaQuery(['(max-width: 600px)']);
   const [searchtext, setSearchtext] = useState('');
 
-  const isMyOven = useMemo(() => {
-    return location.pathname === '/myovens' || location.pathname === '/myovens/';
+  const selectedSubView = useMemo(() => {
+    if (['/myovens', '/myovens/'].includes(location.pathname))
+      return OvensSubView.My;
+
+    if (['/myv1ovens', '/myv1ovens/'].includes(location.pathname))
+      return OvensSubView.MyV1;
+
+    return OvensSubView.All;
   }, [location]);
 
   const SetSortType = (value: string) => {
@@ -120,7 +129,7 @@ const OvensPage: React.FC = () => {
           <option value="Outstanding">Outstanding</option>
           <option value="Utilization">Utilization</option>
         </Select>
-        {!isMyOven && (
+        {selectedSubView === OvensSubView.All && (
           <div>
             <Input
               type="text"
@@ -148,9 +157,9 @@ const OvensPage: React.FC = () => {
       </Flex>
 
       <Box d="table" w="100%" mt={16}>
-        {!isMyOven && <AllOvensContainer />}
-
-        {isMyOven && <MyOvensContainer />}
+        {selectedSubView === OvensSubView.All && <AllOvensContainer />}
+        {selectedSubView === OvensSubView.My && <MyOvensContainer />}
+        {selectedSubView === OvensSubView.MyV1 && <MyV1OvensContainer />}
       </Box>
     </Box>
   );

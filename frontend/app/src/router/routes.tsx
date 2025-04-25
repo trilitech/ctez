@@ -20,6 +20,11 @@ export const routes: ComponentRoute[] = [
     exact: true,
   },
   {
+    path: '/myv1ovens',
+    Component: <OvensPage />,
+    exact: true,
+  },
+  {
     path: '/analytics',
     Component: <AnalyticsPage />,
     exact: true,

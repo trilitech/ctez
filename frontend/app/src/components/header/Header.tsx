@@ -54,6 +54,13 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
       setHeaderIconText({ text: `My Ovens`, icon: <MyOvens /> });
     } else if (
       matchPath(pathName, {
+        path: '/myv1ovens',
+        exact: true,
+      })
+    ) {
+      setHeaderIconText({ text: `My V1 Ovens`, icon: <MyOvens /> });
+    } else if (
+      matchPath(pathName, {
         path: '/ovens',
         exact: true,
       })
