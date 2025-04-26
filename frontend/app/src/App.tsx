@@ -14,6 +14,8 @@ import { getNodePort, getNodeURL } from './utils/settingUtils';
 import ModalContainer from './components/modals/ModalContainer';
 import theme from './theme/theme';
 import ErrorBoundary from './components/ErrorBoundary';
+import { initCfmm } from './v1/contracts/cfmm';
+import { CFMM_ADDRESS } from './v1/utils/globals';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,7 @@ const App: React.FC = () => {
         initTezos(nodeUrl ?? RPC_URL, nodePort ?? RPC_PORT);
         await checkWalletConnection();
         CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
+        CFMM_ADDRESS && (await initCfmm(CFMM_ADDRESS));
       } catch (error : any) {
         logger.error(error);
       }
