@@ -12,8 +12,8 @@ export const getCTezFa12Contract = async (address = CTEZ_FA12_ADDRESS): Promise<
   return CTezFa12;
 };
 
-export const getCtezFa12TotalSupply = async (): Promise<BigNumber> => {
-  const contract = await getCTezFa12Contract();
+export const getCtezFa12TotalSupply = async (address = CTEZ_FA12_ADDRESS): Promise<BigNumber> => {
+  const contract = await getCTezFa12Contract(address);
   const totalSupply = new BigNumber((await contract.contractViews.viewTotalSupply().executeView({viewCaller: contract.address})) ?? 0);
   return totalSupply;
 };

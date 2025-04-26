@@ -38,6 +38,12 @@ const getAllChunks = async <T>(
   return result;
 }
 
+export const getTimeStampOfBlock = async (block: number) => {
+  const response = await get(`blocks/${block}`) as any;
+
+  return response.timestamp;
+};
+
 export const getDelegates = async (userAddress?: string): Promise<Baker[]> => {
   const data: string[][] = await getAllChunks(
     'delegates?active=true&select.values=alias,address&sort.desc=stakingBalance',
