@@ -2,6 +2,9 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "16"
+  },
   "dependencies": {
     "@airgap/beacon-sdk": "^3.3.4",
     "@chakra-ui/react": "^1.6.7",
