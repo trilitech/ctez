@@ -41,7 +41,7 @@ const OvensPage: React.FC = () => {
     if (['/myovens', '/myovens/'].includes(location.pathname))
       return OvensSubView.My;
 
-    if (['/myv1ovens', '/myv1ovens/'].includes(location.pathname))
+    if (['/myV1Ovens', '/myV1Ovens/'].includes(location.pathname))
       return OvensSubView.MyV1;
 
     return OvensSubView.All;
