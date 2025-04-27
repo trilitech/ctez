@@ -5,8 +5,6 @@ import { getOvenMaxCtez } from '../utils/ovenUtils';
 import { formatNumber } from '../../utils/numbers';
 import { 
   AllOvenDatum, 
-} from '../../interfaces';
-import { 
   BaseStats 
 } from '../interfaces';
 import { useCtezBaseStats } from '../api/queries';

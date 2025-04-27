@@ -1,11 +1,11 @@
 import { Center, Text } from '@chakra-ui/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import SkeletonLayout from '../../components/skeleton';
-import OvenCard from '../../components/OvenCard/OvenCard';
 import OvenSummary from '../../v1/components/OvenSummary';
 import { useSortedOvensList } from '../../hooks/utilHooks';
 import { useWallet } from '../../wallet/hooks';
 import { useUserOvenData } from '../../v1/api/queries';
+import OvenCard from '../../v1/components/OvenCard/OvenCard';
 
 
 const MyV1OvensContainer: React.FC = () => {

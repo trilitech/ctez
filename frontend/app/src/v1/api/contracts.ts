@@ -109,20 +109,20 @@ export const getBaseStats = async (userAddress?: string): Promise<BaseStats> => 
 //   };
 // };
 
-// export const isMonthFromLiquidation = (
-//   outstandingCtez: number,
-//   target: number,
-//   tezBalance: number,
-//   currentDrift: number,
-//   noTargetScale?: boolean,
-// ): boolean => {
-//   const scaledTarget = noTargetScale ? target : target / 2 ** 48;
+export const isMonthFromLiquidation = (
+  outstandingCtez: number,
+  target: number,
+  tezBalance: number,
+  currentDrift: number,
+  noTargetScale?: boolean,
+): boolean => {
+  const scaledTarget = noTargetScale ? target : target / 2 ** 48;
 
-//   return (
-//     outstandingCtez *
-//       scaledTarget *
-//       (1 + currentDrift / 2 ** 48) ** ((365.25 * 24 * 3600) / 12) *
-//       (16 / 15) >
-//     tezBalance
-//   );
-// };
+  return (
+    outstandingCtez *
+      scaledTarget *
+      (1 + currentDrift / 2 ** 48) ** ((365.25 * 24 * 3600) / 12) *
+      (16 / 15) >
+    tezBalance
+  );
+};
