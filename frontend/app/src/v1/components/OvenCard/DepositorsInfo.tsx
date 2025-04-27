@@ -119,11 +119,11 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
 
         {content}
 
-        {!isImported && (
+        {/* {!isImported && (
           <Button w="100%" variant="outline" leftIcon={<MdEdit />} onClick={() => setEdit(true)}>
             {t('editDepositors')}
           </Button>
-        )}
+        )} */}
       </Stack>
 
       {/* {oven && (

@@ -228,9 +228,9 @@ const CollateralOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported:
         </Flex>
 
         <HStack w="100%" justifyContent="space-between" spacing="24px">
-          <Button variant="outline" w="95%" onClick={handleDepositClick}>
+          {/* <Button variant="outline" w="95%" onClick={handleDepositClick} disabled>
             {t('deposit')}
-          </Button>
+          </Button> */}
 
           <Button variant="outline" w="100%" onClick={handleWithdrawClick}>
             {t('withdraw')}

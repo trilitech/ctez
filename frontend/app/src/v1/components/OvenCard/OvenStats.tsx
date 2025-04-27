@@ -71,7 +71,7 @@ const OvenStats: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
     <Stack p={8} spacing={4} backgroundColor={background} borderRadius={16}>
       <div>
         <Text color={textcolor} fontWeight="600">
-          {t('ovenStats')}
+          {t('v1OvenStats')}
           <Tooltip label={showInfo} placement="right" borderRadius={14} backgroundColor={cardbg}>
             <span>
               <Icon opacity="0.3" fontSize="lg" color={text4} as={MdInfo} m={1} mb={1} />

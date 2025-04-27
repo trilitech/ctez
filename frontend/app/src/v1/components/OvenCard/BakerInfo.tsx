@@ -116,11 +116,11 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
           <Text as="span" my="auto" flexGrow={1} mx={2}>
             <CopyAddress address={bakerToDisplay}>{bakerToDisplay}</CopyAddress>
           </Text>
-          {!isImported && (
-            <Button variant="ghost" size="sm" onClick={() => setEdit(true)} disabled={processing}>
+          {/* {!isImported && (
+            <Button variant="ghost" size="sm" onClick={() => setEdit(true)} disabled={processing} isDisabled>
               {t('edit')}
             </Button>
-          )}
+          )} */}
         </Flex>
       );
     }

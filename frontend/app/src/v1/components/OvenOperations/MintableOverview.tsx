@@ -169,9 +169,9 @@ const MintableOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: b
 
         {!isImported && (
           <HStack w="100%" justifyContent="space-between" spacing="24px">
-            <Button variant="outline" w="95%" onClick={() => setMintOpen(true)}>
+            {/* <Button variant="outline" w="95%" onClick={() => setMintOpen(true)} disabled>
               Mint
-            </Button>
+            </Button> */}
 
             <Button variant="outline" w="100%" onClick={() => setBurnOpen(true)}>
               Burn
