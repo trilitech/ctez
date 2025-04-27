@@ -1,14 +1,14 @@
 import { Center, Stack, Text, useMediaQuery } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import { useMemo } from 'react';
-import OvenStats from '../../../components/OvenCard/OvenStats';
+import OvenStats from '../../../v1/components/OvenCard/OvenStats';
 import { useWallet } from '../../../wallet/hooks';
-import BakerInfo from '../../../components/OvenCard/BakerInfo';
-import DepositorsInfo from '../../../components/OvenCard/DepositorsInfo';
-import CollateralOverview from '../../../components/OvenOperations/CollateralOverview';
-import MintableOverview from '../../../components/OvenOperations/MintableOverview';
-import { useOvenDataByAddresses } from '../../../api/queries';
-import { AllOvenDatum } from '../../../interfaces';
+import BakerInfo from '../../../v1/components/OvenCard/BakerInfo';
+import DepositorsInfo from '../../../v1/components/OvenCard/DepositorsInfo';
+import CollateralOverview from '../../../v1/components/OvenOperations/CollateralOverview';
+import MintableOverview from '../../../v1/components/OvenOperations/MintableOverview';
+import { useOvenDataByAddresses } from '../../../v1/api/queries';
+import { AllOvenDatum } from '../../../v1/interfaces';
 
 const OvenIdPage: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();

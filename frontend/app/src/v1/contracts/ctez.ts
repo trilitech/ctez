@@ -1,4 +1,5 @@
 import {
+  TransactionWalletOperation,
   // OpKind,
   // TransactionWalletOperation,
   WalletContract,
@@ -20,12 +21,13 @@ import { logger } from '../../utils/logger';
 // import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
 // import { getTezosInstance } from './client';
 import { 
+  executeMethod,
   // executeMethod, 
   initContract 
 } from '../../contracts/utils';
 import { 
   // getAllOvensAPI, 
-  // getOvenByAddressAPI, 
+  getOvenByAddressAPI, 
   getUserOvensAPI 
 } from '../../api/tzkt';
 import { CTezStorage } from '../interfaces';
@@ -71,14 +73,14 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
 //   return operation;
 // };
 
-// export const delegate = async (
-//   ovenAddress: string,
-//   bakerAddress: string,
-// ): Promise<TransactionWalletOperation> => {
-//   const ovenContract = await initContract(ovenAddress);
-//   const operation = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
-//   return operation;
-// };
+export const delegate = async (
+  ovenAddress: string,
+  bakerAddress: string,
+): Promise<TransactionWalletOperation> => {
+  const ovenContract = await initContract(ovenAddress);
+  const operation = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
+  return operation;
+};
 
 // const prepareOvenAllowAddressCall = (
 //   ovenContract: WalletContract,
@@ -174,14 +176,14 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
 //   return operation;
 // };
 
-// export const withdraw = async (
-//   ovenId: number,
-//   amount: number,
-//   to: string,
-// ): Promise<TransactionWalletOperation> => {
-//   const operation = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
-//   return operation;
-// };
+export const withdraw = async (
+  ovenId: number,
+  amount: number,
+  to: string,
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
+  return operation;
+};
 
 // export const liquidate = async (
 //   ovenId: number,
@@ -193,13 +195,13 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
 //   return operation;
 // };
 
-// export const mintOrBurn = async (
-//   ovenId: number,
-//   quantity: number,
-// ): Promise<TransactionWalletOperation> => {
-//   const operation = await executeMethod(cTez, 'mint_or_burn', [ovenId, quantity * 1e6]);
-//   return operation;
-// };
+export const mintOrBurn = async (
+  ovenId: number,
+  quantity: number,
+): Promise<TransactionWalletOperation> => {
+  const operation = await executeMethod(cTez, 'mint_or_burn', [ovenId, quantity * 1e6]);
+  return operation;
+};
 
 // export const getOvenDelegate = async (userOven: string): Promise<string | null> => {
 //   const tezos = getTezosInstance();
@@ -277,18 +279,18 @@ export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] 
   }
 };
 
-// export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undefined> => {
-//   try {
-//     if (!cTez && CTEZ_ADDRESS) {
-//       await initCTez(CTEZ_ADDRESS);
-//     }
-//     const ovenDatum = await getOvenByAddressAPI(ovenAddress);
-//     return ovenDatum;
-//   } catch (error) {
-//     logger.error(error);
-//     return undefined;
-//   }
-// };
+export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undefined> => {
+  try {
+    if (!cTez && CTEZ_ADDRESS) {
+      await initCTez(CTEZ_ADDRESS);
+    }
+    const ovenDatum = await getOvenByAddressAPI(ovenAddress, CTEZ_CONTRACT_BIGMAP);
+    return ovenDatum;
+  } catch (error) {
+    logger.error(error);
+    return undefined;
+  }
+};
 
 // export const getExternalOvenData = async (
 //   externalOvens: string[],

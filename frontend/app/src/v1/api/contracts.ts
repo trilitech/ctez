@@ -12,14 +12,15 @@ import {
   // OvenBalance,
   // UserLQTData
 } from '../interfaces';
-import { CONTRACT_DEPLOYMENT_DATE } from '../utils/globals';
+import { CONTRACT_DEPLOYMENT_DATE, CTEZ_CONTRACT_BIGMAP } from '../utils/globals';
 import { RPC_URL } from '../../utils/globals';
 import {
   getCTezTzktStorage,
   getLastBlockOfTheDay,
   getTimeStampOfBlock,
-  // getUserOvensAPI
+  getUserOvensAPI
 } from '../../api/tzkt';
+import { OvenBalance } from '../../interfaces';
 
 export const getPrevCTezStorage = async (
   days = 7,
@@ -75,26 +76,26 @@ export const getBaseStats = async (userAddress?: string): Promise<BaseStats> => 
   };
 };
 
-// export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalance> => {
-//   const userOvenData = await getUserOvensAPI(userAddress);
-//   try {
-//     return userOvenData.reduce(
-//       (acc, cur) => ({
-//         tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
-//         ctezOutstanding: acc.tezInOvens + Number(cur.value.ctez_outstanding) / 1e6,
-//       }),
-//       {
-//         tezInOvens: 0,
-//         ctezOutstanding: 0,
-//       },
-//     );
-//   } catch (error) {
-//     return {
-//       tezInOvens: 0,
-//       ctezOutstanding: 0,
-//     };
-//   }
-// };
+export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalance> => {
+  const userOvenData = await getUserOvensAPI(userAddress, CTEZ_CONTRACT_BIGMAP);
+  try {
+    return userOvenData.reduce(
+      (acc, cur) => ({
+        tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
+        ctezOutstanding: acc.tezInOvens + Number(cur.value.ctez_outstanding) / 1e6,
+      }),
+      {
+        tezInOvens: 0,
+        ctezOutstanding: 0,
+      },
+    );
+  } catch (error) {
+    return {
+      tezInOvens: 0,
+      ctezOutstanding: 0,
+    };
+  }
+};
 
 // export const getUserLQTData = async (userAddress: string): Promise<UserLQTData> => {
 //   const cfmmStorage = await getCfmmStorage();

@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 import { 
-  // useQueries, 
+  useQueries, 
   useQuery 
 } from 'react-query';
 import { UseQueryResult } from 'react-query/types/react/types';
@@ -8,7 +8,7 @@ import { UseQueryResult } from 'react-query/types/react/types';
 import {
   // getAllOvens,
   // getExternalOvenData,
-  // getOven,
+  getOven,
   // getOvenDelegate,
   // getOvens,
   // getOvenStorage,
@@ -21,7 +21,7 @@ import {
   // CfmmStorage,
   // Oven,
   // OvenStorage,
-  // UserBalance,
+  UserBalance,
   // UserLQTData,
 } from '../../interfaces';
 import { 
@@ -30,7 +30,7 @@ import {
 } from './contracts';
 import { BaseStats } from '../interfaces';
 // import { getDelegates } from './tzkt';
-// import { getUserBalance } from './user';
+import { getUserBalance } from './user';
 
 type TUseQueryReturn<T> = UseQueryResult<T | undefined, AxiosError>;
 
@@ -53,20 +53,21 @@ export const useCtezBaseStats = (userAddress?: string) => {
   );
 };
 
-// export const useUserBalance = (userAddress?: string) => {
-//   return useQuery<UserBalance | undefined, AxiosError, UserBalance | undefined>(
-//     [`v1user-balance-${userAddress}`],
-//     () => {
-//       if (userAddress) {
-//         return getUserBalance(userAddress);
-//       }
-//     },
-//     {
-//       refetchInterval: 30_000,
-//       staleTime: 3_000,
-//     },
-//   );
-// };
+export const useUserBalance = (userAddress?: string) => {
+  return useQuery<UserBalance | undefined, AxiosError, UserBalance | undefined>(
+    [`v1user-balance-${userAddress}`],
+    () => {
+      if (userAddress) {
+        return getUserBalance(userAddress);
+      }
+    },
+    {
+      refetchInterval: 30_000,
+      staleTime: 3_000,
+    },
+  );
+};
+
 // export const useCfmmStorage = () => {
 //   return useQuery<CfmmStorage, AxiosError, CfmmStorage>(
 //     ['v1cfmmStorage'],
@@ -138,16 +139,16 @@ export const useUserOvenData = (
   );
 };
 
-// export const useOvenDataByAddresses = (ovenAddresses: string[]) => {
-//   return useQueries(
-//     ovenAddresses.map((address) => ({
-//       queryKey: ['v1ovenData', address],
-//       queryFn: () => {
-//         return getOven(address);
-//       },
-//     })),
-//   );
-// };
+export const useOvenDataByAddresses = (ovenAddresses: string[]) => {
+  return useQueries(
+    ovenAddresses.map((address) => ({
+      queryKey: ['v1ovenData', address],
+      queryFn: () => {
+        return getOven(address);
+      },
+    })),
+  );
+};
 
 // export const useOvenStorage = (ovenAddress?: string) => {
 //   return useQuery<OvenStorage | undefined, AxiosError, OvenStorage | undefined>(

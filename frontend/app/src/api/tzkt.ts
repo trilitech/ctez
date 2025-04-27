@@ -92,9 +92,9 @@ export const getUserOvensAPI = async (userAddress: string, bigMapId: string): Pr
   return data;
 };
 
-export const getOvenByAddressAPI = async (ovenAddress: string): Promise<AllOvenDatum> => {
+export const getOvenByAddressAPI = async (ovenAddress: string, ctezContractBigMap = CTEZ_CONTRACT_BIGMAP): Promise<AllOvenDatum> => {
   const data = await getAllChunks<AllOvenDatum>(
-    `bigmaps/${CTEZ_CONTRACT_BIGMAP}/keys`,
+    `bigmaps/${ctezContractBigMap}/keys`,
     1000,
     {
       'value.address': ovenAddress,
