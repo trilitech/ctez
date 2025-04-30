@@ -279,19 +279,11 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
                 </MenuItem>
                 <MenuItem
                   className={clsx({
-                    highlight: location.pathname === '/myovens',
+                    highlight: ['/myovens', '/myV1Ovens'].some(path => location.pathname === path),
                   })}
                   icon={<MyOvens />}
                 >
                   <Link to="/myovens">My Ovens</Link>
-                </MenuItem>
-                <MenuItem
-                  className={clsx({
-                    highlight: location.pathname === '/myV1Ovens',
-                  })}
-                  icon={<MyOvens />}
-                >
-                  <Link to="/myV1Ovens">My V1 Ovens</Link>
                 </MenuItem>
                 <MenuItem
                   className={clsx({

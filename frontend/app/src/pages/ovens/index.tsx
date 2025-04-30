@@ -13,11 +13,12 @@ import {
   Menu,
   Input,
   Button as ChakraButton,
+  ButtonGroup,
 } from '@chakra-ui/react';
-import { MdAdd, MdInfo } from 'react-icons/md';
+import { MdAdd, MdInfo, MdSwapHoriz } from 'react-icons/md';
 import { BsArrowRight, BsThreeDotsVertical } from 'react-icons/bs';
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { useAppDispatch } from '../../redux/store';
 import { openModal } from '../../redux/slices/UiSlice';
 import { MODAL_NAMES } from '../../constants/modals';
@@ -34,7 +35,7 @@ const OvensPage: React.FC = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const [background, text4, textcolor, cardbg] = useThemeColors(['cardbg', 'text4', 'textColor', 'cardbg']);
-  const [mobileScreen] = useMediaQuery(['(max-width: 600px)']);
+  const [mobileScreen] = useMediaQuery(['(max-width: 1058px)']);
   const [searchtext, setSearchtext] = useState('');
 
   const selectedSubView = useMemo(() => {
@@ -66,11 +67,10 @@ const OvensPage: React.FC = () => {
     }
   };
 
+  const history = useHistory();
+
   const toolBarButtons = useMemo(() => {
     if (mobileScreen) {
-      if (selectedSubView === OvensSubView.MyV1)
-        return null;
-
       return (
         <Menu>
           <MenuButton
@@ -80,24 +80,48 @@ const OvensPage: React.FC = () => {
             variant="outline"
           />
           <MenuList>
-            <MenuItem
-              icon={<BsArrowRight />}
-              onClick={() => dispatch(openModal(MODAL_NAMES.TRACK_OVEN))}
-            >
-              Track Oven
-            </MenuItem>
-            <MenuItem icon={<MdAdd />} onClick={() => dispatch(openModal(MODAL_NAMES.CREATE_OVEN))}>
-              Create Oven
-            </MenuItem>
+            {selectedSubView !== OvensSubView.MyV1 && <>
+              <MenuItem
+                icon={<BsArrowRight />}
+                onClick={() => dispatch(openModal(MODAL_NAMES.TRACK_OVEN))}
+              >
+                Track Oven
+              </MenuItem>
+              <MenuItem icon={<MdAdd />} onClick={() => dispatch(openModal(MODAL_NAMES.CREATE_OVEN))}>
+                Create Oven
+              </MenuItem>
+            </>}
+            {selectedSubView !== OvensSubView.All && (
+              <MenuItem
+                icon={<MdSwapHoriz />}
+                onClick={() => history.push(selectedSubView === OvensSubView.My ? '/myV1Ovens' : '/myovens')}
+              >
+                Switch to {selectedSubView === OvensSubView.My ? 'v1' : 'v2'}
+              </MenuItem>
+            )}
           </MenuList>
         </Menu>
       );
     }
 
     return (
-      <Flex>
+      <Flex gridGap={6} alignItems="center">
+        {selectedSubView !== OvensSubView.All && <ButtonGroup isAttached my="2px">
+          <Button
+            isActive={selectedSubView === OvensSubView.MyV1}
+            onClick={() => history.push('/myovens')}
+          >
+            v2
+          </Button>
+          <Button
+            isActive={selectedSubView === OvensSubView.My}
+            onClick={() => history.push('/myV1Ovens')}
+          >
+            v1
+          </Button>
+        </ButtonGroup>}
         {selectedSubView !== OvensSubView.MyV1
-          ? <>
+          ? <Flex>
             <Button
               rightIcon={<BsArrowRight />}
               variant="outline"
@@ -114,21 +138,21 @@ const OvensPage: React.FC = () => {
             >
               Create Oven
             </Button>
-          </>
-          : <Flex mr={-2} ml={-2} p={2} borderRadius={14} backgroundColor={cardbg} alignItems="center">
-              <Icon fontSize="2xl" color={text4} as={MdInfo} m={1} />
-              <Flex direction="column">
-                <Text fontSize="xs" ml={2} mr={2}>
-                  Manage your v1 (legacy) contract ovens here.
-                </Text>
-                <Text fontSize="xs" ml={2} mr={2}>
-                  Note: only burn ctez and withdraw tez are available. 
-                </Text>
-              </Flex>
+          </Flex>
+          : <Flex py="4px" px={2} borderRadius={14} backgroundColor={cardbg} alignItems="center">
+            <Icon fontSize="2xl" color={text4} as={MdInfo} m={1} />
+            <Flex direction="column">
+              <Text fontSize="xs" ml={2} mr={2}>
+                Manage your v1 (legacy) contract ovens here.
+              </Text>
+              <Text fontSize="xs" ml={2} mr={2}>
+                Note: only burn ctez and withdraw tez are available.
+              </Text>
+            </Flex>
           </Flex>}
       </Flex>
     );
-  }, [cardbg, dispatch, mobileScreen, selectedSubView, text4]);
+  }, [cardbg, dispatch, mobileScreen, selectedSubView, text4, history]);
 
   return (
     <Box maxWidth={1200} mx="auto" my={4} p={4}>
@@ -146,6 +170,7 @@ const OvensPage: React.FC = () => {
           <option value="Outstanding">Outstanding</option>
           <option value="Utilization">Utilization</option>
         </Select>
+
         {selectedSubView === OvensSubView.All && (
           <div>
             <Input
