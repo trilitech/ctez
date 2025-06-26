@@ -107,7 +107,7 @@ const CollectFromLiquidity: React.FC = () => {
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
       <Stack colorScheme="gray" spacing={2}>
         <DexSideSelector onChange={onHandleSideChanged} value={side} />
-        <FormControl id="to-input-amount" mb={2}>
+        {/* <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
             LQT Balance
           </FormLabel>
@@ -122,7 +122,7 @@ const CollectFromLiquidity: React.FC = () => {
             type="text"
             lang="en-US"
           />
-        </FormControl>
+        </FormControl> */}
 
         <Flex alignItems="center" direction="column" justifyContent="space-between">
           <FormControl id="to-input-amount">

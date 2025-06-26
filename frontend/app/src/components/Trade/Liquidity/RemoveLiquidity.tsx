@@ -179,8 +179,10 @@ const RemoveLiquidity: React.FC = () => {
             lang="en-US"
           />
           {typeof lqtBalance !== 'undefined' && (
-            <Text color={text4} fontSize="xs" mt={1} mb={2}>
-              Balance: {lqtBalance.toString(10)}{' '}
+            <Text color={text4} fontSize="xs" mt={1} mb={2} display="flex" flexWrap="nowrap" gridGap={1}>
+              <Text as="span" flexShrink={1} isTruncated>
+                Balance: {lqtBalance.toString(10)}
+              </Text>
               <Text
                 as="span"
                 cursor="pointer"
