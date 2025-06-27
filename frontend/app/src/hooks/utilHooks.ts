@@ -17,6 +17,7 @@ import { AllOvenDatum, Baker, BaseStats } from '../interfaces';
 import { logger } from '../utils/logger';
 import { openTxSubmittedModal } from '../redux/slices/UiSlice';
 import { useCtezBaseStats } from '../api/queries';
+import { useAppReload } from '../components/AppReloadProvider';
 
 type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
   stats: null | {
@@ -252,6 +253,7 @@ const useTxLoader = (): ((
   });
   const toastId = useMemo(() => (Math.random() + 1).toString(36).substring(2), []);
   const dispatch = useAppDispatch();
+  const { reloadApp } = useAppReload();
 
   return useCallback(
     (result: WalletOperation | TransactionWalletOperation) => {
@@ -281,6 +283,10 @@ const useTxLoader = (): ((
                 description: 'Transaction Confirmed',
                 duration: 5_000,
               });
+
+              setTimeout(() => {
+                reloadApp();
+              }, 3_000);
 
               return true;
             }

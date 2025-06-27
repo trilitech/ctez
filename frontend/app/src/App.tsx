@@ -16,6 +16,7 @@ import theme from './theme/theme';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initCfmm } from './v1/contracts/cfmm';
 import { CFMM_ADDRESS } from './v1/utils/globals';
+import { AppReloadProvider } from './components/AppReloadProvider';
 
 const queryClient = new QueryClient();
 
@@ -40,7 +41,7 @@ const App: React.FC = () => {
         await checkWalletConnection();
         CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
         CFMM_ADDRESS && (await initCfmm(CFMM_ADDRESS));
-      } catch (error : any) {
+      } catch (error: any) {
         logger.error(error);
       }
     };
@@ -49,18 +50,20 @@ const App: React.FC = () => {
 
   return (
     <Suspense fallback="Loading...">
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <WalletProvider value={{ wallet, setWallet }}>
-            <ChakraProvider theme={theme}>
-              <ErrorBoundary>
-                <AppRouter />
-                <ModalContainer />
-              </ErrorBoundary>
-            </ChakraProvider>
-          </WalletProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
+      <AppReloadProvider>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <WalletProvider value={{ wallet, setWallet }}>
+              <ChakraProvider theme={theme}>
+                <ErrorBoundary>
+                  <AppRouter />
+                  <ModalContainer />
+                </ErrorBoundary>
+              </ChakraProvider>
+            </WalletProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </AppReloadProvider>
     </Suspense>
   );
 };
