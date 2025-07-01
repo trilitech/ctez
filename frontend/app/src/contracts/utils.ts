@@ -24,13 +24,30 @@ export const executeMethod = async (
   return op;
 };
 
+const contractInitPromises: Record<string, Promise<ContractAbstraction<Wallet>> | undefined> = {};
+
 export const initContract = async (
   address: string | null = null,
 ): Promise<ContractAbstraction<Wallet>> => {
-  const tezos = getTezosInstance();
-  if (!address || tezos === null) {
-    throw new Error('contract address not set or Tezos not initialized');
+  if (!address) {
+    throw new Error('contract address not set');
   }
-  const contract = await tezos.wallet.at(address);
-  return contract;
+  if (contractInitPromises[address]) {
+    return contractInitPromises[address]!;
+  }
+  const tezos = getTezosInstance();
+  if (tezos === null) {
+    throw new Error('Tezos not initialized');
+  }
+  const promise = tezos.wallet.at(address)
+    .then(contract => {
+      delete contractInitPromises[address];
+      return contract;
+    })
+    .catch(err => {
+      delete contractInitPromises[address];
+      throw err;
+    });
+  contractInitPromises[address] = promise;
+  return promise;
 };
