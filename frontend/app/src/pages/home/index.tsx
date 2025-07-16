@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
             </Button>
             <Button variant="ghost" w="50%">
               <a
-                href="https://github.com/maxima-net/ctez/blob/ctez2/description_v2.md"
+                href="https://github.com/trilitech/ctez/blob/ctez2/description_v2.md"
                 target="_blank"
                 rel="noreferrer"
               >
