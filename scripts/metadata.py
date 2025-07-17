@@ -2,7 +2,7 @@ base_template = {
     'version': '2.0.0',
     'interfaces': ['TZIP-016'], 
     'license': {'name': 'MIT'},
-    'homepage': 'https://github.com/tezos-checker/ctez', 
+    'homepage': 'https://github.com/trilitech/ctez', 
 }
 
 ctez_fa12_metadata = base_template | {
