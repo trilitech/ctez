@@ -1,4 +1,4 @@
-import { Flex, FormControl, FormLabel, Input, Stack, useToast, Text, InputGroup } from '@chakra-ui/react';
+import { Flex, FormControl, FormLabel, Input, Stack, useToast, InputGroup, Slider, SliderTrack, SliderFilledTrack, SliderThumb } from '@chakra-ui/react';
 import { addMinutes } from 'date-fns/fp';
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -51,7 +51,7 @@ const RemoveLiquidity: React.FC = () => {
           minSubsidyReceived: '0',
         });
       } else if (ctezStorage && userAddress) {
-        const dex = isCtezSide ?ctezStorage.sell_ctez : ctezStorage.sell_tez;
+        const dex = isCtezSide ? ctezStorage.sell_ctez : ctezStorage.sell_tez;
         const account = await dex.liquidity_owners.get(userAddress);
         const slippageFactor = (1 - slippage * 0.01);
         const lqtBurnedNat = BigNumber.min(lqtBurned, lqtBalance).multipliedBy(1e6);
@@ -66,11 +66,12 @@ const RemoveLiquidity: React.FC = () => {
         });
       }
     },
-    [ctezStorage, slippage, side],
+    [ctezStorage, slippage, side, lqtBalance.toString(10), userAddress],
   );
 
   const initialValues: IRemoveLiquidityForm = {
     lqtBurned: lqtBalance.toString(10),
+    lqtBurnedPercent: 100,
     deadline: Number(deadlineFromStore),
     slippage: Number(slippage),
   };
@@ -96,6 +97,9 @@ const RemoveLiquidity: React.FC = () => {
         },
         message: t('shouldPositive'),
       }),
+    lqtBurnedPercent: number()
+      .min(0, 'should be positive')
+      .max(100, 'should be less than 100'),
     deadline: number().min(0).optional(),
     slippage: number().min(0).optional(),
   });
@@ -139,15 +143,53 @@ const RemoveLiquidity: React.FC = () => {
     formik.setFieldValue('lqtBurned', lqtBalance.toString(10));
   }, [lqtBalance.toString(10)]);
 
+  const debounceTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedCalcMinValues = useCallback((lqtBurned: BigNumber) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      calcMinValues(lqtBurned);
+    }, 500);
+  }, [calcMinValues]);
+
+  useEffect(() => {
+    debouncedCalcMinValues(new BigNumber(values.lqtBurned));
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [debouncedCalcMinValues, values.lqtBurned]);
+
   useEffect(() => {
     calcMinValues(new BigNumber(values.lqtBurned));
-  }, [calcMinValues, values.slippage, values.lqtBurned, side]);
+  }, [values.slippage, side]);
+
+  useEffect(() => {
+    const newLqtBurned = lqtBalance.multipliedBy(values.lqtBurnedPercent / 100).toFixed(6);
+    formik.setFieldValue('lqtBurned', newLqtBurned);
+  }, [values.lqtBurnedPercent, lqtBalance.toString(10)]);
+
+  // useEffect(() => {
+  //   const lqtBurnedValue = new BigNumber(values.lqtBurned);
+  //   if (!lqtBurnedValue.isNaN() && lqtBalance.gt(0)) {
+  //     const newPercent = lqtBurnedValue.dividedBy(lqtBalance).multipliedBy(100).toNumber();
+  //     formik.setFieldValue('lqtBurnedPercent', Math.max(0, Math.min(100, newPercent)));
+  //   }
+  // }, [values.lqtBurned, lqtBalance.toString(10)]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
     if (!userAddress) {
       return { buttonText: BUTTON_TXT.CONNECT, errorList: errorListLocal };
     }
+    
+    if (lqtBalance.isZero()) {
+      return { buttonText: BUTTON_TXT.NO_SHARE, errorList: [BUTTON_TXT.NO_SHARE] };
+    }
+
     if (values.lqtBurned) {
       if (errorListLocal.length > 0) {
         return { buttonText: errorListLocal[0], errorList: errorListLocal };
@@ -157,7 +199,7 @@ const RemoveLiquidity: React.FC = () => {
     }
 
     return { buttonText: BUTTON_TXT.ENTER_AMT, errorList: errorListLocal };
-  }, [errors, userAddress, values.lqtBurned]);
+  }, [errors, userAddress, values.lqtBurned, lqtBalance.toString(10)]);
 
   return (
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
@@ -165,9 +207,9 @@ const RemoveLiquidity: React.FC = () => {
         <DexSideSelector onChange={onHandleSideChanged} value={side} />
         <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
-            LQT to burn
+            LQT % to burn
           </FormLabel>
-          <Input
+          {/* <Input
             name="lqtBurned"
             id="lqtBurned"
             value={values.lqtBurned}
@@ -187,15 +229,51 @@ const RemoveLiquidity: React.FC = () => {
                 as="span"
                 cursor="pointer"
                 color={maxColor}
-                onClick={() =>
-                  formik.setFieldValue('lqtBurned', lqtBalance.toString(10))
-                }
+                onClick={() => {
+                  formik.setFieldValue('lqtBurnedPercent', 100);
+                  formik.setFieldValue('lqtBurned', lqtBalance.toString(10));
+                }}
               >
                 (Max)
               </Text>
             </Text>
-          )}
+          )} */}
+          <Input
+            type="number"
+            name="lqtBurnedPercent"
+            id="lqtBurnedPercent"
+            min={0}
+            max={100}
+            step={1}
+            value={values.lqtBurnedPercent}
+            onChange={e => {
+              let val = Number(e.target.value);
+              if (Number.isNaN(val)) val = 0;
+              val = Math.max(0, Math.min(100, Math.floor(val)));
+              formik.setFieldValue('lqtBurnedPercent', val);
+            }}
+            color={text2}
+            bg={inputbg}
+            mt={2}
+            fontSize="sm"
+          />
+          <Slider
+            value={values.lqtBurnedPercent}
+            min={0}
+            max={100}
+            step={1}
+            focusThumbOnChange={false}
+            onChange={val => formik.setFieldValue('lqtBurnedPercent', val)}
+            mt={2}
+            mb={2}
+          >
+            <SliderTrack>
+              <SliderFilledTrack />
+            </SliderTrack>
+            <SliderThumb sx={{ transform: 'translate(-50%, -50%)' }} _active={{ transform: 'translate(-50%, -50%) scale(1.2)' }} />
+          </Slider>
         </FormControl>
+
 
         <Flex alignItems="center" direction="column" justifyContent="space-between">
           <FormControl id="to-input-amount">
