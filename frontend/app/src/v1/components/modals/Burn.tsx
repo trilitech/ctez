@@ -61,7 +61,7 @@ const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
       <InputRightElement backgroundColor="transparent" w={24} color={text2}>
         <CTezIcon height={28} width={28} />
         <Text fontWeight="500" mx={2}>
-          ctez
+          ctez_v1
         </Text>
       </InputRightElement>
     );

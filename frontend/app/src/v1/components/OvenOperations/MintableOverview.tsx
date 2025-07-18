@@ -95,7 +95,7 @@ const MintableOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: b
           <Stack>
             <Skeleton isLoaded={stats?.outStandingCtez != null}>
               <Text color="4E5D78" fontWeight="600" fontSize="lg">
-                {formatNumberStandard(stats?.outStandingCtez)} ctez
+                {formatNumberStandard(stats?.outStandingCtez)} ctez_v1
               </Text>
             </Skeleton>
 
@@ -121,7 +121,7 @@ const MintableOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: b
           <Stack>
             <Skeleton isLoaded={stats?.maxMintableCtez != null}>
               <Text color="4E5D78" fontWeight="600" fontSize="lg">
-                {formatNumberStandard(stats?.maxMintableCtez)} ctez
+                {formatNumberStandard(stats?.maxMintableCtez)} ctez_v1
               </Text>
             </Skeleton>
 
@@ -147,7 +147,7 @@ const MintableOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: b
           <Stack>
             <Skeleton isLoaded={stats?.remainingMintableCtez != null}>
               <Text color="4E5D78" fontWeight="600" fontSize="lg">
-                {formatNumberStandard(stats?.remainingMintableCtez)} ctez
+                {formatNumberStandard(stats?.remainingMintableCtez)} ctez_v1
               </Text>
             </Skeleton>
 
