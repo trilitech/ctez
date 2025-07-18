@@ -82,7 +82,7 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
     return userOvenData.reduce(
       (acc, cur) => ({
         tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
-        ctezOutstanding: acc.tezInOvens + Number(cur.value.ctez_outstanding) / 1e6,
+        ctezOutstanding: acc.ctezOutstanding + Number(cur.value.ctez_outstanding) / 1e6,
       }),
       {
         tezInOvens: 0,
