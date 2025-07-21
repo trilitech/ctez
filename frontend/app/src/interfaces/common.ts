@@ -1,3 +1,5 @@
+import BigNumber from "bignumber.js";
+
 export interface ErrorType {
   [key: number]: string;
 }
@@ -6,8 +8,8 @@ export type AddressTrimSizeType = 'small' | 'medium' | 'large';
 
 export interface BaseStats {
   originalTarget: number;
-  ctezDexFeeIndex: number;
-  tezDexFeeIndex: number;
+  ctezDexFeeIndex: BigNumber;
+  tezDexFeeIndex: BigNumber;
   currentTarget: number;
   currentCtezSellPrice: number;
   currentTezSellPrice: number;

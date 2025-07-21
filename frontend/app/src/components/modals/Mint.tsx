@@ -16,6 +16,7 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
+import BigNumber from 'bignumber.js';
 import { MdInfo } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
@@ -87,7 +88,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
               baseStats?.currentTarget,
               tez,
               baseStats?.drift,
-              stats?.feeIndex ?? 2 ** 64,
+              stats?.feeIndex ?? new BigNumber(2 ** 64),
               storage
             );
             return !result;

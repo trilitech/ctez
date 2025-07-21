@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import BigNumber from 'bignumber.js';
 import { TransactionWalletOperation, WalletOperation } from '@taquito/taquito';
 import { Flex, Spinner, useColorMode, useToast } from '@chakra-ui/react';
 import { GroupBase, OptionsOrGroups } from 'react-select/dist/declarations/src';
@@ -29,7 +30,7 @@ type TUseOvenStats = (oven: AllOvenDatum | undefined | null) => {
     collateralRatio: string;
     reqTezBalance: number;
     withdrawableTez: number;
-    feeIndex: number;
+    feeIndex: BigNumber;
   };
   baseStats: BaseStats | undefined;
 };
@@ -44,12 +45,12 @@ const useOvenStats: TUseOvenStats = (oven) => {
       return null;
     }
 
-    const { tezBalance, ctezOutstanding, feeIndex } = (() => {
+    const { tezBalance, ctezOutstanding: ctezOutstandingBig, feeIndex } = (() => {
       const info = getOvenCtezOutstandingAndFeeIndex(
-        oven?.value.ctez_outstanding,
-        oven?.value.fee_index,
-        data?.ctezDexFeeIndex ?? 2 ** 64,
-        data?.tezDexFeeIndex ?? 2 ** 64
+        new BigNumber(oven?.value.ctez_outstanding),
+        new BigNumber(oven?.value.fee_index),
+        data?.ctezDexFeeIndex ?? new BigNumber(2 ** 64),
+        data?.tezDexFeeIndex ?? new BigNumber(2 ** 64)
       );
       return {
         tezBalance: oven?.value.tez_balance,
@@ -57,6 +58,8 @@ const useOvenStats: TUseOvenStats = (oven) => {
         feeIndex: info.feeIndex
       };
     })();
+
+    const ctezOutstanding = ctezOutstandingBig.toNumber();
 
     const { max, remaining } = currentTargetMintable
       ? getOvenMaxCtez(
@@ -137,18 +140,20 @@ const getOvenSummary = (ovens: AllOvenDatum[] | undefined | null, data: BaseStat
   let totalWithdrawableTez = 0;
 
   ovens.forEach((oven) => {
-    const { tezBalance, ctezOutstanding } = (() => {
+    const { tezBalance, ctezOutstanding: ctezOutstandingBig } = (() => {
       const info = getOvenCtezOutstandingAndFeeIndex(
-        oven?.value.ctez_outstanding,
-        oven?.value.fee_index,
-        data?.ctezDexFeeIndex ?? 2 ** 64,
-        data?.tezDexFeeIndex ?? 2 ** 64
+        new BigNumber(oven?.value.ctez_outstanding),
+        new BigNumber(oven?.value.fee_index),
+        data?.ctezDexFeeIndex ?? new BigNumber(2 ** 64),
+        data?.tezDexFeeIndex ?? new BigNumber(2 ** 64)
       );
       return {
         tezBalance: oven?.value.tez_balance,
         ctezOutstanding: info.ctezOutstanding
       };
     })();
+
+    const ctezOutstanding = ctezOutstandingBig.toNumber();
 
     const { max, remaining } = data?.originalTarget
       ? getOvenMaxCtez(

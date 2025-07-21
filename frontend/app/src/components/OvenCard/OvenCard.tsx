@@ -11,6 +11,7 @@ import {
   Text,
   useMediaQuery,
 } from '@chakra-ui/react';
+import BigNumber from 'bignumber.js';
 import React, { MouseEventHandler, useMemo, MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -59,7 +60,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
       data?.currentTarget ?? 0,
       stats?.ovenBalance ?? 0,
       data?.drift ?? 0,
-      stats?.feeIndex ?? 2 ** 64,
+      stats?.feeIndex ?? new BigNumber(2 ** 64),
       storage
     ),
     [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance, stats?.feeIndex, storage],

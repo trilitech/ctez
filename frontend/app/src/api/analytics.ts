@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { useQuery } from "react-query";
+import BigNumber from "bignumber.js";
 import {
   CtezStatsGql, OvenDonutGql, OvensSummaryGql, OvenTransactionGql, OvenTransactionDtoGql, OvenTvlGql,
   SwapTransactionsGql, TradeVolumeGql, AddLiquidityTransactionsGql, AddLiquidityTransactionsDto,
@@ -220,8 +221,8 @@ export const useTopOvensGraphGql = () => {
 
       let topOvensTotalOutstandingCtez = 0;
       const ovens = response.data.data.oven.map((oven: OvenDonutGql) => {
-        const { ctezOutstanding: ctezOutstandingNat } = getOvenCtezOutstandingAndFeeIndex(oven.ctez_outstanding * 1e6, oven.fee_index, baseStats.ctezDexFeeIndex, baseStats.tezDexFeeIndex);
-        const ctezOutstanding = ctezOutstandingNat / 1e6
+        const { ctezOutstanding: ctezOutstandingNat } = getOvenCtezOutstandingAndFeeIndex(new BigNumber(oven.ctez_outstanding).multipliedBy(1e6), new BigNumber(oven.fee_index), baseStats.ctezDexFeeIndex, baseStats.tezDexFeeIndex);
+        const ctezOutstanding = ctezOutstandingNat.dividedBy(1e6).toNumber();
         topOvensTotalOutstandingCtez += ctezOutstanding;
         return {
           ...oven,

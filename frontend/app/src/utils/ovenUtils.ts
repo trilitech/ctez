@@ -97,38 +97,38 @@ export const getOvenMaxCtez = (
 };
 
 export const getOvenCtezOutstandingAndFeeIndex = (
-  currentOvenOutstandingCtez: string | number,
-  currentOvenFeeIndex: string | number,
-  sellCtezDexFeeIndex: string | number,
-  sellTezDexFeeIndex: string | number,
-): { ctezOutstanding: number, feeIndex: number } => {
-  const dexFeeIndex = new BigNumber(sellCtezDexFeeIndex).multipliedBy(sellTezDexFeeIndex);
-  const prevCtezOutstanding = new BigNumber(currentOvenOutstandingCtez);
-  const prevFeeIndex = new BigNumber(currentOvenFeeIndex);
+  currentOvenOutstandingCtez: BigNumber,
+  currentOvenFeeIndex: BigNumber,
+  sellCtezDexFeeIndex: BigNumber,
+  sellTezDexFeeIndex: BigNumber,
+): { ctezOutstanding: BigNumber, feeIndex: BigNumber } => {
+  const dexFeeIndex = sellCtezDexFeeIndex.multipliedBy(sellTezDexFeeIndex);
+  const prevCtezOutstanding = currentOvenOutstandingCtez;
+  const prevFeeIndex = currentOvenFeeIndex;
   const ctezOutstanding = prevCtezOutstanding.multipliedBy(dexFeeIndex).dividedToIntegerBy(prevFeeIndex);
 
   const feeIndex = prevCtezOutstanding.isGreaterThan(0)
     ? ctezOutstanding.multipliedBy(prevFeeIndex).dividedBy(prevCtezOutstanding)
     : dexFeeIndex;
 
-  return { ctezOutstanding: ctezOutstanding.toNumber(), feeIndex: Math.ceil(feeIndex.toNumber()) }
+  return { ctezOutstanding, feeIndex: feeIndex.integerValue(BigNumber.ROUND_CEIL) }
 }
 
-export const getFeeRate = (q: number, Q: number): number => {
-  const maxRate = 5845483520;
-  if (8 * q < Q)
-    return maxRate;
-  if (8 * q > 7 * Q)
-    return 0;
-  return Math.abs(maxRate * (7 * Q - 8 * q)) / (6 * Q);
+export const getFeeRate = (q: BigNumber, Q: BigNumber): BigNumber => {
+  const maxRate = new BigNumber(5845483520);
+  if (q.multipliedBy(8).isLessThan(Q))
+    return maxRate;``
+  if (q.multipliedBy(8).isGreaterThan(Q.multipliedBy(7)))
+    return new BigNumber(0);
+  return maxRate.multipliedBy(Q.multipliedBy(7).minus(q.multipliedBy(8))).abs().dividedBy(Q.multipliedBy(6));
 }
 
 export const getUpdatedDexFeeIndex = (
-  delta: number,
-  Q: number,
-  dexFeeIndex: number,
-  dexSelfReserves: number
-): number => {
+  delta: BigNumber,
+  Q: BigNumber,
+  dexFeeIndex: BigNumber,
+  dexSelfReserves: BigNumber
+): BigNumber => {
   const rate = getFeeRate(dexSelfReserves, Q);
-  return dexFeeIndex + delta * dexFeeIndex * rate / 2 ** 64;
+  return dexFeeIndex.plus(delta.multipliedBy(dexFeeIndex).multipliedBy(rate).dividedBy(2 ** 64));
 }
