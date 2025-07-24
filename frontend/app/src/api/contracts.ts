@@ -50,7 +50,7 @@ export const getBaseStats = async (): Promise<BaseStats> => {
   const target = storage.context.target.toNumber() / 2 ** 64;
   const sellCtezDex = storage.sell_ctez;
   const sellTezDex = storage.sell_tez;
-    
+
   /* eslint-disable */
   const ctezDexTargetLiquidity = storage.context._Q.toNumber();
   const tezDexTargetLiquidity = storage.context._Q.multipliedBy(target).toNumber();
@@ -174,22 +174,30 @@ export const isMonthFromLiquidation = (
   );
 
   const updatedOutstandingCtez = getOvenCtezOutstandingAndFeeIndex(
-    new BigNumber(outstandingCtez).multipliedBy(1e6), 
-    ovenFeeIndex, 
-    sellCtezDexFeeIndex, 
+    new BigNumber(outstandingCtez).multipliedBy(1e6),
+    ovenFeeIndex,
+    sellCtezDexFeeIndex,
     sellTezDexFeeIndex
-  ).ctezOutstanding.dividedBy(1e6).toNumber();
+  ).ctezOutstanding.dividedBy(1e6);
 
-  // const futureFees = updatedOutstandingCtez - outstandingCtez;
-  // console.log('outstandingCtez', outstandingCtez);
-  // console.log('updatedOutstandingCtez', updatedOutstandingCtez);
-  // console.log('futureFees', futureFees.toFixed(6), ' at ', new Date(Date.now() + secondsInMonth*1000).toLocaleString());
+  // const requiredTezBalanceInMonthOld =
+  //   updatedOutstandingCtez.toNumber() *
+  //   target *
+  //   (1 + currentDrift / 2 ** 64) ** secondsInMonth *
+  //   (16 / 15);
 
-  return (
-    updatedOutstandingCtez *
-    target *
-    (1 + currentDrift / 2 ** 64) ** secondsInMonth *
-    (16 / 15) >
-    tezBalance
-  );
+  const requiredTezBalanceInMonth = updatedOutstandingCtez
+      .multipliedBy(target)
+      .multipliedBy(
+        new BigNumber(1)
+          .plus(new BigNumber(currentDrift).dividedBy(new BigNumber(2).pow(64)))
+          .pow(secondsInMonth)
+      ).multipliedBy(16).dividedBy(15);
+
+  // console.log('');
+  // console.log('requiredTezBalanceInMonthOld', requiredTezBalanceInMonthOld);
+  // console.log('requiredTezBalanceInMonthNew', requiredTezBalanceInMonth.toString());
+  // console.log('currentTezBalance...........', tezBalance);
+
+  return requiredTezBalanceInMonth.isGreaterThan(tezBalance);
 };
