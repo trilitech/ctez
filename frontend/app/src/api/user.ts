@@ -2,11 +2,12 @@ import { getTezosInstance } from '../contracts/client';
 import { getCTezFa12Contract } from '../contracts/fa12';
 import { UserBalance } from '../interfaces';
 import { getUserTezCtezData } from './contracts';
+import BigNumber from 'bignumber.js';
 
 const getXtzBalance = async (userAddress: string) => {
   try {
     const tezos = getTezosInstance();
-    const xtz = ((await tezos.tz.getBalance(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
+    const xtz = ((await tezos.tz.getBalance(userAddress)) ?? new BigNumber(0)).shiftedBy(-6).toNumber() ?? 0;
     return xtz;
   } catch (error) {
     return 0;
@@ -18,7 +19,7 @@ const getCtezBalance = async (userAddress: string) => {
     const ctezFa12 = await getCTezFa12Contract();
     const ctezFa12Storage: any = await ctezFa12.storage();
     const ctez =
-      ((await ctezFa12Storage.tokens.get(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
+      ((await ctezFa12Storage.tokens.get(userAddress)) ?? new BigNumber(0)).shiftedBy(-6).toNumber() ?? 0;
     return ctez;
   } catch (error) {
     return 0;

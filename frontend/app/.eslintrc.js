@@ -32,6 +32,7 @@ module.exports = {
     project: tsconfigPath,
   },
   rules: {
+    'import/order': 'off',
     'linebreak-style': 'off',
     'prettier/prettier': 'off',
     'react/destructuring-assignment': 'off',

@@ -121,7 +121,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
     if (props.oven.value.address && props.ovenStorage && userAddress) {
       try {
         const userWhiteList = depositors
-          .map((item: IDepositorItem) => item?.value ?? item)
+          .map((item: IDepositorItem) => item?.value ?? '')
           .filter((o) => o !== userAddress);
         const whitelistDepositors = getWhiteList(props.ovenStorage);
         const userDenyList = !props.canAnyoneDeposit

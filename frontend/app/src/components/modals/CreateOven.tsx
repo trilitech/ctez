@@ -148,7 +148,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
         const depositors =
           data.depositors.length > 0 && data.depositType === 'Whitelist'
             ? data.depositors
-                .map((item: IDepositorItem) => item?.value ?? item)
+                .map((item: IDepositorItem) => item?.value ?? '')
                 .filter((o) => o !== userAddress)
             : undefined;
 
