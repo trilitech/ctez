@@ -1,0 +1,6 @@
+{
+    "name": "Ctez CFMM",
+    "homepage": "https://github.com/tezos-checker/ctez",
+    "interfaces": ["TZIP-016"],
+    "license": {"name": "MIT"}
+}

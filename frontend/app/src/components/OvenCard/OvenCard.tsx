@@ -11,7 +11,6 @@ import {
   Text,
   useMediaQuery,
 } from '@chakra-ui/react';
-import BigNumber from 'bignumber.js';
 import React, { MouseEventHandler, useMemo, MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -21,7 +20,7 @@ import { AllOvenDatum } from '../../interfaces';
 import ProgressPill from './ProgressPill';
 import { useOvenStats, useThemeColors } from '../../hooks/utilHooks';
 import CopyAddress from '../CopyAddress';
-import { useActualCtezStorage, useCtezBaseStats } from '../../api/queries';
+import { useCtezBaseStats } from '../../api/queries';
 import { isMonthFromLiquidation } from '../../api/contracts';
 import SkeletonLayout from '../skeleton';
 import { trimAddress } from '../../utils/addressUtils';
@@ -44,7 +43,6 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
   const { t } = useTranslation(['common']);
   const { stats } = useOvenStats(props.oven);
   const { data } = useCtezBaseStats();
-  const { data: storage } = useActualCtezStorage();
   const dispatch = useAppDispatch();
 
   const [largerScreen] = useMediaQuery(['(min-width: 800px)']);
@@ -54,16 +52,16 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     dispatch(setRemoveOven(address));
   };
 
-  const showMonthFromLiquidationWarning = useMemo(
-    () => !!storage && isMonthFromLiquidation(
-      stats?.outStandingCtez ?? 0,
-      data?.currentTarget ?? 0,
-      stats?.ovenBalance ?? 0,
-      data?.drift ?? 0,
-      stats?.feeIndex ?? new BigNumber(2 ** 64),
-      storage
-    ),
-    [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance, stats?.feeIndex, storage],
+  const result = useMemo(
+    () =>
+      isMonthFromLiquidation(
+        Number(stats?.outStandingCtez),
+        Number(data?.currentTarget),
+        Number(stats?.ovenBalance ?? 0),
+        Number(data?.currentAnnualDrift),
+        true,
+      ),
+    [data?.currentAnnualDrift, data?.currentTarget, stats?.outStandingCtez, stats?.ovenBalance],
   );
 
   // ? Used for changing layout between Mobile and Desktop view
@@ -219,10 +217,10 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
         ))}
         <Box id="oven-card-item-6">
           <ProgressPill
-            value={stats?.collateralUtilization ?? 0}
+            value={Number(stats?.collateralUtilization ?? 0)}
             type={props.type}
             oven={props.oven}
-            warning={showMonthFromLiquidationWarning}
+            warning={result}
           />
           <Text color={text4} fontSize="xs">
             {t('collateralUtilization')}
@@ -237,7 +235,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     stats?.outStandingCtez,
     stats?.maxMintableCtez,
     stats?.collateralUtilization,
-    showMonthFromLiquidationWarning,
+    result,
     textcolor,
   ]);
 
@@ -278,7 +276,7 @@ const OvenCard: React.FC<IOvenCardProps> = (props) => {
     </div>
   );
 
-  if (stats?.collateralUtilization === Infinity) {
+  if (stats?.collateralUtilization === 'Infinity') {
     return <SkeletonLayout count={1} component="OvenCard" />;
   }
 

@@ -2,16 +2,12 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "16"
-  },
   "dependencies": {
-    "@airgap/beacon-sdk": "^3.3.4",
+    "@airgap/beacon-sdk": "^3.0.0",
     "@chakra-ui/react": "^1.6.7",
     "@date-io/date-fns": "2.x",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
-    "@react-hook/resize-observer": "^2.0.2",
     "@reduxjs/toolkit": "^1.6.1",
     "@taquito/beacon-wallet": "^12.1.0",
     "@taquito/taquito": "^12.1.0",
@@ -21,7 +17,6 @@
     "blockies-ts": "^1.0.0",
     "chakra-paginator": "^0.7.3",
     "date-fns": "^2.19.0",
-    "echarts": "^5.5.1",
     "formik": "^2.2.6",
     "framer-motion": "^4.1.17",
     "i18next": "^20.1.0",
@@ -75,8 +70,6 @@
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-react": "^7.23.1",
     "eslint-plugin-react-hooks": "4.2.0",
-    "patch-package": "^8.0.0",
-    "postinstall-postinstall": "^2.1.0",
     "prettier": "^2.2.1",
     "react-scripts": "4.0.3",
     "serve": "^11.3.2",
@@ -90,8 +83,7 @@
     "eject": "react-scripts eject",
     "lint": "tsc --noEmit && eslint src/**/*.ts{,x} --fix",
     "serve": "serve -s build",
-    "serve:build": "yarn build && serve -s build",
-    "postinstall": "patch-package"
+    "serve:build": "yarn build && serve -s build"
   },
   "eslintConfig": {
     "extends": [

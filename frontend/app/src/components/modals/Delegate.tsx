@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useDelegates } from '../../api/queries';
 import { useWallet } from '../../wallet/hooks';
 import Button from '../button';
-import { delegate } from '../../contracts/ctez';
+import { cTezError, delegate } from '../../contracts/ctez';
 import { Oven } from '../../interfaces';
 
 interface IDelegateProps {
@@ -46,8 +46,8 @@ const Delegate: React.FC<IDelegateProps> = (props) => {
           status: 'success',
         });
       }
-    } catch (error : any) {
-      const errorText = error?.data?.[1].with.string as string || t('txFailed');
+    } catch (error) {
+      const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
       toast({
         description: errorText,
         status: 'error',

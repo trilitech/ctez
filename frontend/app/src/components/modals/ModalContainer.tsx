@@ -17,8 +17,10 @@ const ModalContainer: React.FC = () => {
 
   return (
     <>
-      <CreateOven isOpen={open === MODAL_NAMES.CREATE_OVEN} onClose={handleClose} />
-      <TrackOven isOpen={open === MODAL_NAMES.TRACK_OVEN} onClose={handleClose} />
+      {userAddress && (
+        <CreateOven isOpen={open === MODAL_NAMES.CREATE_OVEN} onClose={handleClose} />
+      )}
+      {userAddress && <TrackOven isOpen={open === MODAL_NAMES.TRACK_OVEN} onClose={handleClose} />}
       <InfoModal open={open === MODAL_NAMES.TX_SUBMITTED} onClose={handleClose} opHash={opHash} />
     </>
   );

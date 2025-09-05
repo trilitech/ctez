@@ -1,10 +1,9 @@
 import { AxiosError } from 'axios';
 import { useQueries, useQuery } from 'react-query';
 import { UseQueryResult } from 'react-query/types/react/types';
+import { getCfmmStorage } from '../contracts/cfmm';
 import {
-  getActualCtezStorage,
   getAllOvens,
-  getCtezStorage,
   getExternalOvenData,
   getOven,
   getOvenDelegate,
@@ -16,7 +15,7 @@ import {
   AllOvenDatum,
   Baker,
   BaseStats,
-  CTezStorage,
+  CfmmStorage,
   Oven,
   OvenStorage,
   UserBalance,
@@ -38,7 +37,7 @@ export const useCtezBaseStats = (userAddress?: string) => {
   return useQuery<BaseStats, AxiosError, BaseStats>(
     ['baseStats'],
     async () => {
-      return getBaseStats();
+      return getBaseStats(userAddress);
     },
     {
       refetchInterval: 30_000,
@@ -61,26 +60,11 @@ export const useUserBalance = (userAddress?: string) => {
     },
   );
 };
-
-
-export const useCtezStorage = () => {
-  return useQuery<CTezStorage, AxiosError, CTezStorage>(
-    ['ctezStorage'],
+export const useCfmmStorage = () => {
+  return useQuery<CfmmStorage, AxiosError, CfmmStorage>(
+    ['cfmmStorage'],
     async () => {
-      return getCtezStorage();
-    },
-    {
-      refetchInterval: 30000,
-      staleTime: 3000,
-    },
-  );
-};
-
-export const useActualCtezStorage = () => {
-  return useQuery<CTezStorage, AxiosError, CTezStorage>(
-    ['actualCtezStorage'],
-    async () => {
-      return getActualCtezStorage();
+      return getCfmmStorage();
     },
     {
       refetchInterval: 30000,

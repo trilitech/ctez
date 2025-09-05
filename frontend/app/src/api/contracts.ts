@@ -1,11 +1,10 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
-import { sub, format } from 'date-fns';
-import { getActualCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
-import { getCtezFa12TotalSupply } from '../contracts/fa12';
-import { BaseStats, CTezStorage, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
-import { CTEZ_CONTRACT_BIGMAP, RPC_URL } from '../utils/globals';
-import { getOvenCtezOutstandingAndFeeIndex, getUpdatedDexFeeIndex } from '../utils/ovenUtils';
+import { sub, format, differenceInDays } from 'date-fns';
+import { getCfmmStorage, getLQTContractStorage } from '../contracts/cfmm';
+import { getCtezStorage } from '../contracts/ctez';
+import { BaseStats, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
+import { CONTRACT_DEPLOYMENT_DATE, RPC_URL } from '../utils/globals';
 import { getCTezTzktStorage, getLastBlockOfTheDay, getUserOvensAPI } from './tzkt';
 
 export const getPrevCTezStorage = async (
@@ -23,115 +22,64 @@ export const getCurrentBlock = async () => {
 
   return response.data.header.level;
 };
+export const getTimeStampOfBlock = async (block: number) => {
+  const response = await axios.get(`https://api.tzkt.io/v1/blocks/${block}`);
 
-const getMarginalPrice = (liquidity: number, targetLiquidity: number, targetPrice: number): number => {
-  const u = Math.min(liquidity / targetLiquidity, 1);
-  return targetPrice * (21 - 3 * u + 3 * u ** 2 - u ** 3) / 20;
-}
+  return response.data.timestamp;
+};
 
-const getAnnualFeeRate = (liquidity: number, targetLiquidity: number): number => {
-  const max_rate = 5845483520;
-  const rate = (8 * liquidity < targetLiquidity)
-    ? max_rate
-    : (8 * liquidity > 7 * targetLiquidity)
-      ? 0
-      : Math.floor(Math.abs(max_rate * (7 * targetLiquidity - 8 * liquidity)) / (6 * targetLiquidity));
+export const getBaseStats = async (userAddress?: string): Promise<BaseStats> => {
+  const diffInDays = differenceInDays(new Date(), new Date(CONTRACT_DEPLOYMENT_DATE));
+  const prevStorageDays = diffInDays >= 7 ? 7 : diffInDays;
+  const cTezStorage = await getCtezStorage();
+  const cfmmStorage = await getCfmmStorage();
+  const cTez7dayStorage = await getPrevCTezStorage(prevStorageDays, userAddress);
+  const currentLevel = await getCurrentBlock();
+  const timestampCurrent = await getTimeStampOfBlock(currentLevel);
+  const date_timestampCurrent = new Date(timestampCurrent);
+  const timestamp_lastBlock_seconds = date_timestampCurrent.getTime() / 1000;
+  const past_block = currentLevel - 20160;
+  const timestampPast = await getTimeStampOfBlock(past_block);
+  const datedate_timestampPast = new Date(timestampPast);
+  const timestamp_past_seconds = datedate_timestampPast.getTime() / 1000;
 
-  return rate * 60 * 60 * 24 * 365.25 / 2 ** 64;
-}
-
-const getAnnualLiquidityIncentives = (ctezTotalSupply: BigNumber, dexAnnualFeeRate: number, dexSelfReservesInCtez: BigNumber): number => {
-  const earnedSubsidyInCtezPerYear = ctezTotalSupply.multipliedBy(dexAnnualFeeRate);
-  return earnedSubsidyInCtezPerYear.dividedBy(BigNumber.max(dexSelfReservesInCtez, 1)).toNumber();
-}
-
-export const getBaseStats = async (): Promise<BaseStats> => {
-  const [storage, ctezTotalSupply] = await Promise.all([getActualCtezStorage(), getCtezFa12TotalSupply()]);
-  const target = storage.context.target.toNumber() / 2 ** 64;
-  const sellCtezDex = storage.sell_ctez;
-  const sellTezDex = storage.sell_tez;
-
-  /* eslint-disable */
-  const ctezDexTargetLiquidity = storage.context._Q.toNumber();
-  const tezDexTargetLiquidity = storage.context._Q.multipliedBy(target).toNumber();
-
-  const ctezSellPrice = getMarginalPrice(
-    sellCtezDex.self_reserves.toNumber(),
-    ctezDexTargetLiquidity,
-    target
-  );
-  const tezBuyPrice = 1 / ctezSellPrice;
-
-  const tezSellPrice = getMarginalPrice(
-    sellTezDex.self_reserves.toNumber(),
-    tezDexTargetLiquidity,
-    1 / target
-  )
-  const ctezBuyPrice = 1 / tezSellPrice;
-
-  const currentAvgPrice = (ctezSellPrice + ctezBuyPrice) / 2
-  const premium = currentAvgPrice === target ? 0 : currentAvgPrice / target - 1.0;
-  const drift = storage.context.drift.toNumber() / 2 ** 64;
-  const currentAnnualDrift = (1.0 + drift) ** (365.25 * 24 * 3600) - 1.0;
-
-  const ctezDexFeeRate = getAnnualFeeRate(sellCtezDex.self_reserves.toNumber(), storage.context._Q.toNumber());
-  const tezDexFeeRate = getAnnualFeeRate(sellTezDex.self_reserves.toNumber(), storage.context._Q.multipliedBy(target).toNumber());
-  const ctezLiquidityIncentives = getAnnualLiquidityIncentives(ctezTotalSupply, ctezDexFeeRate, sellCtezDex.self_reserves);
-  const tezLiquidityIncentives = getAnnualLiquidityIncentives(ctezTotalSupply, tezDexFeeRate, sellTezDex.self_reserves.dividedBy(target));
-
+  const prevTarget = Number(cTez7dayStorage.target) / 2 ** 48;
+  const currentTarget = cTezStorage.target.toNumber() / 2 ** 48;
+  const currentPrice = cfmmStorage.cashPool.toNumber() / cfmmStorage.tokenPool.toNumber();
+  const premium = currentPrice === currentTarget ? 0 : currentPrice / currentTarget - 1.0;
+  const drift = cTezStorage.drift.toNumber();
+  const currentAnnualDrift = (1.0 + drift / 2 ** 48) ** (365.25 * 24 * 3600) - 1.0;
+  const annualDriftPastWeek =
+    (currentTarget / prevTarget) **
+      ((365.25 * 24 * 3600) / (timestamp_lastBlock_seconds - timestamp_past_seconds)) -
+    1.0;
+  const totalLiquidity = (cfmmStorage.cashPool.toNumber() * 2) / 1e6;
   return {
-    originalTarget: storage.context.target.toNumber(),
-    currentTarget: target,
-    currentCtezSellPrice: ctezSellPrice,
-    currentTezSellPrice: tezSellPrice,
-    currentCtezBuyPrice: ctezBuyPrice,
-    currentTezBuyPrice: tezBuyPrice,
-    currentAvgPrice: currentAvgPrice,
-    premium: premium * 100,
-    currentAnnualDrift: currentAnnualDrift * 100,
+    originalTarget: cTezStorage.target.toNumber(),
+    currentTarget: currentTarget.toFixed(6),
+    currentPrice: currentPrice.toFixed(6),
+    premium: (premium * 100).toFixed(2),
+    currentAnnualDrift: (currentAnnualDrift * 100).toFixed(2),
+    annualDriftPastWeek: (annualDriftPastWeek * 100).toFixed(2),
+    totalLiquidity: totalLiquidity.toFixed(2),
     drift,
-    ctezTotalSupply: ctezTotalSupply.dividedBy(1e6).toNumber(),
-    ctezDexFeeIndex: sellCtezDex.fee_index,
-    tezDexFeeIndex: sellTezDex.fee_index,
-    ctezDexSelfTokens: sellCtezDex.self_reserves.toNumber() / 1e6,
-    ctezDexTargetLiquidity: ctezDexTargetLiquidity / 1e6,
-    ctezDexProceeds: sellCtezDex.proceeds_reserves.minus(sellCtezDex.proceeds_debts).toNumber() / 1e6,
-    ctezDexSubsidy: sellCtezDex.subsidy_reserves.minus(sellCtezDex.subsidy_debts).toNumber() / 1e6,
-    ctezDexAnnualFeeRate: ctezDexFeeRate * 100,
-    ctezLiquidityIncentives: ctezLiquidityIncentives * 100,
-    tezDexSelfTokens: sellTezDex.self_reserves.toNumber() / 1e6,
-    tezDexTargetLiquidity: tezDexTargetLiquidity / 1e6,
-    tezDexProceeds: sellTezDex.proceeds_reserves.minus(sellTezDex.proceeds_debts).toNumber() / 1e6,
-    tezDexSubsidy: sellTezDex.subsidy_reserves.minus(sellTezDex.subsidy_debts).toNumber() / 1e6,
-    tezDexAnnualFeeRate: tezDexFeeRate * 100,
-    tezLiquidityIncentives: tezLiquidityIncentives * 100
   };
 };
 
 export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalance> => {
-  const data = await getBaseStats();
-  const userOvenData = await getUserOvensAPI(userAddress, CTEZ_CONTRACT_BIGMAP);
-
+  const userOvenData = await getUserOvensAPI(userAddress);
   try {
     return userOvenData.reduce(
-      (acc, cur) => {
-        const ctezOutstanding = getOvenCtezOutstandingAndFeeIndex(
-          new BigNumber(cur.value.ctez_outstanding),
-          new BigNumber(cur.value.fee_index),
-          data.ctezDexFeeIndex,
-          data.tezDexFeeIndex
-        ).ctezOutstanding
-        return {
-          tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
-          ctezOutstanding: acc.ctezOutstanding + ctezOutstanding.dividedBy(1e6).toNumber(),
-        }
-      },
+      (acc, cur) => ({
+        tezInOvens: acc.tezInOvens + Number(cur.value.tez_balance) / 1e6,
+        ctezOutstanding: acc.tezInOvens + Number(cur.value.ctez_outstanding) / 1e6,
+      }),
       {
         tezInOvens: 0,
         ctezOutstanding: 0,
       },
     );
-  } catch (error: any) {
+  } catch (error) {
     return {
       tezInOvens: 0,
       ctezOutstanding: 0,
@@ -140,13 +88,15 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
 };
 
 export const getUserLQTData = async (userAddress: string): Promise<UserLQTData> => {
-  const ctezLqtBalances = await getUserHalfDexLqtBalance(userAddress, true);
-  const tezLqtBalances = await getUserHalfDexLqtBalance(userAddress, false);
+  const cfmmStorage = await getCfmmStorage();
+  const lqtTokenStorage = await getLQTContractStorage();
+  const userLqtBalance: BigNumber =
+    (await lqtTokenStorage.tokens.get(userAddress)) ?? new BigNumber(0);
   return {
-    ctezDexLqt: ctezLqtBalances.lqt,
-    ctezDexLqtShare: ctezLqtBalances.lqtShare,
-    tezDexLqt: tezLqtBalances.lqt,
-    tezDexLqtShare: tezLqtBalances.lqtShare,
+    lqt: userLqtBalance.toNumber(),
+    lqtShare: Number(
+      ((userLqtBalance.toNumber() / cfmmStorage.lqtTotal.toNumber()) * 100).toFixed(6),
+    ),
   };
 };
 
@@ -155,49 +105,15 @@ export const isMonthFromLiquidation = (
   target: number,
   tezBalance: number,
   currentDrift: number,
-  ovenFeeIndex: BigNumber,
-  storage: CTezStorage,
+  noTargetScale?: boolean,
 ): boolean => {
-  const secondsInMonth = (365.25 * 24 * 3600) / 12;
-  const secondsInMonthBig = new BigNumber(secondsInMonth);
-  const sellCtezDexFeeIndex = getUpdatedDexFeeIndex(
-    secondsInMonthBig,
-    storage.context._Q,
-    storage.sell_ctez.fee_index,
-    storage.sell_ctez.self_reserves,
+  const scaledTarget = noTargetScale ? target : target / 2 ** 48;
+
+  return (
+    outstandingCtez *
+      scaledTarget *
+      (1 + currentDrift / 2 ** 48) ** ((365.25 * 24 * 3600) / 12) *
+      (16 / 15) >
+    tezBalance
   );
-  const sellTezDexFeeIndex = getUpdatedDexFeeIndex(
-    secondsInMonthBig,
-    BigNumber.max(storage.context._Q.multipliedBy(storage.context.target).dividedBy(2 ** 64), 1),
-    storage.sell_tez.fee_index,
-    storage.sell_tez.self_reserves,
-  );
-
-  const updatedOutstandingCtez = getOvenCtezOutstandingAndFeeIndex(
-    new BigNumber(outstandingCtez).multipliedBy(1e6),
-    ovenFeeIndex,
-    sellCtezDexFeeIndex,
-    sellTezDexFeeIndex
-  ).ctezOutstanding.dividedBy(1e6);
-
-  // const requiredTezBalanceInMonthOld =
-  //   updatedOutstandingCtez.toNumber() *
-  //   target *
-  //   (1 + currentDrift / 2 ** 64) ** secondsInMonth *
-  //   (16 / 15);
-
-  const requiredTezBalanceInMonth = updatedOutstandingCtez
-      .multipliedBy(target)
-      .multipliedBy(
-        new BigNumber(1)
-          .plus(new BigNumber(currentDrift).dividedBy(new BigNumber(2).pow(64)))
-          .pow(secondsInMonth)
-      ).multipliedBy(16).dividedBy(15);
-
-  // console.log('');
-  // console.log('requiredTezBalanceInMonthOld', requiredTezBalanceInMonthOld);
-  // console.log('requiredTezBalanceInMonthNew', requiredTezBalanceInMonth.toString());
-  // console.log('currentTezBalance...........', tezBalance);
-
-  return requiredTezBalanceInMonth.isGreaterThan(tezBalance);
 };

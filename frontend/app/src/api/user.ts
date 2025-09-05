@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js';
 import { getTezosInstance } from '../contracts/client';
 import { getCTezFa12Contract } from '../contracts/fa12';
 import { UserBalance } from '../interfaces';
@@ -9,7 +8,7 @@ const getXtzBalance = async (userAddress: string) => {
     const tezos = getTezosInstance();
     const xtz = ((await tezos.tz.getBalance(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
     return xtz;
-  } catch (error: any) {
+  } catch (error) {
     return 0;
   }
 };
@@ -17,10 +16,11 @@ const getXtzBalance = async (userAddress: string) => {
 const getCtezBalance = async (userAddress: string) => {
   try {
     const ctezFa12 = await getCTezFa12Contract();
-    const ctezInt: BigNumber = await ctezFa12.contractViews.viewBalance(userAddress)
-      .executeView({ viewCaller: ctezFa12.address });
-    return ctezInt.shiftedBy(-6).toNumber();
-  } catch (error: any) {
+    const ctezFa12Storage: any = await ctezFa12.storage();
+    const ctez =
+      ((await ctezFa12Storage.tokens.get(userAddress)) ?? 0).shiftedBy(-6).toNumber() ?? 0;
+    return ctez;
+  } catch (error) {
     return 0;
   }
 };
@@ -36,7 +36,7 @@ export const getUserBalance = async (userAddress: string): Promise<UserBalance> 
       tezInOvens,
       ctezOutstanding,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       xtz: 0,
       ctez: 0,

@@ -1,5 +1,3 @@
-import BigNumber from "bignumber.js";
-
 export interface ErrorType {
   [key: number]: string;
 }
@@ -8,30 +6,14 @@ export type AddressTrimSizeType = 'small' | 'medium' | 'large';
 
 export interface BaseStats {
   originalTarget: number;
-  ctezDexFeeIndex: BigNumber;
-  tezDexFeeIndex: BigNumber;
-  currentTarget: number;
-  currentCtezSellPrice: number;
-  currentTezSellPrice: number;
-  currentCtezBuyPrice: number;
-  currentTezBuyPrice: number;
-  currentAvgPrice: number;
-  premium: number;
-  currentAnnualDrift: number;
+  currentTarget: string;
+  currentPrice: string;
+  premium: string;
+  currentAnnualDrift: string;
+  annualDriftPastWeek: string;
+  totalLiquidity: string;
   drift: number;
-  ctezTotalSupply: number;
-  ctezDexSelfTokens: number;
-  ctezDexTargetLiquidity: number;
-  ctezDexProceeds: number;
-  ctezDexSubsidy: number;
-  ctezDexAnnualFeeRate: number;
-  ctezLiquidityIncentives: number;
-  tezDexSelfTokens: number;
-  tezDexTargetLiquidity: number;
-  tezDexProceeds: number;
-  tezDexSubsidy: number;
-  tezDexAnnualFeeRate: number;
-  tezLiquidityIncentives: number;
+  [key: string]: string | number;
 }
 
 export interface UserOvenStats {

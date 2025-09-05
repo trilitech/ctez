@@ -22,7 +22,7 @@ import { number, object } from 'yup';
 import { useFormik } from 'formik';
 import { useCallback, useMemo } from 'react';
 import { IMintRepayForm } from '../../constants/oven-operations';
-import { mintOrBurn } from '../../contracts/ctez';
+import { cTezError, mintOrBurn } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import Button from '../button';
 import { BUTTON_TXT } from '../../constants/swap';
@@ -77,7 +77,6 @@ const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
 
   const validationSchema = object().shape({
     amount: number()
-      .typeError('Amount must be a number')
       .min(0.000001)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .test({
@@ -102,9 +101,9 @@ const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
         const amount = -data.amount;
         const result = await mintOrBurn(Number(oven.key.id), amount);
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error) {
         logger.warn(error);
-        const errorText = error.data[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

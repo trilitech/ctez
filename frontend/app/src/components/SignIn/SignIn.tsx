@@ -25,7 +25,6 @@ import { getBeaconInstance } from '../../wallet';
 import { APP_NAME, NETWORK } from '../../utils/globals';
 import { setWalletProvider } from '../../contracts/client';
 import { useUserBalance, useUserLqtData } from '../../api/queries';
-import { useUserBalance as useUserV1Balance } from '../../v1/api/queries';
 import Identicon from '../avatar';
 import { formatNumber as formatNumberUtil, formatNumberStandard } from '../../utils/numbers';
 import { ReactComponent as copy } from '../../assets/images/sidebar/content_copy.svg';
@@ -34,7 +33,6 @@ const SignIn: React.FC = () => {
   const [{ pkh: userAddress, network }, setWallet, disconnectWallet] = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: balance } = useUserBalance(userAddress);
-  const { data: v1Balance } = useUserV1Balance(userAddress);
   const { data: userLqtData } = useUserLqtData(userAddress);
 
   const formatNumber = useCallback((number?: number, shiftedBy = -6) => {
@@ -66,11 +64,6 @@ const SignIn: React.FC = () => {
       </Button>
     );
   }
-
-  const hasV1Data =
-    (v1Balance?.ctez ?? 0) > 0 ||
-    (v1Balance?.tezInOvens ?? 0) > 0 ||
-    (v1Balance?.ctezOutstanding ?? 0) > 0;
 
   return (
     <>
@@ -105,8 +98,6 @@ const SignIn: React.FC = () => {
           </PopoverHeader>
           <PopoverBody>
             <Table variant="unstyled" size="sm">
-              <TableCaption placement="top" mt={0}>{network}</TableCaption>
-
               <Tbody>
                 {typeof balance !== 'undefined' && (
                   <>
@@ -140,63 +131,24 @@ const SignIn: React.FC = () => {
                     </Tr>
                   </>
                 )}
-                {/* {typeof userLqtData?.tezDexLqt !== 'undefined' && (
+                {typeof userLqtData?.lqt !== 'undefined' && (
                   <Tr>
-                    <Td>Tez LQT:</Td>
+                    <Td>LQT:</Td>
                     <Td textAlign="right">
-                      {userLqtData.tezDexLqt.dividedBy(1e6).toString(10)}
+                      {formatNumberStandard(formatNumber(userLqtData?.lqt))}
                     </Td>
-                  </Tr>
-                )} */}
-                {typeof userLqtData?.tezDexLqtShare !== 'undefined' && (
-                  <Tr>
-                    <Td>Tez LQT Pool share:</Td>
-                    <Td textAlign="right">{userLqtData?.tezDexLqtShare.toFixed(2)}%</Td>
                   </Tr>
                 )}
-                {/* {typeof userLqtData?.ctezDexLqt !== 'undefined' && (
+                {typeof userLqtData?.lqtShare !== 'undefined' && (
                   <Tr>
-                    <Td>Ctez LQT:</Td>
-                    <Td textAlign="right">
-                      {userLqtData?.ctezDexLqt.dividedBy(1e6).toString(10)}
-                    </Td>
-                  </Tr>
-                )} */}
-                {typeof userLqtData?.ctezDexLqtShare !== 'undefined' && (
-                  <Tr>
-                    <Td>Ctez LQT Pool share:</Td>
-                    <Td textAlign="right">{userLqtData?.ctezDexLqtShare.toFixed(2)}%</Td>
+                    <Td>LQT Pool share:</Td>
+                    <Td textAlign="right">{userLqtData?.lqtShare}%</Td>
                   </Tr>
                 )}
               </Tbody>
 
+              <TableCaption mt={0}>{network}</TableCaption>
             </Table>
-            {hasV1Data && v1Balance && (
-              <Table variant="unstyled" size="sm" mt="24px">
-                <TableCaption placement="top" mt={0}>ctez v1</TableCaption>
-
-                <Tbody>
-                  <Tr>
-                    <Td>ctez_v1:</Td>
-                    <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(v1Balance.ctez, 0))}
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td>tez in v1 ovens:</Td>
-                    <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(v1Balance.tezInOvens, 0))}
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td>ctez_v1 outstanding:</Td>
-                    <Td textAlign="right">
-                      {formatNumberStandard(formatNumber(v1Balance.ctezOutstanding, 0))}
-                    </Td>
-                  </Tr>
-                </Tbody>
-              </Table>)
-            }
           </PopoverBody>
 
           <PopoverFooter>

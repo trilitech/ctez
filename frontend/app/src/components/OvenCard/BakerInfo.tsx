@@ -8,7 +8,7 @@ import { validateAddress } from '@taquito/utils';
 import { useDelegates, useOvenDelegate } from '../../api/queries';
 import { useWallet } from '../../wallet/hooks';
 import Button from '../button';
-import { delegate } from '../../contracts/ctez';
+import { cTezError, delegate } from '../../contracts/ctez';
 import Identicon from '../avatar';
 import { AllOvenDatum } from '../../interfaces';
 import SkeletonLayout from '../skeleton';
@@ -73,8 +73,8 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
           setProcessing(false);
         }
       });
-    } catch (error : any) {
-      const errorText = error?.data?.[1].with.string as string || t('txFailed');
+    } catch (error) {
+      const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
       toast({
         description: errorText,
         status: 'error',
@@ -90,6 +90,7 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
       const exists =
         options?.find((option) => (option as TOption).value === inputValue) !== undefined;
       const valid = validateAddress(inputValue) === 3;
+      // TODO: show validation errors somewhere?
       return valid && !exists;
     },
     [options],

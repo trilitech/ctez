@@ -5,39 +5,39 @@ import {
   IconButton,
   Input,
   InputGroup,
+  InputRightElement,
   Text,
   useToast,
 } from '@chakra-ui/react';
-import BigNumber from 'bignumber.js';
-import { MdSwapVert } from 'react-icons/md';
+import { MdAdd, MdSwapVert } from 'react-icons/md';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
 import { useWallet } from '../../../wallet/hooks';
-import { useActualCtezStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
+import { useCfmmStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
   ConversionFormParams,
   FORM_TYPE,
   TFormType,
   TOKEN,
+  TToken,
 } from '../../../constants/swap';
-import { tezToCtez, ctezToTez,calcSelfTokensToSell } from '../../../contracts/ctez';
+import { CTezIcon, TezIcon } from '../../icons';
+import { cashToToken, cfmmError, tokenToCash } from '../../../contracts/cfmm';
 import { logger } from '../../../utils/logger';
 import { useAppSelector } from '../../../redux/store';
 import Button from '../../button';
 import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
-import TokenInputIcon from '../TokenInputIcon';
 
 const Swap: React.FC = () => {
   const [{ pkh: userAddress }] = useWallet();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
-  const { data: ctezStorage } = useActualCtezStorage();
-
+  const { data: cfmmStorage } = useCfmmStorage();
   const { data: balance } = useUserBalance(userAddress);
   const { t } = useTranslation(['common', 'header']);
   const toast = useToast();
@@ -51,9 +51,26 @@ const Swap: React.FC = () => {
   const handleProcessing = useTxLoader();
 
   const { slippage, deadline: deadlineFromStore } = useAppSelector((state) => state.trade);
-  const [received, setReceived] = useState(0);
   const [minReceived, setMinReceived] = useState(0);
-  const [priceImpact, setPriceImpact] = useState(0);
+  const [priceImpact, setpriceImpact] = useState(0);
+
+  const getRightElement = useCallback((token: TToken) => {
+    if (token === TOKEN.Tez) {
+      return (
+        <InputRightElement backgroundColor="transparent" w={24}>
+          <TezIcon height={28} width={28} />
+          <Text mx={1}>tez</Text>
+        </InputRightElement>
+      );
+    }
+
+    return (
+      <InputRightElement backgroundColor="transparent" w={24}>
+        <CTezIcon height={28} width={28} />
+        <Text mx={1}>ctez</Text>
+      </InputRightElement>
+    );
+  }, []);
 
   const initialValues = useMemo<ConversionFormParams>(
     () => ({
@@ -67,25 +84,15 @@ const Swap: React.FC = () => {
   const maxValue = (): number =>
     formType === FORM_TYPE.CTEZ_TEZ ? balance?.ctez || 0.0 : balance?.xtz || 0.0;
 
-  const rate = (): number => {
-    return formType === FORM_TYPE.CTEZ_TEZ
-      ? formatNumberStandard(baseStats?.currentCtezBuyPrice ?? 1)
-      : formatNumberStandard(baseStats?.currentTezBuyPrice ?? 1);
-  }
-
-  const getDexLiquidity = useCallback((): number => {
-    const dex = formType === FORM_TYPE.CTEZ_TEZ
-      ? ctezStorage?.sell_tez
-      : ctezStorage?.sell_ctez;
-
-    return (dex?.self_reserves.toNumber() || 0) / 1e6
-  }, [formType, ctezStorage]);
+  const rate = (): number =>
+    formType === FORM_TYPE.CTEZ_TEZ
+      ? formatNumberStandard(baseStats?.currentPrice ?? 1)
+      : formatNumberStandard(1 / Number(baseStats?.currentPrice ?? 1));
 
   const validationSchema = Yup.object().shape({
     slippage: Yup.number().min(0).optional(),
     deadline: Yup.number().min(0).required(t('required')),
     amount: Yup.number()
-      .typeError('Amount must be a number')
       .positive(t('shouldPositive'))
       .min(0.000001, `${t('shouldMinimum')} 0.000001`)
       .max(maxValue(), `${t('insufficientBalance')}`)
@@ -101,25 +108,25 @@ const Swap: React.FC = () => {
         const deadline = addMinutes(deadlineFromStore)(new Date());
         const result =
           formType === FORM_TYPE.TEZ_CTEZ
-            ? await tezToCtez({
-              tezSold: formData.amount,
-              deadline,
-              minCtezBought: minReceived,
-              to: userAddress,
-            })
-            : await ctezToTez(
-              {
+            ? await cashToToken({
+                amount: formData.amount,
                 deadline,
-                minTezBought: minReceived,
+                minTokensBought: minReceived,
                 to: userAddress,
-                ctezSold: formData.amount,
-              },
-              userAddress,
-            );
+              })
+            : await tokenToCash(
+                {
+                  deadline,
+                  minCashBought: minReceived,
+                  to: userAddress,
+                  tokensSold: formData.amount,
+                },
+                userAddress,
+              );
         handleProcessing(result);
-      } catch (error: any) {
+      } catch (error) {
         logger.warn(error);
-        const errorText = error.data[1].with.string as string || t('txFailed');
+        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
         toast({
           status: 'error',
           description: errorText,
@@ -132,56 +139,58 @@ const Swap: React.FC = () => {
   });
 
   useEffect(() => {
-    formik.validateForm();
-  }, [userAddress])
-
-  useEffect(() => {
-    const calc = async () => {
-      if (values.amount && ctezStorage) {
-        const swapAmountNat = new BigNumber(values.amount).multipliedBy(1e6).integerValue(BigNumber.ROUND_FLOOR);
-        // const receivedLocalOnchain = (await calcSelfTokensToSellOnchain(formType === FORM_TYPE.TEZ_CTEZ, swapAmountNat)) / 1e6;
-        const receivedLocal = (calcSelfTokensToSell(formType === FORM_TYPE.TEZ_CTEZ, ctezStorage, swapAmountNat)) / 1e6;
-
-        const receivedPrice = Number((receivedLocal / values.amount).toFixed(6));
-        
-        const initialPrice = rate();
-        const priceImpactLocal = ((initialPrice - receivedPrice) * 100) / initialPrice;
-
-        setPriceImpact(priceImpactLocal);
-        setMinBuyValue(formatNumberStandard(receivedLocal.toFixed(6)));
-        const minReceivedLocal = receivedLocal - (receivedLocal * slippage) / 100;
-        setReceived(receivedLocal);
-        setMinReceived(minReceivedLocal);
+    if (cfmmStorage && values.amount) {
+      const { tokenPool, cashPool } = cfmmStorage;
+      const invariant = Number(cashPool) * Number(tokenPool);
+      let initialPrice: number;
+      const SwapAmount = values.amount * 1e6;
+      let recievedPrice: number;
+      if (formType === FORM_TYPE.CTEZ_TEZ) {
+        // 1 ctez = 11 tez
+        initialPrice = Number(cashPool) / Number(tokenPool);
+        const newTokenPool = Number(tokenPool) + SwapAmount * 0.9995;
+        const newCashPool = invariant / newTokenPool;
+        const difference = Number(cashPool) - newCashPool;
+        recievedPrice = difference / SwapAmount;
       } else {
-        setMinBuyValue(0);
-        setMinReceived(0);
-        setPriceImpact(0);
-      };
+        initialPrice = Number(tokenPool) / Number(cashPool);
+        const newCashPool = Number(cashPool) + SwapAmount * 0.9995;
+        const newTokenPool = invariant / newCashPool;
+        const difference = Number(tokenPool) - newTokenPool;
+        recievedPrice = difference / SwapAmount;
+      }
+      const priceImpact1 = ((initialPrice - recievedPrice) * 100) / initialPrice;
+      setpriceImpact(priceImpact1);
+      const cashSold = values.amount * 1e6;
+      const [aPool, bPool] =
+        formType === FORM_TYPE.TEZ_CTEZ ? [tokenPool, cashPool] : [cashPool, tokenPool];
+      const tokWithoutSlippage =
+        (cashSold * 9995 * aPool.toNumber()) / (bPool.toNumber() * 10000 + cashSold * 9995) / 1e6;
+      setMinBuyValue(formatNumberStandard(tokWithoutSlippage.toFixed(6)));
+      const minRece = tokWithoutSlippage - (tokWithoutSlippage * slippage) / 100;
+      setMinReceived(minRece);
+    } else {
+      setMinBuyValue(0);
+      setMinReceived(0);
+      setpriceImpact(0);
     }
-
-    calc();
-  }, [formType, values.amount, slippage, rate, ctezStorage]);
+  }, [cfmmStorage, formType, values.amount, slippage]);
 
   const { buttonText, errorList } = useMemo(() => {
     const errorListLocal = Object.values(errors);
     if (!userAddress) {
-      return { buttonText: BUTTON_TXT.CONNECT, errorList: [] };
+      return { buttonText: BUTTON_TXT.CONNECT, errorList: errorListLocal };
     }
-
     if (values.amount) {
       if (errorListLocal.length > 0) {
         return { buttonText: errorListLocal[0], errorList: errorListLocal };
-      }
-
-      if (received > getDexLiquidity()) {
-        return { buttonText: BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY, errorList: [BUTTON_TXT.INSUFFICIENT_DEX_LIQUIDITY] };
       }
 
       return { buttonText: BUTTON_TXT.SWAP, errorList: errorListLocal };
     }
 
     return { buttonText: BUTTON_TXT.ENTER_AMT, errorList: errorListLocal };
-  }, [errors, userAddress, values.amount, minReceived, getDexLiquidity]);
+  }, [errors, userAddress, values.amount]);
 
   return (
     <form autoComplete="off" onSubmit={handleSubmit}>
@@ -201,7 +210,7 @@ const Swap: React.FC = () => {
             onChange={handleChange}
             lang="en-US"
           />
-          <TokenInputIcon token={formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.CTez : TOKEN.Tez} />
+          {getRightElement(formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.CTez : TOKEN.Tez)}
         </InputGroup>
         <Text color={text4} fontSize="xs" mt={1}>
           Balance:{' '}
@@ -261,20 +270,14 @@ const Swap: React.FC = () => {
             type="text"
             lang="en-US"
           />
-          <TokenInputIcon token={formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez} />
+          {getRightElement(formType === FORM_TYPE.CTEZ_TEZ ? TOKEN.Tez : TOKEN.CTez)}
         </InputGroup>
-        <Flex justifyContent="space-between" fontSize="xs" mt={1} wrap="wrap">
-          <Text color={text4} fontSize="xs">
-            Balance:{' '}
-            {formType === FORM_TYPE.CTEZ_TEZ
-              ? formatNumberStandard(balance?.xtz)
-              : formatNumberStandard(balance?.ctez)}
-          </Text>
-          <Text color={text4} >
-            Dex liquidity:{' '}
-            {getDexLiquidity()}{' '}
-          </Text>
-        </Flex>
+        <Text color={text4} fontSize="xs" mt={1}>
+          Balance:{' '}
+          {formType === FORM_TYPE.CTEZ_TEZ
+            ? formatNumberStandard(balance?.xtz)
+            : formatNumberStandard(balance?.ctez)}
+        </Text>
       </FormControl>
 
       <Flex justifyContent="space-between">
@@ -306,6 +309,7 @@ const Swap: React.FC = () => {
         type="submit"
         disabled={isSubmitting || errorList.length > 0}
         isLoading={isSubmitting}
+        leftIcon={buttonText === BUTTON_TXT.CONNECT ? <MdAdd /> : undefined}
       >
         {buttonText}
       </Button>

@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { validateAddress } from '@taquito/utils';
 import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
-import { liquidate } from '../../contracts/ctez';
+import { cTezError, liquidate } from '../../contracts/ctez';
 import Button from '../button';
 import { AllOvenDatum } from '../../interfaces';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
@@ -48,13 +48,10 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
   };
 
   const validationSchema = object().shape({
-    amount: number()
-      .typeError('Amount must be a number')
-      .min(0.000001)
-      .required(t('required')),
+    amount: number().min(0.000001).required(t('required')),
     to: string()
       .test({
-        test: (value) => !!value && validateAddress(value) === 3,
+        test: (value) => validateAddress(value) === 3,
         message: t('invalidAddress'),
       })
       .required(t('required')),
@@ -70,8 +67,8 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
           data.to,
         );
         handleProcessing(result);
-      } catch (error : any) {
-        const errorText = error.data[1].with.string as string || t('txFailed');
+      } catch (error) {
+        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

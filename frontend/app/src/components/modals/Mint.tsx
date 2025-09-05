@@ -16,7 +16,6 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
-import BigNumber from 'bignumber.js';
 import { MdInfo } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
@@ -24,7 +23,7 @@ import { useFormik } from 'formik';
 import { useCallback, useMemo } from 'react';
 import { isMonthFromLiquidation } from '../../api/contracts';
 import { IMintRepayForm } from '../../constants/oven-operations';
-import { mintOrBurn } from '../../contracts/ctez';
+import { cTezError, mintOrBurn } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import Button from '../button';
 import { BUTTON_TXT } from '../../constants/swap';
@@ -32,7 +31,6 @@ import { CTezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useOvenStats, useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../utils/numbers';
-import { useActualCtezStorage } from '../../api/queries';
 
 interface IMintProps {
   isOpen: boolean;
@@ -42,7 +40,6 @@ interface IMintProps {
 
 const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
   const { t } = useTranslation(['common']);
-  const { data: storage } = useActualCtezStorage();
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'tooltipbg',
@@ -66,11 +63,19 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
     );
   }, [text2]);
 
+  const { tez_balance, ctez_outstanding } = useMemo(
+    () =>
+      oven?.value ?? {
+        tez_balance: '0',
+        ctez_outstanding: '0',
+      },
+    [oven],
+  );
+
   const maxValue = (): number => stats?.remainingMintableCtez ?? 0;
 
   const validationSchema = Yup.object().shape({
     amount: Yup.number()
-      .typeError('Amount must be a number')
       .min(0.000001)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .test({
@@ -80,16 +85,13 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
             baseStats?.drift !== undefined &&
             baseStats?.currentTarget !== undefined
           ) {
-            const newOutstanding = (stats?.outStandingCtez ?? 0) + value;
-            const tez = stats?.ovenBalance ?? 0;
-
-            const result = !!storage && isMonthFromLiquidation(
+            const newOutstanding = Number(ctez_outstanding) + value * 1e6;
+            const tez = Number(tez_balance);
+            const result = isMonthFromLiquidation(
               newOutstanding,
-              baseStats?.currentTarget,
+              Number(baseStats?.currentTarget),
               tez,
               baseStats?.drift,
-              stats?.feeIndex ?? new BigNumber(2 ** 64),
-              storage
             );
             return !result;
           }
@@ -110,9 +112,9 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
         const result = await mintOrBurn(Number(oven.key.id), Number(amount));
         handleProcessing(result);
         onClose();
-      } catch (error : any) {
+      } catch (error) {
         logger.warn(error);
-        const errorText = error.data[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

@@ -54,13 +54,6 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
       setHeaderIconText({ text: `My Ovens`, icon: <MyOvens /> });
     } else if (
       matchPath(pathName, {
-        path: '/myV1Ovens',
-        exact: true,
-      })
-    ) {
-      setHeaderIconText({ text: `My V1 Ovens`, icon: <MyOvens /> });
-    } else if (
-      matchPath(pathName, {
         path: '/ovens',
         exact: true,
       })
@@ -100,7 +93,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     const pathName = location.pathname;
     setHeader(pathName);
   }, [location]);
-  const [isBannerOpen, setBannerOpen] = useState(false);
+  const [isBannerOpen, setBannerOpen] = useState(true);
   const closeBanner = () => {
     setBannerOpen(false);
   };

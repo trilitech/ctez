@@ -16,7 +16,6 @@
   "liquidate": "Liquidate",
   "oven": "Oven",
   "ovenStats": "Oven Stats",
-  "v1OvenStats": "V1 Oven Stats",
   "outstanding": "Outstanding",
   "ovenBalance": "Oven balance",
   "outstandingCTez": "Outstanding ctez",
@@ -122,7 +121,7 @@
   "withdrawTezos": "Withdraw Tezos",
   "copiedtoclipboard": "Copied to clipboard.",
   "collateralOverview": "Collateral Overview",
-  "tezcollateral": "Tez collateral",
-  "requiredtezcollateral": "Required tez collateral",
+  "tez collateral": "tez collateral",
+  "requiredtezcollateral": "required tez collateral",
   "withdrawtez": "Withdraw tez"
 }

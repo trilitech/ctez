@@ -1,0 +1,6 @@
+{
+    "name": "Ctez FA12",
+    "homepage": "https://github.com/tezos-checker/ctez",
+    "interfaces": ["TZIP-007", "TZIP-012", "TZIP-016"],
+    "license": {"name": "MIT"}
+}

@@ -21,7 +21,7 @@ import { useFormik } from 'formik';
 
 import { IDepositForm } from '../../constants/oven-operations';
 import { BUTTON_TXT } from '../../constants/swap';
-import { deposit } from '../../contracts/ctez';
+import { cTezError, deposit } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import Button from '../button';
 import { TezIcon } from '../icons';
@@ -70,7 +70,6 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
 
   const validationSchema = object().shape({
     amount: number()
-      .typeError('Amount must be a number')
       .min(0.000001)
       .max(maxValue(), `${t('insufficientBalance')}`)
       .required(t('required')),
@@ -81,9 +80,9 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
       try {
         const result = await deposit(oven.value.address, Number(data.amount));
         handleProcessing(result);
-      } catch (error : any) {
+      } catch (error) {
         logger.error(error);
-        const errorText = error.data[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

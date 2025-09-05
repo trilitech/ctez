@@ -3,38 +3,31 @@ import BigNumber from 'bignumber.js';
 export interface AddLiquidityParams {
   owner: string;
   deadline: Date;
-  minLqtMinted: BigNumber;
+  minLqtMinted: number;
+  maxTokensDeposited: number;
   amount: number;
-  isCtezSide: boolean;
-}
-
-export interface CollectFromLiquidityParams {
-  to: string;
-  isCtezSide: boolean;
 }
 
 export interface RemoveLiquidityParams {
   to: string;
   deadline: Date;
-  lqtBurned: BigNumber;
-  minSelfReceived : BigNumber;
-  minProceedsReceived: BigNumber;
-  minSubsidyReceived: BigNumber;
-  isCtezSide: boolean;
+  lqtBurned: number;
+  minTokensWithdrawn: number;
+  minCashWithdrawn: number;
 }
 
-export interface TezToCtezParams {
+export interface CashToTokenParams {
   to: string;
-  tezSold: number;
-  minCtezBought: number;
+  minTokensBought: number;
   deadline: Date;
+  amount: number;
   // cashSold: number; # For !CASH_IS_TEZ
 }
 
-export interface ctezToTezParams {
+export interface TokenToCashParams {
   to: string;
-  ctezSold: number;
-  minTezBought: number;
+  tokensSold: number;
+  minCashBought: number;
   deadline: Date;
 }
 
@@ -57,14 +50,7 @@ export interface CfmmStorage {
   lqtTotal: BigNumber;
 }
 
-export interface HalfDexLQTData {
-  lqt: BigNumber;
-  lqtShare: BigNumber;
-}
-
 export interface UserLQTData {
-  ctezDexLqt: BigNumber;
-  ctezDexLqtShare: BigNumber;
-  tezDexLqt: BigNumber;
-  tezDexLqtShare: BigNumber;
+  lqt: number;
+  lqtShare: number;
 }

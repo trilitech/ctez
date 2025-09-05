@@ -22,7 +22,7 @@ import RadioCard from '../radio';
 import DepositorsInput from '../input';
 import { trimAddress } from '../../utils/addressUtils';
 import { useWallet } from '../../wallet/hooks';
-import { addRemoveDepositorList, enableDisableAnyDepositor } from '../../contracts/ctez';
+import { addRemoveDepositorList, cTezError, enableDisableAnyDepositor } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 
@@ -59,8 +59,6 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
 
   const getWhiteList = (recvData: any) => {
     try {
-      if (!recvData?.depositors?.whitelist)
-        return [];
       const list = Array.prototype.slice.call(recvData.depositors.whitelist);
       return list;
     } catch (err) {
@@ -79,9 +77,9 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
         },
         ...(!props.canAnyoneDeposit
           ? (whitelist as string[])?.map((dep) => ({
-            label: trimAddress(dep),
-            value: dep,
-          }))
+              label: trimAddress(dep),
+              value: dep,
+            }))
           : []),
       ]);
       setDepType(props.canAnyoneDeposit ? options[1] : options[0]);
@@ -108,9 +106,9 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
             status: 'success',
           });
         }
-      } catch (error: any) {
+      } catch (error) {
         logger.error(error);
-        const errorText = error?.data?.[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',
@@ -136,9 +134,9 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
           userDenyList,
         );
         handleProcessing(result);
-      } catch (error: any) {
+      } catch (error) {
         logger.error(error);
-        const errorText = error?.data?.[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

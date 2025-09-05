@@ -51,7 +51,7 @@ const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
   const validationSchema = object().shape({
     ovenAddress: string()
       .test({
-        test: (value) => !!value && validateContractAddress(value) === 3,
+        test: (value) => validateContractAddress(value) === 3,
         message: t('invalidAddress'),
       })
       .test({
@@ -118,7 +118,7 @@ const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
           </ModalBody>
 
           <ModalFooter py={6}>
-            <Button w="100%" type="submit" isLoading={formik.isSubmitting} walletGuard>
+            <Button w="100%" type="submit" isLoading={formik.isSubmitting}>
               {t('trackOven')}
             </Button>
           </ModalFooter>

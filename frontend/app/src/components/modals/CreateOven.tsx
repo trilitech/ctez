@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { useDelegates, useUserBalance, useUserOvenData } from '../../api/queries';
 import { Depositor } from '../../interfaces';
-import { create } from '../../contracts/ctez';
+import { create, cTezError } from '../../contracts/ctez';
 import { useWallet } from '../../wallet/hooks';
 import { logger } from '../../utils/logger';
 import RadioCard from '../radio';
@@ -50,6 +50,7 @@ interface ICreateVaultForm {
   depositorOp: Depositor;
 }
 
+// TODO Refactor
 const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
   const [{ pkh: userAddress }] = useWallet();
   const { data: delegates } = useDelegates(userAddress);
@@ -84,12 +85,10 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
   const validationSchema = object().shape({
     delegate: string()
       .test({
-        test: (value) => !!value && validateAddress(value) === 3,
+        test: (value) => validateAddress(value) === 3,
       })
       .required(t('required')),
-    amount: number()
-      .typeError('Amount must be a number')
-      .optional(),
+    amount: number().optional(),
     depositors: array()
       .test({
         test: (value) => {
@@ -138,7 +137,8 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
 
   const isInputValid = (inputValue: any) => {
     const exists = options?.find((option) => option === inputValue) !== undefined;
-    const valid = inputValue.match(/^(tz1|tz2|tz3|tz4)([A-Za-z0-9]{33})$/);
+    const valid = inputValue.match(/^(tz1|tz2)([A-Za-z0-9]{33})$/);
+    // TODO: show validation errors somewhere?
     return valid && !exists;
   };
 
@@ -162,9 +162,9 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
         );
         handleProcessing(result);
         onClose();
-      } catch (error : any) {
+      } catch (error) {
         logger.error(error);
-        const errorText = error?.data?.[1].with.string as string || t('txFailed');
+        const errorText = cTezError[error?.data?.[1].with.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',
@@ -286,7 +286,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
           </ModalBody>
 
           <ModalFooter>
-            <Button w="100%" type="submit" walletGuard>
+            <Button w="100%" type="submit">
               {t('createoven')}
             </Button>
           </ModalFooter>

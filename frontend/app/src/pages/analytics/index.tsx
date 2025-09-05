@@ -1,6 +1,6 @@
-import { Box, Center, Flex, Skeleton, Text, useColorMode, useMediaQuery } from '@chakra-ui/react';
+import { Box, Button, ButtonGroup, Center, Flex, Skeleton, SkeletonText, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useColorMode, useMediaQuery } from '@chakra-ui/react';
 import React from 'react';
-import { useOvensSummaryGql } from '../../api/analytics';
+import { useMainHeader } from '../../api/analytics';
 import { useThemeColors } from '../../hooks/utilHooks';
 import { numberToMillionOrBillionFormate } from '../../utils/numberFormate';
 import './analytics.css';
@@ -15,13 +15,16 @@ import TransactionTableoven from './transactionsTable';
 import TransactionTableAMM from './transactionsTableAmm';
 
 
-const AnalyticsPage: React.FC = () => {
-    const { data: overData = false } = useOvensSummaryGql();
-
+const AnaluticsPage: React.FC = () => {
+    const { data: headerData = false } = useMainHeader();
     const [textcolor] = useThemeColors(['homeTxt']);
+    const [textHighlight] = useThemeColors(['sideBarBg']);
     const [largerScreen] = useMediaQuery(['(min-width: 900px)']);
-
-    const { colorMode } = useColorMode();
+    const [background,inputbg] = useThemeColors([
+        'cardbg2',
+        'inputbg',
+    ]);
+    const {colorMode} = useColorMode();
     const GradientText = (text: string | number, isDollor: boolean) => {
         return <b className='gradientcolortext'>
             {isDollor ? '$' : null}
@@ -29,27 +32,27 @@ const AnalyticsPage: React.FC = () => {
         </b>;
     }
     return (
-        <Box p={largerScreen ? '55px' : '15px'} pt={largerScreen ? '55px' : '30px'} maxWidth={1200} mx="auto" className={colorMode}>
+        <Box p= {largerScreen ? '55px' : '15px'} pt={largerScreen ? '55px' : '30px'} maxWidth={1200} mx="auto" className={colorMode}>
             <Center maxWidth='759px' margin='0px auto' >
-                {overData ? <Text
+            {headerData?<Text
                     color={textcolor}
                     fontSize={largerScreen ? '40px' : '26px'}
                     lineHeight={largerScreen ? '50px' : '32px'}
                     fontWeight={400}
                     textAlign='center'
                 >
-                    {GradientText(`${numberToMillionOrBillionFormate(overData.total_debt)} ctez`, false)} collateralized by {GradientText(`${numberToMillionOrBillionFormate(overData.collateral_locked)} tez`, false)} across {GradientText(`${overData.total} `, false)} {GradientText('ovens', false)}
-
+           {GradientText(`${numberToMillionOrBillionFormate(headerData.total_debt)} ctez`, false) } collateralized by {GradientText(`${numberToMillionOrBillionFormate(headerData.collateral_locked)} tez`, false) } across {GradientText(`${headerData.Total_Ovens} `, false)} {GradientText('ovens',false)}
+                                            
                 </Text>
-                    : <Skeleton>
-                        <Text
-                            color={textcolor}
-                            fontSize={largerScreen ? '40px' : '26px'}
-                            lineHeight="50px"
-                            fontWeight={400}
-                            textAlign='center'
-                        >
-                            441.39k ctez collateralized by 568.34k tez across 195 ovens
+                :<Skeleton>
+                    <Text
+                    color={textcolor}
+                    fontSize={largerScreen ? '40px' : '26px'}
+                    lineHeight="50px"
+                    fontWeight={400}
+                    textAlign='center'
+                >
+                441.39k ctez collateralized by 568.34k tez across 195 ovens 
                 </Text>
                     </Skeleton>}
             </Center>
@@ -63,7 +66,7 @@ const AnalyticsPage: React.FC = () => {
                 >
                     Protocol
                 </Text>
-                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
+                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
                     <GraphCtez />
                     <GraphDrift />
                 </Flex>
@@ -82,9 +85,9 @@ const AnalyticsPage: React.FC = () => {
             </div>
 
             <div className='section-container'>
-                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
-                    <GraphTVL />
-                    <OvenPiChart />
+                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
+                   <GraphTVL />
+                     <OvenPiChart />
 
                 </Flex>
             </div>
@@ -93,7 +96,7 @@ const AnalyticsPage: React.FC = () => {
             </div>
 
             <div className='section-container'>
-                <Text
+            <Text
                     fontSize={largerScreen ? '30px' : '20px'}
                     lineHeight="50px"
                     fontWeight={400}
@@ -102,18 +105,18 @@ const AnalyticsPage: React.FC = () => {
                 >
                     AMM
                 </Text>
-                <Flex direction='row' wrap={largerScreen ? 'nowrap' : 'wrap'} gridGap='10' >
-                    <GraphAMMTVL />
-                    <GraphAMMVolume />
+                <Flex direction='row' wrap={largerScreen?'nowrap':'wrap'} gridGap='10' >
+                     <GraphAMMTVL/>
+                   <GraphAMMVolume/>
                 </Flex>
             </div>
 
             <div className='section-container'>
-                <TransactionTableAMM />
+            <TransactionTableAMM/>
             </div>
 
 
         </Box>
     )
 }
-export default AnalyticsPage;
+export default AnaluticsPage;

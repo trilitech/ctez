@@ -1,7 +1,7 @@
 import { ProSidebar, SidebarHeader, SidebarContent, Menu, MenuItem } from 'react-pro-sidebar';
 import clsx from 'clsx';
 import { Text, Flex, Box, Image } from '@chakra-ui/react';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { ReactComponent as MyOvens } from '../../assets/images/sidebar/myovens.svg';
@@ -11,6 +11,8 @@ import { ReactComponent as Trade } from '../../assets/images/sidebar/trade.svg';
 import { ReactComponent as Faq } from '../../assets/images/sidebar/faq.svg';
 import { ReactComponent as Analytics } from '../../assets/images/sidebar/analytics-icon.svg';
 import { ReactComponent as Github } from '../../assets/images/sidebar/github.svg';
+import BenderLabs from '../../assets/images/sidebar/bender-labs.png';
+import { ReactComponent as Plenty } from '../../assets/images/sidebar/plenty.svg';
 import { ReactComponent as ArrowLeft } from '../../assets/images/sidebar/arrowleft.svg';
 import { ReactComponent as ArrowRight } from '../../assets/images/sidebar/arrowright.svg';
 import { ReactComponent as Logo } from '../../assets/images/sidebar/ctez.svg';
@@ -42,24 +44,23 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
     dispatch(openModal(MODAL_NAMES.CREATE_OVEN));
   };
 
-  const [devMode, setDevMode] = useState(false);
-  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.detail === 3)
-      setDevMode((prevValue) => !prevValue);
-  }, []);
-
   const stats = () => {
     return (
-      <Flex direction="column" onClick={handleClick}>
-        <Text color={sidebarTxt} fontSize="xs" fontWeight="bold" cursor="default">
-          Ctez
-        </Text>
+      <Flex direction="column">
         <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Target
+            Current Target
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentTarget.toFixed(6)}
+            {data?.currentTarget}
+          </Text>
+        </Flex>
+        <Flex direction="row">
+          <Text color={sidebarTxt} fontSize="xs" cursor="default">
+            Current Price
+          </Text>
+          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
+            {data?.currentPrice}
           </Text>
         </Flex>
         <Flex direction="row">
@@ -67,160 +68,25 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
             Premium
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.premium.toFixed(2)}%
+            {data?.premium}%
           </Text>
         </Flex>
         <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Drift
+            Current Annual Drift
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentAnnualDrift.toFixed(2)}% / year
+            {data?.currentAnnualDrift}%
           </Text>
         </Flex>
-        <Text mt={2} color={sidebarTxt} fontSize="xs" fontWeight="bold" cursor="default">
-          Dex
-        </Text>
-        <Flex direction="row">
+        {/* <Flex direction="row">
           <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Best ask
+            Annual Drift (Past week)
           </Text>
           <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezSellPrice.toFixed(6)}
+            {data?.annualDriftPastWeek}%
           </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Best bid
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.currentCtezBuyPrice.toFixed(6)}
-          </Text>
-        </Flex>
-        <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
-          Liquidity incentives
-        </Text>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Selling:
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.ctezLiquidityIncentives.toFixed(2)}% / year
-          </Text>
-        </Flex>
-        <Flex direction="row">
-          <Text color={sidebarTxt} fontSize="xs" cursor="default">
-            Buying:
-          </Text>
-          <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-            {data?.tezLiquidityIncentives.toFixed(2)}% / year
-          </Text>
-        </Flex>
-        {devMode && <><hr style={{marginTop: '1.5rem'}}/><Text color={sidebarTxt} fontWeight="bold" fontSize="xs" cursor="default" mt={6}>
-          Dev Zone:
-        </Text>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Current Avg Price
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.currentAvgPrice.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Ctez Total Supply
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezTotalSupply.toFixed(6)}
-            </Text>
-          </Flex>
-          <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
-            Sell Ctez Dex:
-        </Text>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Self tokens
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezDexSelfTokens.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Proceeds
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezDexProceeds.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Subsidy
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezDexSubsidy.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Q_ctez
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezDexTargetLiquidity.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Fee Rate
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.ctezDexAnnualFeeRate.toFixed(2)}% / year
-          </Text>
-          </Flex>
-          <Text color={sidebarTxt} fontSize="xs" cursor="default" fontWeight="bold" mt={2}>
-            Sell Tez Dex:
-        </Text>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Self tokens
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.tezDexSelfTokens.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Proceeds
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.tezDexProceeds.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Subsidy
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.tezDexSubsidy.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Q_tez
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.tezDexTargetLiquidity.toFixed(6)}
-            </Text>
-          </Flex>
-          <Flex direction="row">
-            <Text color={sidebarTxt} fontSize="xs" cursor="default">
-              Fee Rate
-          </Text>
-            <Text marginLeft="auto" color={sidebarTxt} fontSize="xs" cursor="default">
-              {data?.tezDexAnnualFeeRate.toFixed(2)}% / year
-          </Text>
-          </Flex></>}
+        </Flex> */}
       </Flex>
     );
   };
@@ -279,7 +145,7 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
                 </MenuItem>
                 <MenuItem
                   className={clsx({
-                    highlight: ['/myovens', '/myV1Ovens'].some(path => location.pathname === path),
+                    highlight: location.pathname === '/myovens',
                   })}
                   icon={<MyOvens />}
                 >
@@ -345,7 +211,7 @@ const Sidebar: React.FC<Props> = ({ handleCollapsed, handleToggled, collapsed, t
                   <Link to="/faq">FAQ</Link>
                 </MenuItem>
                 <MenuItem icon={<Github />}>
-                  <a href="https://github.com/trilitech/ctez" target="_blank" rel="noreferrer">
+                  <a href="https://github.com/Tezsure/ctez" target="_blank" rel="noreferrer">
                     GitHub
                   </a>
                 </MenuItem>
