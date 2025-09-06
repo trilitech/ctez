@@ -92,7 +92,13 @@ const prepareOvenAllowAnyCall = (
     ...ovenContract.methods.allow_any(allow).toTransferParams(),
   };
 };
-const getWhiteList = (recvData: any) => {
+interface RecvData {
+  depositors: {
+    whitelist: unknown[];
+  };
+}
+
+const getWhiteList = (recvData: RecvData) => {
   try {
     const list = Array.prototype.slice.call(recvData.depositors.whitelist);
     return list;

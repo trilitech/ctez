@@ -33,9 +33,13 @@ export const getCfmmStorage = async (): Promise<CfmmStorage> => {
   return storage;
 };
 
-export const getLQTContractStorage = async (): Promise<any> => {
+interface LQTStorage {
+  tokens: Map<string, BigNumber>;
+}
+
+export const getLQTContractStorage = async (): Promise<LQTStorage> => {
   const lqtContract = await getLQTContract();
-  const storage: any = await lqtContract.storage();
+  const storage = await lqtContract.storage<LQTStorage>();
   return storage;
 };
 
