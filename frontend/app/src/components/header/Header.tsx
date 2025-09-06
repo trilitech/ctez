@@ -66,13 +66,13 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
       })
     ) {
       setHeaderIconText({ text: `Trade`, icon: <Trade /> });
-    } else if (
-      matchPath(pathName, {
-        path: '/analytics',
-        exact: true,
-      })
-    ) {
-      setHeaderIconText({ text: `Analytics`, icon: <AnalyticsIcon /> });
+    // } else if (
+    //   matchPath(pathName, {
+    //     path: '/analytics',
+    //     exact: true,
+    //   })
+    // ) {
+    //   setHeaderIconText({ text: `Analytics`, icon: <AnalyticsIcon /> });
     } else if (
       matchPath(pathName, {
         path: '/faq',
@@ -93,7 +93,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     const pathName = location.pathname;
     setHeader(pathName);
   }, [location]);
-  const [isBannerOpen, setBannerOpen] = useState(true);
+  const [isBannerOpen, setBannerOpen] = useState(false);
   const closeBanner = () => {
     setBannerOpen(false);
   };

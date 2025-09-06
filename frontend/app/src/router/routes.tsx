@@ -19,11 +19,11 @@ export const routes: ComponentRoute[] = [
     Component: <OvensPage />,
     exact: true,
   },
-  {
-    path: '/analytics',
-    Component: <AnalyticsPage />,
-    exact: true,
-  },
+  // {
+  //   path: '/analytics',
+  //   Component: <AnalyticsPage />,
+  //   exact: true,
+  // },
   {
     path: '/ovens',
     Component: <OvensPage />,
