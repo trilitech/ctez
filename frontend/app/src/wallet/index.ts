@@ -1,5 +1,5 @@
 import { BeaconWallet } from '@taquito/beacon-wallet';
-import { BeaconMessageType, NetworkType } from '@airgap/beacon-sdk';
+import { NetworkType } from '@airgap/beacon-sdk';
 import { WalletInterface } from '../interfaces/wallet';
 import { NETWORK } from '../utils/globals';
 import { logger } from '../utils/logger';
@@ -12,22 +12,9 @@ export const isWalletConnected = (): boolean => {
   return localStorage.getItem('wallet-connected') === 'true';
 };
 
-const connectBeacon = async (
-  wallet: BeaconWallet,
-  network: NetworkType = NetworkType.FLORENCENET,
-): Promise<boolean> => {
-  try {
-    await wallet.requestPermissions({ network: { type: network } });
-    return true;
-  } catch (error) {
-    logger.error(error);
-  }
-  return false;
-};
-
 export const disconnectBeacon = async (wallet: BeaconWallet): Promise<void> => {
   localStorage.removeItem('wallet-connected');
-  await wallet.disconnect();
+  await wallet.client.disconnect();
 };
 
 export const getBeaconInstance = async (
@@ -37,26 +24,42 @@ export const getBeaconInstance = async (
 ): Promise<WalletInterface | undefined> => {
   try {
     const networkType: NetworkType = network as NetworkType;
-    const wallet = new BeaconWallet({ name, preferredNetwork: networkType });
+    
+    const wallet = new BeaconWallet({
+      name,
+      network: { type: networkType },
+    });
+    
     const activeAccount = await wallet.client.getActiveAccount();
-    const opsRequest = activeAccount
-      ? await wallet.client.checkPermissions(BeaconMessageType.OperationRequest)
-      : undefined;
-    const signRequest = activeAccount
-      ? await wallet.client.checkPermissions(BeaconMessageType.SignPayloadRequest)
-      : undefined;
-    if (connect && !opsRequest && !signRequest) {
-      const isConnected = await connectBeacon(wallet, networkType);
-      /**
-       * May not be needed
-       */
-      isConnected && setConnected();
-      !isConnected && (await disconnectBeacon(wallet));
+    if (activeAccount) {
+      setConnected();
+      return {
+        wallet,
+        network,
+        pkh: activeAccount.address,
+      };
+    } else {
+      if (connect) {
+        try {
+          await wallet.client.requestPermissions();
+          const pkh = await wallet.getPKH();
+          setConnected();
+          return {
+            wallet,
+            network,
+            pkh,
+          };
+        } catch (error) {
+          console.error("Got request permissions error:", error);
+          logger.error(error);
+        }
+      }
     }
+    
     return {
       wallet,
       network,
-      pkh: connect ? await wallet.getPKH() : undefined,
+      pkh: undefined,
     };
   } catch (error) {
     logger.error(error);
