@@ -3,13 +3,13 @@ import { useAppDispatch, useAppSelector } from '../../redux/store';
 import { closeModal } from '../../redux/slices/UiSlice';
 import { MODAL_NAMES } from '../../constants/modals';
 import TrackOven from './TrackOven';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import InfoModal from './InfoModal';
 
 const ModalContainer: React.FC = () => {
   const { open, opHash } = useAppSelector((state) => state.ui.modal);
   const dispatch = useAppDispatch();
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
 
   const handleClose = () => {
     dispatch(closeModal());

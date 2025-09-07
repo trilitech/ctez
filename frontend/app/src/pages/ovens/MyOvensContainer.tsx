@@ -4,7 +4,7 @@ import SkeletonLayout from '../../components/skeleton';
 import OvenCard from '../../components/OvenCard/OvenCard';
 import OvenSummary from '../../components/OvenSummary';
 import { useSortedOvensList } from '../../hooks/utilHooks';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { useOvenDataByAddresses, useUserOvenData } from '../../api/queries';
 import { getExternalOvens, removeExternalOven } from '../../utils/ovenUtils';
 import { CTEZ_ADDRESS } from '../../utils/globals';
@@ -13,7 +13,7 @@ import { setExternalOvens, setRemoveOven } from '../../redux/slices/OvenSlice';
 import { AllOvenDatum } from '../../interfaces';
 
 const MyOvensContainer: React.FC = () => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const dispatch = useAppDispatch();
   const { data: myOvens, isLoading } = useUserOvenData(userAddress);
   const removeTrackedOven = useAppSelector((state) => state.oven.removeOven);

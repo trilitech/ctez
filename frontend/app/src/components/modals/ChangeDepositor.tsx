@@ -21,7 +21,7 @@ import { AllOvenDatum, OvenStorage } from '../../interfaces';
 import RadioCard from '../radio';
 import DepositorsInput from '../input';
 import { trimAddress } from '../../utils/addressUtils';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { addRemoveDepositorList, cTezError, enableDisableAnyDepositor } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
@@ -41,7 +41,7 @@ interface IDepositorItem {
 }
 
 const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const toast = useToast();
   const { t } = useTranslation(['common']);
   const [text2] = useThemeColors(['text2']);

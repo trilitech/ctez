@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { RemoveLiquidityParams } from '../../../interfaces';
 import { cfmmError, removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
-import { useWallet } from '../../../wallet/hooks';
+import { useBeaconWallet } from '../../../wallet/hooks';
 import { useCfmmStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
@@ -21,7 +21,7 @@ import {
 import { BUTTON_TXT } from '../../../constants/swap';
 
 const RemoveLiquidity: React.FC = () => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const [otherValues, setOtherValues] = useState({
     cashWithdraw: 0,
     tokenWithdraw: 0,

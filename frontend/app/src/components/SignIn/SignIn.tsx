@@ -20,17 +20,18 @@ import {
 import { useCallback } from 'react';
 import Button from '../button';
 import { trimAddress } from '../../utils/addressUtils';
-import { useWallet } from '../../wallet/hooks';
-import { getBeaconInstance } from '../../wallet';
-import { APP_NAME, NETWORK } from '../../utils/globals';
-import { setWalletProvider } from '../../contracts/client';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { useUserBalance, useUserLqtData } from '../../api/queries';
 import Identicon from '../avatar';
 import { formatNumber as formatNumberUtil, formatNumberStandard } from '../../utils/numbers';
 import { ReactComponent as copy } from '../../assets/images/sidebar/content_copy.svg';
 
 const SignIn: React.FC = () => {
-  const [{ pkh: userAddress, network }, setWallet, disconnectWallet] = useWallet();
+  const {
+    wallet: { pkh: userAddress, network },
+    connect,
+    disconnect,
+  } = useBeaconWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: balance } = useUserBalance(userAddress);
   const { data: userLqtData } = useUserLqtData(userAddress);
@@ -44,13 +45,11 @@ const SignIn: React.FC = () => {
   }, []);
 
   const connectWallet = async () => {
-    const newWallet = await getBeaconInstance(APP_NAME, true, NETWORK);
-    newWallet?.wallet && setWalletProvider(newWallet.wallet);
-    newWallet && setWallet(newWallet);
+    await connect();
   };
 
   const onDisconnectWallet = () => {
-    disconnectWallet();
+    disconnect();
   };
 
   if (!userAddress) {

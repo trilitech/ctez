@@ -23,7 +23,7 @@ import { useFormik } from 'formik';
 import { useDelegates, useUserBalance, useUserOvenData } from '../../api/queries';
 import { Depositor } from '../../interfaces';
 import { create, cTezError } from '../../contracts/ctez';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { logger } from '../../utils/logger';
 import RadioCard from '../radio';
 import Button from '../button';
@@ -52,7 +52,7 @@ interface ICreateVaultForm {
 
 // TODO Refactor
 const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const { data: delegates } = useDelegates(userAddress);
 
   const {

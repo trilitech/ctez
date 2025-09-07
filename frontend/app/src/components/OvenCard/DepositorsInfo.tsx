@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MdEdit, MdInfo } from 'react-icons/md';
 import { useOvenDelegate, useOvenStorage } from '../../api/queries';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import Button from '../button';
 import Identicon from '../avatar';
 import ChangeDepositor from '../modals/ChangeDepositor';
@@ -17,7 +17,7 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
   oven,
   isImported,
 }) => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const { t } = useTranslation(['common']);
   const { data: ovenStorageData } = useOvenStorage(oven?.value.address);
   const { data: baker } = useOvenDelegate(oven?.value.address);

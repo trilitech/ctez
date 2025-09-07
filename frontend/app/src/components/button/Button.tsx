@@ -1,10 +1,7 @@
 import React, { MouseEventHandler, useMemo } from 'react';
 import { Button as ChakraButton, useColorMode, Box, CSSObject } from '@chakra-ui/react';
 import { ButtonProps } from '@chakra-ui/button';
-import { useWallet } from '../../wallet/hooks';
-import { getBeaconInstance } from '../../wallet';
-import { APP_NAME, NETWORK } from '../../utils/globals';
-import { setWalletProvider } from '../../contracts/client';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { useThemeColors } from '../../hooks/utilHooks';
 
 export interface IButtonProps extends ButtonProps {
@@ -14,7 +11,7 @@ export interface IButtonProps extends ButtonProps {
 }
 
 const Button: React.FC<IButtonProps> = (props) => {
-  const [{ pkh: userAddress }, setWallet] = useWallet();
+  const { wallet: { pkh: userAddress }, connect } = useBeaconWallet();
   const { colorMode } = useColorMode();
   const [background] = useThemeColors(['cardbg']);
 
@@ -28,9 +25,7 @@ const Button: React.FC<IButtonProps> = (props) => {
 
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (ev) => {
     if (props.walletGuard && !userAddress) {
-      const newWallet = await getBeaconInstance(APP_NAME, true, NETWORK);
-      newWallet?.wallet && setWalletProvider(newWallet.wallet);
-      newWallet && setWallet(newWallet);
+      await connect();
     } else {
       props.onClick?.(ev);
     }

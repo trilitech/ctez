@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useDelegates } from '../../api/queries';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import Button from '../button';
 import { cTezError, delegate } from '../../contracts/ctez';
 import { Oven } from '../../interfaces';
@@ -26,7 +26,7 @@ interface IDelegateProps {
 
 const Delegate: React.FC<IDelegateProps> = (props) => {
   const { t } = useTranslation(['common']);
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const { data: delegates } = useDelegates(userAddress);
   const toast = useToast();
   const [delegator, setDelegator] = useState('');

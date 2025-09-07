@@ -27,7 +27,7 @@ import Button from '../button';
 import { TezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { useUserBalance } from '../../api/queries';
 import { formatNumber, formatNumberStandard, inputFormatNumberStandard } from '../../utils/numbers';
 
@@ -39,7 +39,7 @@ interface IDepositProps {
 
 const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
   const toast = useToast();
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const handleProcessing = useTxLoader();
   const [text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'text2',

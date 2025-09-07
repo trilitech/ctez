@@ -30,7 +30,7 @@ import { CTezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useOvenStats, useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 import { useUserBalance } from '../../api/queries';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { inputFormatNumberStandard } from '../../utils/numbers';
 
 interface IBurnProps {
@@ -40,7 +40,7 @@ interface IBurnProps {
 }
 
 const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const { t } = useTranslation(['common']);
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([

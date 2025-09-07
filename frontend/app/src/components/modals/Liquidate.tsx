@@ -20,7 +20,7 @@ import { cTezError, liquidate } from '../../contracts/ctez';
 import Button from '../button';
 import { AllOvenDatum } from '../../interfaces';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 import { inputFormatNumberStandard } from '../../utils/numbers';
 
 interface LiquidateForm {
@@ -38,7 +38,7 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
   const toast = useToast();
   const [text1, text2, inputbg] = useThemeColors(['text1', 'text2', 'inputbg']);
   const handleProcessing = useTxLoader();
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
 
   const { t } = useTranslation(['common']);
   const initialValues: LiquidateForm = {

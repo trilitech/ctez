@@ -21,12 +21,12 @@ import { AllOvenDatum } from '../../interfaces';
 import data from '../../assets/data/info.json';
 import { formatNumberStandard } from '../../utils/numbers';
 import { useOvenStorage } from '../../api/queries';
-import { useWallet } from '../../wallet/hooks';
+import { useBeaconWallet } from '../../wallet/hooks';
 
 const CollateralOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean }> = ({
   oven,
 }) => {
-  const [{ pkh: userAddress }] = useWallet();
+  const { wallet: { pkh: userAddress } } = useBeaconWallet();
   const { stats } = useOvenStats(oven);
   const [depositOpen, setDepositOpen] = useState<boolean>(false);
   const [withdrawOpen, setWithdrawOpen] = useState<boolean>(false);
