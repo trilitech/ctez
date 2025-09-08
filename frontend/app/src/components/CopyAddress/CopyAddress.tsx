@@ -10,7 +10,12 @@ export interface Props {
   spaced?: boolean;
 }
 
-const CopyAddress: React.FC<Props> = ({ children, address, placement, spaced }) => {
+const CopyAddress: React.FC<Props> = ({ 
+  children, 
+  address, 
+  placement = 'right', 
+  spaced = false 
+}) => {
   const toast = useToast();
   const [cardbg] = useThemeColors(['cardbg']);
   const { t } = useTranslation(['common']);
@@ -58,12 +63,5 @@ const CopyAddress: React.FC<Props> = ({ children, address, placement, spaced }) 
   );
 };
 
-const defaultProps: Props = {
-  address: '',
-  placement: 'right',
-  spaced: false,
-};
-
-CopyAddress.defaultProps = defaultProps;
 
 export { CopyAddress };
