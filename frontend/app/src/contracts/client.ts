@@ -7,7 +7,7 @@ export const setWalletProvider = (wallet: BeaconWallet): void => {
   tezos && tezos.setProvider({ wallet });
 };
 
-export const initTezos = (url: string, port: string | number): void => {
+export const initTezos = (url: string): void => {
   tezos = new TezosToolkit(url);
   tezos.setPackerProvider(new MichelCodecPacker());
 };

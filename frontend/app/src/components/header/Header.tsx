@@ -1,4 +1,4 @@
-import { Flex, Box, useColorMode, Text, useMediaQuery } from '@chakra-ui/react';
+import { Flex, Box, useColorMode, Text, useMediaQuery, HStack } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import { FiMoon, FiSun } from 'react-icons/fi';
@@ -8,11 +8,10 @@ import { ReactComponent as MyOvens } from '../../assets/images/sidebar/myovens.s
 import { ReactComponent as Trade } from '../../assets/images/sidebar/trade.svg';
 import { ReactComponent as AnalyticsIcon } from '../../assets/images/sidebar/analytics-icon.svg';
 import { ReactComponent as Faq } from '../../assets/images/sidebar/faq.svg';
-import { ReactComponent as Arrow } from '../../assets/images/icons/rightArrow.svg';
-import { ReactComponent as ArrowDark } from '../../assets/images/icons/rightArrowDark.svg';
 import { ReactComponent as Close } from '../../assets/images/icons/close.svg';
 import Button from '../button';
 import SignIn from '../SignIn';
+import { SettingsButton, SettingsDialog } from '../settings';
 import { useThemeColors } from '../../hooks/utilHooks';
 
 export interface IHeaderProps {
@@ -101,9 +100,12 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     setHeader(pathName);
   }, [location]);
   const [isBannerOpen, setBannerOpen] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
   const closeBanner = () => {
     setBannerOpen(false);
   };
+
+  const flexBackground = isFrontpage() ? undefined : (headerBackground as string);
 
   return (
     <Box width="100%">
@@ -142,7 +144,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
       <Flex
         padding="16px"
         alignItems="center"
-        background={!isFrontpage() ? headerBackground : undefined}
+        background={flexBackground}
       >
         <Button
           border="1px solid rgba(0, 0, 0, 0.07)"
@@ -163,8 +165,15 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
         <Box marginStart="auto" marginEnd="10px" cursor="pointer" onClick={toggleColorMode}>
           {colorMode === 'light' ? <FiSun size={26} /> : <FiMoon size={26} />}
         </Box>
-        <SignIn />
+        <HStack spacing={2}>
+          <SignIn />
+          <SettingsButton onClick={() => setSettingsOpen(true)} />
+        </HStack>
       </Flex>
+      <SettingsDialog
+        isOpen={isSettingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </Box>
   );
 };
