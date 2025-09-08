@@ -20,7 +20,7 @@ import {
 import { useCallback } from 'react';
 import Button from '../button';
 import { trimAddress } from '../../utils/addressUtils';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { useUserBalance, useUserLqtData } from '../../api/queries';
 import Identicon from '../avatar';
 import { formatNumber as formatNumberUtil, formatNumberStandard } from '../../utils/numbers';
@@ -32,7 +32,7 @@ const SignIn: React.FC = () => {
     pkh: userAddress,
     connect,
     disconnect,
-  } = useTezosWallet();
+  } = useTezosContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: balance } = useUserBalance(userAddress);
   const { data: userLqtData } = useUserLqtData(userAddress);

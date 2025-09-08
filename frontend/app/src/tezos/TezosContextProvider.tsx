@@ -1,25 +1,29 @@
-import React, { useCallback, useEffect, useState, createContext, ReactNode } from 'react';
+import React, { useCallback, useEffect, useState, createContext, ReactNode, useContext } from 'react';
 import { BeaconWallet } from '@taquito/beacon-wallet';
-import { TezosToolkit, MichelCodecPacker } from '@taquito/taquito';
+import { TezosToolkit, MichelCodecPacker, WalletContract } from '@taquito/taquito';
 import { BeaconEvent } from '@airgap/beacon-sdk';
 import { APP_NAME, NETWORK, RPC_URL, CTEZ_ADDRESS, CFMM_ADDRESS } from '../utils/globals';
-import { initCTez } from '../contracts/ctez';
-import { initCfmm } from '../contracts/cfmm';
+import { initContract } from '../contracts/utils';
 import { logger } from '../utils/logger';
 
-interface TezosWalletContextType {
-  wallet: BeaconWallet | null;
-  tezos: TezosToolkit;
+export interface TezosContextType {
   pkh?: string;
+  wallet?: BeaconWallet | null;
+  tezos: TezosToolkit;
+  ctezContract: WalletContract | null;
+  cfmmContract: WalletContract | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
 
-export const TezosWalletContext = createContext<TezosWalletContextType | null>(null);
 
-export const TezosWalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const TezosContext = createContext<TezosContextType | null>(null);
+
+export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [pkh, setPkh] = useState<string | undefined>();
   const [wallet, setWallet] = useState<BeaconWallet | null>(null);
+  const [ctezContract, setCtezContract] = useState<WalletContract | null>(null);
+  const [cfmmContract, setCfmmContract] = useState<WalletContract | null>(null);
   const [tezos] = useState<TezosToolkit>(() => {
     const toolkit = new TezosToolkit(RPC_URL);
     toolkit.setPackerProvider(new MichelCodecPacker());
@@ -76,9 +80,11 @@ export const TezosWalletProvider: React.FC<{ children: ReactNode }> = ({ childre
           setPkh(activeAccount.address);
         }
 
-        // Initialize contracts
-        if (CTEZ_ADDRESS) await initCTez(CTEZ_ADDRESS, tezos);
-        if (CFMM_ADDRESS) await initCfmm(CFMM_ADDRESS, tezos);
+        // Initialize contracts - they are guaranteed to exist due to globals.ts checks
+        const ctez = await initContract(CTEZ_ADDRESS, tezos);
+        const cfmm = await initContract(CFMM_ADDRESS, tezos);
+        setCtezContract(ctez);
+        setCfmmContract(cfmm);
       } catch (err) {
         logger.error('Wallet initialization error:', err);
         setPkh(undefined);
@@ -88,17 +94,29 @@ export const TezosWalletProvider: React.FC<{ children: ReactNode }> = ({ childre
     initializeWallet();
   }, [getOrCreateBeaconWallet, tezos]);
 
-  const contextValue: TezosWalletContextType = {
+  const contextValue: TezosContextType = {
+    pkh,
     wallet,
     tezos,
-    pkh,
+    ctezContract,
+    cfmmContract,
     connect,
     disconnect,
   };
 
   return (
-    <TezosWalletContext.Provider value={contextValue}>
+    <TezosContext.Provider value={contextValue}>
       {children}
-    </TezosWalletContext.Provider>
+    </TezosContext.Provider>
   );
+};
+
+export const useTezosContext = (): TezosContextType => {
+  const context = useContext(TezosContext);
+  
+  if (!context) {
+    throw new Error('useTezosContext must be used within a TezosContextProvider');
+  }
+
+  return context;
 };

@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ChakraProvider } from '@chakra-ui/react';
-import { TezosWalletProvider } from './wallet/BeaconWalletProvider';
+import { TezosContextProvider } from './tezos';
 import { AppRouter } from './router';
 import ModalContainer from './components/modals/ModalContainer';
 import theme from './theme/theme';
@@ -16,14 +16,14 @@ const App: React.FC = () => {
     <Suspense fallback="Loading...">
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <TezosWalletProvider>
+          <TezosContextProvider>
             <ChakraProvider theme={theme}>
               <ErrorBoundary>
                 <AppRouter />
                 <ModalContainer />
               </ErrorBoundary>
             </ChakraProvider>
-          </TezosWalletProvider>
+          </TezosContextProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </Suspense>

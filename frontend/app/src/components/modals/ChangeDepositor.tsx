@@ -21,7 +21,7 @@ import { AllOvenDatum, OvenStorage } from '../../interfaces';
 import RadioCard from '../radio';
 import DepositorsInput from '../input';
 import { trimAddress } from '../../utils/addressUtils';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { addRemoveDepositorList, cTezError, enableDisableAnyDepositor } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
@@ -41,7 +41,7 @@ interface IDepositorItem {
 }
 
 const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
-  const { pkh: userAddress, tezos } = useTezosWallet();
+  const { pkh: userAddress, tezos } = useTezosContext();
   const toast = useToast();
   const { t } = useTranslation(['common']);
   const [text2] = useThemeColors(['text2']);
@@ -59,7 +59,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
 
   const getWhiteList = (recvData: OvenStorage) => {
     try {
-      const list = Array.prototype.slice.call(recvData.depositors.whitelist);
+      const list = recvData.depositors.whitelist?.slice() || [];
       return list;
     } catch (err) {
       console.log(err);

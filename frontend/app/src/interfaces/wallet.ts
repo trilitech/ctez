@@ -8,10 +8,6 @@ export interface WalletInterface {
   network?: string;
 }
 
-export interface IWalletContext {
-  wallet: Partial<WalletInterface>;
-  setWallet: (wallet: Partial<WalletInterface>) => void;
-}
 
 export interface UserBalance {
   xtz: number;

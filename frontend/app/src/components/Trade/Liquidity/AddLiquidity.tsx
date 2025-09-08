@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { addMinutes } from 'date-fns/fp';
 import { useFormik } from 'formik';
-import { useTezosWallet } from '../../../wallet/hooks';
+import { useTezosContext } from '../../../tezos';
 import { useCfmmStorage, useUserBalance } from '../../../api/queries';
 
 import { AddLiquidityParams } from '../../../interfaces';
@@ -19,7 +19,7 @@ import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
 
 const AddLiquidity: React.FC = () => {
-  const { pkh: userAddress, tezos } = useTezosWallet();
+  const { pkh: userAddress, tezos, cfmmContract } = useTezosContext();
   const [minLQT, setMinLQT] = useState(0);
   const { data: cfmmStorage } = useCfmmStorage();
   const { data: balance } = useUserBalance(userAddress);
@@ -80,7 +80,7 @@ const AddLiquidity: React.FC = () => {
   });
 
   const handleFormSubmit = async (formData: IAddLiquidityForm) => {
-    if (userAddress && formData.amount && formData.ctezAmount) {
+    if (userAddress && formData.amount && formData.ctezAmount && cfmmContract) {
       try {
         const deadline = addMinutes(deadlineFromStore)(new Date());
         const data: AddLiquidityParams = {
@@ -90,7 +90,7 @@ const AddLiquidity: React.FC = () => {
           maxTokensDeposited: formData.ctezAmount,
           minLqtMinted: minLQT,
         };
-        const result = await addLiquidity(data, tezos);
+        const result = await addLiquidity(cfmmContract, data, tezos);
         handleProcessing(result);
       } catch (error) {
         logger.error(error);

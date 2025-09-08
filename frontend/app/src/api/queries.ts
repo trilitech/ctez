@@ -24,7 +24,7 @@ import {
 import { getBaseStats, getUserLQTData } from './contracts';
 import { getDelegates } from './tzkt';
 import { getUserBalance } from './user';
-import { useTezosWallet } from '../wallet/hooks';
+import { useTezosContext } from '../tezos';
 
 type TUseQueryReturn<T> = UseQueryResult<T | undefined, AxiosError>;
 
@@ -35,20 +35,26 @@ export const useDelegates = (userAddress?: string) => {
 };
 
 export const useCtezBaseStats = (userAddress?: string) => {
+  const { ctezContract, cfmmContract } = useTezosContext();
+  
   return useQuery<BaseStats, AxiosError, BaseStats>(
     ['baseStats'],
     async () => {
-      return getBaseStats(userAddress);
+      if (!ctezContract || !cfmmContract) {
+        throw new Error('Contracts not initialized');
+      }
+      return getBaseStats(ctezContract, cfmmContract, userAddress);
     },
     {
       refetchInterval: 30_000,
       staleTime: 3_000,
+      enabled: !!(ctezContract && cfmmContract),
     },
   );
 };
 
 export const useUserBalance = (userAddress?: string) => {
-  const { tezos } = useTezosWallet();
+  const { tezos } = useTezosContext();
   
   return useQuery<UserBalance | undefined, AxiosError, UserBalance | undefined>(
     [`user-balance-${userAddress}`],
@@ -64,33 +70,39 @@ export const useUserBalance = (userAddress?: string) => {
   );
 };
 export const useCfmmStorage = () => {
+  const { cfmmContract } = useTezosContext();
+  
   return useQuery<CfmmStorage, AxiosError, CfmmStorage>(
     ['cfmmStorage'],
     async () => {
-      return getCfmmStorage();
+      if (!cfmmContract) {
+        throw new Error('CFMM contract not initialized');
+      }
+      return getCfmmStorage(cfmmContract);
     },
     {
       refetchInterval: 30000,
       staleTime: 3000,
+      enabled: !!cfmmContract,
     },
   );
 };
 
 export const useOvenData = (userAddress?: string, externalOvens: string[] = []) => {
-  const { tezos } = useTezosWallet();
+  const { tezos, ctezContract } = useTezosContext();
   
   return useQuery<Oven[], AxiosError, Oven[]>(
     ['ovenData', userAddress, externalOvens.join()],
     async () => {
-      if (userAddress) {
-        const userOvens = await getOvens(userAddress, tezos);
+      if (userAddress && ctezContract) {
+        const userOvens = await getOvens(ctezContract, userAddress, tezos);
         const ovens: Oven[] = [];
         if (userOvens && userOvens.length > 0) {
           ovens.push(...userOvens);
         }
         const currentOvens = userOvens?.map((o) => o.address) ?? [];
         const filteredOvens = externalOvens.filter((o) => !currentOvens.includes(o));
-        const externals = await getExternalOvenData(filteredOvens, userAddress, tezos);
+        const externals = await getExternalOvenData(ctezContract, filteredOvens, userAddress, tezos);
         if (externals && externals.length > 0) {
           ovens.push(...externals);
         }
@@ -107,6 +119,7 @@ export const useOvenData = (userAddress?: string, externalOvens: string[] = []) 
     {
       refetchInterval: 30_000,
       staleTime: 3_000,
+      enabled: !!(userAddress && ctezContract),
     },
   );
 };
@@ -148,7 +161,7 @@ export const useOvenDataByAddresses = (ovenAddresses: string[]) => {
 };
 
 export const useOvenStorage = (ovenAddress?: string) => {
-  const { tezos } = useTezosWallet();
+  const { tezos } = useTezosContext();
   
   return useQuery<OvenStorage | undefined, AxiosError, OvenStorage | undefined>(
     ['ovenStorage', ovenAddress],
@@ -161,7 +174,7 @@ export const useOvenStorage = (ovenAddress?: string) => {
 };
 
 export const useOvenDelegate = (ovenAddress?: string) => {
-  const { tezos } = useTezosWallet();
+  const { tezos } = useTezosContext();
   
   return useQuery<string | null | undefined, AxiosError, string | null | undefined>(
     ['ovenDelegate', ovenAddress],
@@ -174,18 +187,19 @@ export const useOvenDelegate = (ovenAddress?: string) => {
 };
 
 export const useUserLqtData = (userAddress?: string) => {
-  const { tezos } = useTezosWallet();
+  const { tezos, cfmmContract } = useTezosContext();
   
   return useQuery<UserLQTData | undefined, AxiosError, UserLQTData | undefined>(
     ['userLqtData', userAddress],
     async () => {
-      if (userAddress) {
-        return getUserLQTData(userAddress, tezos);
+      if (userAddress && cfmmContract) {
+        return getUserLQTData(cfmmContract, userAddress, tezos);
       }
     },
     {
       refetchInterval: 30000,
       staleTime: 3000,
+      enabled: !!(userAddress && cfmmContract),
     },
   );
 };

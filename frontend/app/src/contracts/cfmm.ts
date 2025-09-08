@@ -18,18 +18,12 @@ import {
 } from '../interfaces';
 import { CFMM_ADDRESS } from '../utils/globals';
 import { getCTezFa12Contract, getLQTContract } from './fa12';
-import { executeMethod, initContract } from './utils';
-
-let cfmm: WalletContract;
+import { executeMethod } from './utils';
 
 type FA12TokenType = 'ctez' | 'lqt';
 
-export const initCfmm = async (address: string, tezos: TezosToolkit): Promise<void> => {
-  cfmm = await initContract(address, tezos);
-};
-
-export const getCfmmStorage = async (): Promise<CfmmStorage> => {
-  const storage = await cfmm.storage<CfmmStorage>();
+export const getCfmmStorage = async (cfmmContract: WalletContract): Promise<CfmmStorage> => {
+  const storage = await cfmmContract.storage<CfmmStorage>();
   return storage;
 };
 
@@ -72,7 +66,7 @@ export const getTokenAllowanceOps = async (
   return batchOps;
 };
 
-export const addLiquidity = async (args: AddLiquidityParams, tezos: TezosToolkit): Promise<WalletOperation> => {
+export const addLiquidity = async (cfmmContract: WalletContract, args: AddLiquidityParams, tezos: TezosToolkit): Promise<WalletOperation> => {
   const CTezFa12 = await getCTezFa12Contract(tezos);
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     CTezFa12,
@@ -83,7 +77,7 @@ export const addLiquidity = async (args: AddLiquidityParams, tezos: TezosToolkit
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmm.methods
+      ...cfmmContract.methods
         .addLiquidity(
           args.owner,
           args.minLqtMinted,
@@ -103,6 +97,7 @@ export const addLiquidity = async (args: AddLiquidityParams, tezos: TezosToolkit
 };
 
 export const removeLiquidity = async (
+  cfmmContract: WalletContract,
   args: RemoveLiquidityParams,
   userAddress: string,
   tezos: TezosToolkit,
@@ -118,7 +113,7 @@ export const removeLiquidity = async (
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmm.methods
+      ...cfmmContract.methods
         .removeLiquidity(
           args.to,
           args.lqtBurned,
@@ -137,9 +132,9 @@ export const removeLiquidity = async (
   return hash;
 };
 
-export const cashToToken = async (args: CashToTokenParams): Promise<TransactionWalletOperation> => {
+export const cashToToken = async (cfmmContract: WalletContract, args: CashToTokenParams): Promise<TransactionWalletOperation> => {
   const operation = await executeMethod(
-    cfmm,
+    cfmmContract,
     'cashToToken',
     [args.to, Math.floor(args.minTokensBought * 1e6), args.deadline.toISOString()],
     undefined,
@@ -150,6 +145,7 @@ export const cashToToken = async (args: CashToTokenParams): Promise<TransactionW
 };
 
 export const tokenToCash = async (
+  cfmmContract: WalletContract,
   args: TokenToCashParams,
   userAddress: string,
   tezos: TezosToolkit,
@@ -165,7 +161,7 @@ export const tokenToCash = async (
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmm.methods
+      ...cfmmContract.methods
         .tokenToCash(
           args.to,
           args.tokensSold * 1e6,
@@ -184,9 +180,10 @@ export const tokenToCash = async (
 };
 
 export const tokenToToken = async (
+  cfmmContract: WalletContract,
   args: TokenToTokenParams,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cfmm, 'tokenToToken', [
+  const operation = await executeMethod(cfmmContract, 'tokenToToken', [
     args.outputCfmmContract,
     args.minTokensBought * 1e6,
     args.to,

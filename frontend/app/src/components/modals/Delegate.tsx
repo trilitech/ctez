@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useDelegates } from '../../api/queries';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import Button from '../button';
 import { cTezError, delegate } from '../../contracts/ctez';
 import { Oven } from '../../interfaces';
@@ -26,7 +26,7 @@ interface IDelegateProps {
 
 const Delegate: React.FC<IDelegateProps> = (props) => {
   const { t } = useTranslation(['common']);
-  const { pkh: userAddress, tezos } = useTezosWallet();
+  const { pkh: userAddress, tezos } = useTezosContext();
   const { data: delegates } = useDelegates(userAddress);
   const toast = useToast();
   const [delegator, setDelegator] = useState('');

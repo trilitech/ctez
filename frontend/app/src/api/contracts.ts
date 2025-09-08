@@ -1,7 +1,7 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { sub, format, differenceInDays } from 'date-fns';
-import { TezosToolkit } from '@taquito/taquito';
+import { TezosToolkit, WalletContract } from '@taquito/taquito';
 import { getCfmmStorage, getLQTContractStorage } from '../contracts/cfmm';
 import { getCtezStorage } from '../contracts/ctez';
 import { BaseStats, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
@@ -29,11 +29,11 @@ export const getTimeStampOfBlock = async (block: number) => {
   return response.data.timestamp;
 };
 
-export const getBaseStats = async (userAddress?: string): Promise<BaseStats> => {
+export const getBaseStats = async (ctezContract: WalletContract, cfmmContract: WalletContract, userAddress?: string): Promise<BaseStats> => {
   const diffInDays = differenceInDays(new Date(), new Date(CONTRACT_DEPLOYMENT_DATE));
   const prevStorageDays = diffInDays >= 7 ? 7 : diffInDays;
-  const cTezStorage = await getCtezStorage();
-  const cfmmStorage = await getCfmmStorage();
+  const cTezStorage = await getCtezStorage(ctezContract);
+  const cfmmStorage = await getCfmmStorage(cfmmContract);
   const cTez7dayStorage = await getPrevCTezStorage(prevStorageDays, userAddress);
   const currentLevel = await getCurrentBlock();
   const timestampCurrent = await getTimeStampOfBlock(currentLevel);
@@ -88,8 +88,8 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
   }
 };
 
-export const getUserLQTData = async (userAddress: string, tezos: TezosToolkit): Promise<UserLQTData> => {
-  const cfmmStorage = await getCfmmStorage();
+export const getUserLQTData = async (cfmmContract: WalletContract, userAddress: string, tezos: TezosToolkit): Promise<UserLQTData> => {
+  const cfmmStorage = await getCfmmStorage(cfmmContract);
   const lqtTokenStorage = await getLQTContractStorage(tezos);
   const userLqtBalance: BigNumber =
     (await lqtTokenStorage.tokens.get(userAddress)) ?? new BigNumber(0);

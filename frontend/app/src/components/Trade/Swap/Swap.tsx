@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
-import { useTezosWallet } from '../../../wallet/hooks';
+import { useTezosContext } from '../../../tezos';
 import { useCfmmStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
@@ -34,7 +34,7 @@ import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
 
 const Swap: React.FC = () => {
-  const { pkh: userAddress, tezos } = useTezosWallet();
+  const { pkh: userAddress, tezos, cfmmContract } = useTezosContext();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
   const { data: cfmmStorage } = useCfmmStorage();
@@ -108,13 +108,14 @@ const Swap: React.FC = () => {
         const deadline = addMinutes(deadlineFromStore)(new Date());
         const result =
           formType === FORM_TYPE.TEZ_CTEZ
-            ? await cashToToken({
+            ? await cashToToken(cfmmContract, {
                 amount: formData.amount,
                 deadline,
                 minTokensBought: minReceived,
                 to: userAddress,
               })
             : await tokenToCash(
+                cfmmContract,
                 {
                   deadline,
                   minCashBought: minReceived,

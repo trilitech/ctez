@@ -2,6 +2,13 @@ import { NetworkType } from "@airgap/beacon-sdk";
 
 export const APP_NAME = process.env.REACT_APP_APP_NAME || 'CTez';
 export const NETWORK = (process.env.REACT_APP_NETWORK_TYPE || 'florencenet') as NetworkType;
+if (!process.env.REACT_APP_CFMM_CONTRACT) {
+  throw new Error('REACT_APP_CFMM_CONTRACT environment variable is required');
+}
+if (!process.env.REACT_APP_CTEZ_CONTRACT) {
+  throw new Error('REACT_APP_CTEZ_CONTRACT environment variable is required');
+}
+
 export const CFMM_ADDRESS = process.env.REACT_APP_CFMM_CONTRACT;
 export const CTEZ_ADDRESS = process.env.REACT_APP_CTEZ_CONTRACT;
 export const CTEZ_FA12_ADDRESS = process.env.REACT_APP_CTEZ_FA12_CONTRACT;

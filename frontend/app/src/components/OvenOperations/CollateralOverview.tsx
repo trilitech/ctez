@@ -21,12 +21,12 @@ import { AllOvenDatum } from '../../interfaces';
 import data from '../../assets/data/info.json';
 import { formatNumberStandard } from '../../utils/numbers';
 import { useOvenStorage } from '../../api/queries';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 
 const CollateralOverview: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean }> = ({
   oven,
 }) => {
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress } = useTezosContext();
   const { stats } = useOvenStats(oven);
   const [depositOpen, setDepositOpen] = useState<boolean>(false);
   const [withdrawOpen, setWithdrawOpen] = useState<boolean>(false);

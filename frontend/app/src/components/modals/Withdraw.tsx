@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { validateAddress } from '@taquito/utils';
 import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { IWithdrawForm } from '../../constants/oven-operations';
 import { cTezError, withdraw } from '../../contracts/ctez';
 import Button from '../button';
@@ -41,7 +41,7 @@ interface IWithdrawProps {
 
 const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
   const { t } = useTranslation(['common']);
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress, ctezContract } = useTezosContext();
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'tooltipbg',
@@ -86,7 +86,7 @@ const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
   const handleFormSubmit = async (data: IWithdrawForm) => {
     if (oven?.key.id) {
       try {
-        const result = await withdraw(Number(oven.key.id), Number(data.amount), data.to);
+        const result = await withdraw(ctezContract, Number(oven.key.id), Number(data.amount), data.to);
         handleProcessing(result);
       } catch (error) {
         const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');

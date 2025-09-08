@@ -21,18 +21,8 @@ import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
 import { executeMethod, initContract } from './utils';
 import { getAllOvensAPI, getOvenByAddressAPI, getUserOvensAPI } from '../api/tzkt';
 
-let cTez: WalletContract;
-
-export const initCTez = async (address: string, tezos: TezosToolkit): Promise<void> => {
-  cTez = await initContract(address, tezos);
-};
-
-export const getCTez = (): WalletContract => {
-  return cTez;
-};
-
-export const getCtezStorage = async (): Promise<CTezStorage> => {
-  const storage = await cTez.storage<CTezStorage>();
+export const getCtezStorage = async (ctezContract: WalletContract): Promise<CTezStorage> => {
+  const storage = await ctezContract.storage<CTezStorage>();
   return storage;
 };
 
@@ -43,6 +33,7 @@ export const getOvenStorage = async (ovenAddress: string, tezos: TezosToolkit): 
 };
 
 export const create = async (
+  ctezContract: WalletContract,
   userAddress: string,
   bakerAddress: string,
   op: Depositor,
@@ -52,13 +43,13 @@ export const create = async (
 ): Promise<TransactionWalletOperation> => {
   const newOvenId = lastOvenId + 1;
   const operation = await executeMethod(
-    cTez,
+    ctezContract,
     'create',
     [newOvenId, bakerAddress, op, allowedDepositors],
     undefined,
     amount,
   );
-  saveLastOven(userAddress, cTez.address, newOvenId);
+  saveLastOven(userAddress, ctezContract.address, newOvenId);
   return operation;
 };
 
@@ -175,29 +166,32 @@ export const deposit = async (
 };
 
 export const withdraw = async (
+  ctezContract: WalletContract,
   ovenId: number,
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cTez, 'withdraw', [ovenId, amount * 1e6, to]);
+  const operation = await executeMethod(ctezContract, 'withdraw', [ovenId, amount * 1e6, to]);
   return operation;
 };
 
 export const liquidate = async (
+  ctezContract: WalletContract,
   ovenId: number,
   overOwner: string,
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cTez, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
+  const operation = await executeMethod(ctezContract, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
   return operation;
 };
 
 export const mintOrBurn = async (
+  ctezContract: WalletContract,
   ovenId: number,
   quantity: number,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cTez, 'mint_or_burn', [ovenId, quantity * 1e6]);
+  const operation = await executeMethod(ctezContract, 'mint_or_burn', [ovenId, quantity * 1e6]);
   return operation;
 };
 
@@ -234,10 +228,10 @@ export const prepareExternalOvenCall = async (
   return { ...ovenData, isImported: true, isExternal: owner !== userAddress };
 };
 
-export const getOvens = async (userAddress: string, tezos: TezosToolkit): Promise<Oven[] | undefined> => {
+export const getOvens = async (ctezContract: WalletContract, userAddress: string, tezos: TezosToolkit): Promise<Oven[] | undefined> => {
   try {
-    const lastOvenId = getLastOvenId(userAddress, cTez.address);
-    const storage: any = await cTez.storage();
+    const lastOvenId = getLastOvenId(userAddress, ctezContract.address);
+    const storage: any = await ctezContract.storage();
     const ovens: Promise<Oven>[] = [];
     for (let i = lastOvenId; i > 0; i -= 1) {
       ovens.push(prepareOvenCall(storage, i, userAddress, tezos));
@@ -280,12 +274,13 @@ export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undef
 };
 
 export const getExternalOvenData = async (
+  ctezContract: WalletContract,
   externalOvens: string[],
   userAddress: string,
   tezos: TezosToolkit,
 ): Promise<Oven[] | undefined> => {
   try {
-    const storage: any = await cTez.storage();
+    const storage: any = await ctezContract.storage();
     const allOvenData = await Promise.all(
       externalOvens.map((item) => prepareExternalOvenCall(storage, item, userAddress, tezos)),
     );

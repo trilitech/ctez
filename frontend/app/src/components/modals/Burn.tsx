@@ -30,7 +30,7 @@ import { CTezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useOvenStats, useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 import { useUserBalance } from '../../api/queries';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { inputFormatNumberStandard } from '../../utils/numbers';
 
 interface IBurnProps {
@@ -40,7 +40,7 @@ interface IBurnProps {
 }
 
 const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress, ctezContract } = useTezosContext();
   const { t } = useTranslation(['common']);
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
@@ -99,7 +99,7 @@ const Burn: React.FC<IBurnProps> = ({ isOpen, onClose, oven }) => {
     if (oven?.key.id) {
       try {
         const amount = -data.amount;
-        const result = await mintOrBurn(Number(oven.key.id), amount);
+        const result = await mintOrBurn(ctezContract, Number(oven.key.id), amount);
         handleProcessing(result);
       } catch (error) {
         logger.warn(error);

@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { object, string } from 'yup';
 import { isOven } from '../../contracts/ctez';
 import { useOvenData } from '../../api/queries';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { CTEZ_ADDRESS } from '../../utils/globals';
 import { addExternalOven, getExternalOvens } from '../../utils/ovenUtils';
 import Button from '../button';
@@ -35,7 +35,7 @@ interface IAddOvenForm {
 }
 
 const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
-  const { pkh: userAddress, tezos } = useTezosWallet();
+  const { pkh: userAddress, tezos } = useTezosContext();
   const toast = useToast();
   const dispatch = useAppDispatch();
   const { t } = useTranslation(['common']);

@@ -31,6 +31,7 @@ import { CTezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useOvenStats, useThemeColors, useTxLoader } from '../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../utils/numbers';
+import { useTezosContext } from '../../tezos';
 
 interface IMintProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ interface IMintProps {
 }
 
 const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
+  const { ctezContract } = useTezosContext();
   const { t } = useTranslation(['common']);
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
@@ -109,7 +111,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
     if (oven?.key.id) {
       try {
         const amount = data?.amount;
-        const result = await mintOrBurn(Number(oven.key.id), Number(amount));
+        const result = await mintOrBurn(ctezContract, Number(oven.key.id), Number(amount));
         handleProcessing(result);
         onClose();
       } catch (error) {

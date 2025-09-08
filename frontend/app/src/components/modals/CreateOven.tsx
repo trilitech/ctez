@@ -23,7 +23,7 @@ import { useFormik } from 'formik';
 import { useDelegates, useUserBalance, useUserOvenData } from '../../api/queries';
 import { Depositor } from '../../interfaces';
 import { create, cTezError } from '../../contracts/ctez';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import { logger } from '../../utils/logger';
 import RadioCard from '../radio';
 import Button from '../button';
@@ -52,7 +52,7 @@ interface ICreateVaultForm {
 
 // TODO Refactor
 const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress, ctezContract } = useTezosContext();
   const { data: delegates } = useDelegates(userAddress);
 
   const {
@@ -153,6 +153,7 @@ const CreateOven: React.FC<ICreateOvenProps> = ({ isOpen, onClose }) => {
             : undefined;
 
         const result = await create(
+          ctezContract,
           userAddress,
           data.delegate,
           data.depositType === 'Whitelist' ? Depositor.whitelist : Depositor.any,

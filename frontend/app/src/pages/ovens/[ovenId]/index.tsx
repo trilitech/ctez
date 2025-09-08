@@ -2,7 +2,7 @@ import { Center, Stack, Text, useMediaQuery } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import OvenStats from '../../../components/OvenCard/OvenStats';
-import { useTezosWallet } from '../../../wallet/hooks';
+import { useTezosContext } from '../../../tezos';
 import BakerInfo from '../../../components/OvenCard/BakerInfo';
 import DepositorsInfo from '../../../components/OvenCard/DepositorsInfo';
 import CollateralOverview from '../../../components/OvenOperations/CollateralOverview';
@@ -11,7 +11,7 @@ import { useOvenDataByAddresses } from '../../../api/queries';
 import { AllOvenDatum } from '../../../interfaces';
 
 const OvenIdPage: React.FC = () => {
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress } = useTezosContext();
   const [largerScreen] = useMediaQuery(['(min-width: 800px)']);
   const { address } = useParams<{ address: string }>();
   const [queryResult] = useOvenDataByAddresses([address]);

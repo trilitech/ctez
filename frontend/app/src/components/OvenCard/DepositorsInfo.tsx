@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MdEdit, MdInfo } from 'react-icons/md';
 import { useOvenDelegate, useOvenStorage } from '../../api/queries';
-import { useTezosWallet } from '../../wallet/hooks';
+import { useTezosContext } from '../../tezos';
 import Button from '../button';
 import Identicon from '../avatar';
 import ChangeDepositor from '../modals/ChangeDepositor';
@@ -17,7 +17,7 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
   oven,
   isImported,
 }) => {
-  const { pkh: userAddress } = useTezosWallet();
+  const { pkh: userAddress } = useTezosContext();
   const { t } = useTranslation(['common']);
   const { data: ovenStorageData } = useOvenStorage(oven?.value.address);
   const { data: baker } = useOvenDelegate(oven?.value.address);
@@ -43,7 +43,7 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
   }, [cardbg, text4]);
   const getWhiteList = (recvData: any) => {
     try {
-      const list = Array.prototype.slice.call(recvData.depositors.whitelist);
+      const list = recvData.depositors.whitelist?.slice() || [];
       return list;
     } catch (err) {
       console.log(err);
