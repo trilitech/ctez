@@ -126,7 +126,7 @@ const DepositorsInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boo
         )}
       </Stack>
 
-      {oven && (
+      {oven && ovenStorageData && (
         <ChangeDepositor
           isOpen={edit}
           onClose={() => setEdit(false)}

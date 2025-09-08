@@ -57,7 +57,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
   const group = getRootProps();
   const handleProcessing = useTxLoader();
 
-  const getWhiteList = (recvData: any) => {
+  const getWhiteList = (recvData: OvenStorage) => {
     try {
       const list = Array.prototype.slice.call(recvData.depositors.whitelist);
       return list;
