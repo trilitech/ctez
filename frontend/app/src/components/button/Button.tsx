@@ -1,7 +1,7 @@
 import React, { MouseEventHandler, useMemo } from 'react';
 import { Button as ChakraButton, useColorMode, Box, CSSObject } from '@chakra-ui/react';
 import { ButtonProps } from '@chakra-ui/button';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { useThemeColors } from '../../hooks/utilHooks';
 
 export interface IButtonProps extends ButtonProps {
@@ -11,7 +11,7 @@ export interface IButtonProps extends ButtonProps {
 }
 
 const Button: React.FC<IButtonProps> = (props) => {
-  const { wallet: { pkh: userAddress }, connect } = useBeaconWallet();
+  const { pkh: userAddress, connect } = useTezosWallet();
   const { colorMode } = useColorMode();
   const [background] = useThemeColors(['cardbg']);
 

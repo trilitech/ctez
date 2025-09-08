@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { components, OptionProps } from 'react-select';
 import { validateAddress } from '@taquito/utils';
 import { useDelegates, useOvenDelegate } from '../../api/queries';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import Button from '../button';
 import { cTezError, delegate } from '../../contracts/ctez';
 import Identicon from '../avatar';
@@ -23,7 +23,7 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
   isImported,
 }) => {
   const { t } = useTranslation(['common']);
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const { data: delegates } = useDelegates(userAddress);
   const { data: baker, refetch: refetchBaker } = useOvenDelegate(oven?.value.address);
 
@@ -62,7 +62,7 @@ const BakerInfo: React.FC<{ oven: AllOvenDatum | undefined; isImported: boolean 
     }
 
     try {
-      const result = await delegate(oven?.value.address ?? '', bakerSelect.value);
+      const result = await delegate(oven?.value.address ?? '', bakerSelect.value, tezos);
 
       setProcessing(true);
 

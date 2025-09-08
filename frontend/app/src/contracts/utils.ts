@@ -3,8 +3,8 @@ import {
   TransactionWalletOperation,
   Wallet,
   WalletContract,
+  TezosToolkit,
 } from '@taquito/taquito';
-import { getTezosInstance } from './client';
 
 export const executeMethod = async (
   contract: WalletContract,
@@ -25,11 +25,11 @@ export const executeMethod = async (
 };
 
 export const initContract = async (
-  address: string | null = null,
+  address: string,
+  tezos: TezosToolkit,
 ): Promise<ContractAbstraction<Wallet>> => {
-  const tezos = getTezosInstance();
-  if (!address || tezos === null) {
-    throw new Error('contract address not set or Tezos not initialized');
+  if (!address) {
+    throw new Error('contract address not set');
   }
   const contract = await tezos.wallet.at(address);
   return contract;

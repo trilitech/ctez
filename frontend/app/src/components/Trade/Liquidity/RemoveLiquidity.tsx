@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { RemoveLiquidityParams } from '../../../interfaces';
 import { cfmmError, removeLiquidity } from '../../../contracts/cfmm';
 import { IRemoveLiquidityForm, REMOVE_BTN_TXT } from '../../../constants/liquidity';
-import { useBeaconWallet } from '../../../wallet/hooks';
+import { useTezosWallet } from '../../../wallet/hooks';
 import { useCfmmStorage, useUserLqtData } from '../../../api/queries';
 import Button from '../../button';
 import { useAppSelector } from '../../../redux/store';
@@ -21,7 +21,7 @@ import {
 import { BUTTON_TXT } from '../../../constants/swap';
 
 const RemoveLiquidity: React.FC = () => {
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const [otherValues, setOtherValues] = useState({
     cashWithdraw: 0,
     tokenWithdraw: 0,
@@ -89,7 +89,7 @@ const RemoveLiquidity: React.FC = () => {
           minCashWithdrawn: otherValues.cashWithdraw,
           minTokensWithdrawn: otherValues.tokenWithdraw,
         };
-        const result = await removeLiquidity(data, userAddress);
+        const result = await removeLiquidity(data, userAddress, tezos);
         handleProcessing(result);
       } catch (error) {
         const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');

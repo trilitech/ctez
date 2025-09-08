@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useDelegates } from '../../api/queries';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import Button from '../button';
 import { cTezError, delegate } from '../../contracts/ctez';
 import { Oven } from '../../interfaces';
@@ -26,7 +26,7 @@ interface IDelegateProps {
 
 const Delegate: React.FC<IDelegateProps> = (props) => {
   const { t } = useTranslation(['common']);
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const { data: delegates } = useDelegates(userAddress);
   const toast = useToast();
   const [delegator, setDelegator] = useState('');
@@ -39,7 +39,7 @@ const Delegate: React.FC<IDelegateProps> = (props) => {
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const result = await delegate(props.oven.address, delegator);
+      const result = await delegate(props.oven.address, delegator, tezos);
       if (result) {
         toast({
           description: t('txSubmitted'),

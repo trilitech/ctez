@@ -3,6 +3,7 @@ import {
   TransactionWalletOperation,
   WalletContract,
   WalletParamsWithKind,
+  TezosToolkit,
 } from '@taquito/taquito';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -15,17 +16,15 @@ import {
   Oven,
   OvenStorage,
 } from '../interfaces';
-import { CTEZ_ADDRESS } from '../utils/globals';
 import { logger } from '../utils/logger';
 import { getLastOvenId, saveLastOven } from '../utils/ovenUtils';
-import { getTezosInstance } from './client';
 import { executeMethod, initContract } from './utils';
 import { getAllOvensAPI, getOvenByAddressAPI, getUserOvensAPI } from '../api/tzkt';
 
 let cTez: WalletContract;
 
-export const initCTez = async (address: string): Promise<void> => {
-  cTez = await initContract(address);
+export const initCTez = async (address: string, tezos: TezosToolkit): Promise<void> => {
+  cTez = await initContract(address, tezos);
 };
 
 export const getCTez = (): WalletContract => {
@@ -37,8 +36,8 @@ export const getCtezStorage = async (): Promise<CTezStorage> => {
   return storage;
 };
 
-export const getOvenStorage = async (ovenAddress: string): Promise<OvenStorage> => {
-  const ovenContract = await initContract(ovenAddress);
+export const getOvenStorage = async (ovenAddress: string, tezos: TezosToolkit): Promise<OvenStorage> => {
+  const ovenContract = await initContract(ovenAddress, tezos);
   const storage: OvenStorage = await ovenContract.storage();
   return storage;
 };
@@ -66,8 +65,9 @@ export const create = async (
 export const delegate = async (
   ovenAddress: string,
   bakerAddress: string,
+  tezos: TezosToolkit,
 ): Promise<TransactionWalletOperation> => {
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const operation = await executeMethod(ovenContract, 'oven_delegate', [bakerAddress]);
   return operation;
 };
@@ -112,9 +112,9 @@ export const addRemoveDepositorList = async (
   ovenStorage: OvenStorage,
   addList: string[] = [],
   disableList: string[] = [],
+  tezos: TezosToolkit,
 ): Promise<any> => {
-  const tezos = getTezosInstance();
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const whitelist = getWhiteList(ovenStorage);
   const disableAny =
     !Array.isArray(ovenStorage?.depositors) && Object.keys(ovenStorage?.depositors).includes('any');
@@ -140,9 +140,9 @@ export const addRemoveDepositorList = async (
 export const enableDisableAnyDepositor = async (
   ovenAddress: string,
   allow: boolean,
+  tezos: TezosToolkit,
 ): Promise<string> => {
-  const tezos = getTezosInstance();
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const batch = tezos.wallet.batch([prepareOvenAllowAnyCall(ovenContract, allow)]);
   const hash = await batch.send();
   return hash.opHash;
@@ -152,9 +152,10 @@ export const editDepositor = async (
   ovenAddress: string,
   ops: EditDepositorOps,
   enable: boolean,
+  tezos: TezosToolkit,
   address?: string,
 ): Promise<TransactionWalletOperation> => {
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const operation = await executeMethod(ovenContract, 'oven_edit_depositor', [
     ops,
     enable,
@@ -166,8 +167,9 @@ export const editDepositor = async (
 export const deposit = async (
   ovenAddress: string,
   amount: number,
+  tezos: TezosToolkit,
 ): Promise<TransactionWalletOperation> => {
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const operation = await executeMethod(ovenContract, 'default', undefined, 0, amount);
   return operation;
 };
@@ -199,8 +201,7 @@ export const mintOrBurn = async (
   return operation;
 };
 
-export const getOvenDelegate = async (userOven: string): Promise<string | null> => {
-  const tezos = getTezosInstance();
+export const getOvenDelegate = async (userOven: string, tezos: TezosToolkit): Promise<string | null> => {
   const baker = await tezos.rpc.getDelegate(userOven);
   return baker;
 };
@@ -209,12 +210,13 @@ export const prepareOvenCall = async (
   storage: any,
   ovenId: number | BigNumber,
   userAddress: string,
+  tezos: TezosToolkit,
 ): Promise<Oven> => {
   const userOven = await storage.ovens.get({
     id: ovenId,
     owner: userAddress,
   });
-  const baker = userOven ? await getOvenDelegate(userOven.address) : null;
+  const baker = userOven ? await getOvenDelegate(userOven.address, tezos) : null;
   return { ...userOven, baker, ovenId };
 };
 
@@ -222,25 +224,23 @@ export const prepareExternalOvenCall = async (
   storage: any,
   ovenAddress: string,
   userAddress: string,
+  tezos: TezosToolkit,
 ): Promise<Oven> => {
-  const ovenContract = await initContract(ovenAddress);
+  const ovenContract = await initContract(ovenAddress, tezos);
   const {
     handle: { id, owner },
   } = await ovenContract.storage<OvenStorage>();
-  const ovenData = await prepareOvenCall(storage, id, owner);
+  const ovenData = await prepareOvenCall(storage, id, owner, tezos);
   return { ...ovenData, isImported: true, isExternal: owner !== userAddress };
 };
 
-export const getOvens = async (userAddress: string): Promise<Oven[] | undefined> => {
+export const getOvens = async (userAddress: string, tezos: TezosToolkit): Promise<Oven[] | undefined> => {
   try {
-    if (!cTez && CTEZ_ADDRESS) {
-      await initCTez(CTEZ_ADDRESS);
-    }
     const lastOvenId = getLastOvenId(userAddress, cTez.address);
     const storage: any = await cTez.storage();
     const ovens: Promise<Oven>[] = [];
     for (let i = lastOvenId; i > 0; i -= 1) {
-      ovens.push(prepareOvenCall(storage, i, userAddress));
+      ovens.push(prepareOvenCall(storage, i, userAddress, tezos));
     }
     const allOvenData = await Promise.all(ovens);
     return allOvenData;
@@ -251,9 +251,6 @@ export const getOvens = async (userAddress: string): Promise<Oven[] | undefined>
 
 export const getAllOvens = async (): Promise<AllOvenDatum[] | undefined> => {
   try {
-    if (!cTez && CTEZ_ADDRESS) {
-      await initCTez(CTEZ_ADDRESS);
-    }
     const allOvenData = await getAllOvensAPI();
     return allOvenData;
   } catch (error) {
@@ -264,9 +261,6 @@ export const getAllOvens = async (): Promise<AllOvenDatum[] | undefined> => {
 
 export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] | undefined> => {
   try {
-    if (!cTez && CTEZ_ADDRESS) {
-      await initCTez(CTEZ_ADDRESS);
-    }
     const userOvenData = await getUserOvensAPI(userAddress);
     return userOvenData;
   } catch (error) {
@@ -277,9 +271,6 @@ export const getUserOvens = async (userAddress: string): Promise<AllOvenDatum[] 
 
 export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undefined> => {
   try {
-    if (!cTez && CTEZ_ADDRESS) {
-      await initCTez(CTEZ_ADDRESS);
-    }
     const ovenDatum = await getOvenByAddressAPI(ovenAddress);
     return ovenDatum;
   } catch (error) {
@@ -291,14 +282,12 @@ export const getOven = async (ovenAddress: string): Promise<AllOvenDatum | undef
 export const getExternalOvenData = async (
   externalOvens: string[],
   userAddress: string,
+  tezos: TezosToolkit,
 ): Promise<Oven[] | undefined> => {
   try {
-    if (!cTez && CTEZ_ADDRESS) {
-      await initCTez(CTEZ_ADDRESS);
-    }
     const storage: any = await cTez.storage();
     const allOvenData = await Promise.all(
-      externalOvens.map((item) => prepareExternalOvenCall(storage, item, userAddress)),
+      externalOvens.map((item) => prepareExternalOvenCall(storage, item, userAddress, tezos)),
     );
     return allOvenData;
   } catch (error) {
@@ -306,15 +295,15 @@ export const getExternalOvenData = async (
   }
 };
 
-export const getOvenDepositor = async (ovenAddress: string): Promise<depositors> => {
-  const ovenContract = await initContract(ovenAddress);
+export const getOvenDepositor = async (ovenAddress: string, tezos: TezosToolkit): Promise<depositors> => {
+  const ovenContract = await initContract(ovenAddress, tezos);
   const ovenStorage: OvenStorage = await ovenContract.storage();
   return ovenStorage.depositors;
 };
 
-export const isOven = async (ovenAddress: string): Promise<boolean> => {
+export const isOven = async (ovenAddress: string, tezos: TezosToolkit): Promise<boolean> => {
   try {
-    const ovenContract = await initContract(ovenAddress);
+    const ovenContract = await initContract(ovenAddress, tezos);
     const ovenStorage: OvenStorage = await ovenContract.storage();
     return typeof ovenStorage?.handle !== 'undefined' && typeof ovenStorage?.admin !== 'undefined';
   } catch (error) {

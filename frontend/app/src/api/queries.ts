@@ -24,6 +24,7 @@ import {
 import { getBaseStats, getUserLQTData } from './contracts';
 import { getDelegates } from './tzkt';
 import { getUserBalance } from './user';
+import { useTezosWallet } from '../wallet/hooks';
 
 type TUseQueryReturn<T> = UseQueryResult<T | undefined, AxiosError>;
 
@@ -47,11 +48,13 @@ export const useCtezBaseStats = (userAddress?: string) => {
 };
 
 export const useUserBalance = (userAddress?: string) => {
+  const { tezos } = useTezosWallet();
+  
   return useQuery<UserBalance | undefined, AxiosError, UserBalance | undefined>(
     [`user-balance-${userAddress}`],
     () => {
       if (userAddress) {
-        return getUserBalance(userAddress);
+        return getUserBalance(tezos, userAddress);
       }
     },
     {
@@ -74,18 +77,20 @@ export const useCfmmStorage = () => {
 };
 
 export const useOvenData = (userAddress?: string, externalOvens: string[] = []) => {
+  const { tezos } = useTezosWallet();
+  
   return useQuery<Oven[], AxiosError, Oven[]>(
     ['ovenData', userAddress, externalOvens.join()],
     async () => {
       if (userAddress) {
-        const userOvens = await getOvens(userAddress);
+        const userOvens = await getOvens(userAddress, tezos);
         const ovens: Oven[] = [];
         if (userOvens && userOvens.length > 0) {
           ovens.push(...userOvens);
         }
         const currentOvens = userOvens?.map((o) => o.address) ?? [];
         const filteredOvens = externalOvens.filter((o) => !currentOvens.includes(o));
-        const externals = await getExternalOvenData(filteredOvens, userAddress);
+        const externals = await getExternalOvenData(filteredOvens, userAddress, tezos);
         if (externals && externals.length > 0) {
           ovens.push(...externals);
         }
@@ -143,33 +148,39 @@ export const useOvenDataByAddresses = (ovenAddresses: string[]) => {
 };
 
 export const useOvenStorage = (ovenAddress?: string) => {
+  const { tezos } = useTezosWallet();
+  
   return useQuery<OvenStorage | undefined, AxiosError, OvenStorage | undefined>(
     ['ovenStorage', ovenAddress],
     async () => {
       if (ovenAddress) {
-        return getOvenStorage(ovenAddress);
+        return getOvenStorage(ovenAddress, tezos);
       }
     },
   );
 };
 
 export const useOvenDelegate = (ovenAddress?: string) => {
+  const { tezos } = useTezosWallet();
+  
   return useQuery<string | null | undefined, AxiosError, string | null | undefined>(
     ['ovenDelegate', ovenAddress],
     async () => {
       if (ovenAddress) {
-        return getOvenDelegate(ovenAddress);
+        return getOvenDelegate(ovenAddress, tezos);
       }
     },
   );
 };
 
 export const useUserLqtData = (userAddress?: string) => {
+  const { tezos } = useTezosWallet();
+  
   return useQuery<UserLQTData | undefined, AxiosError, UserLQTData | undefined>(
     ['userLqtData', userAddress],
     async () => {
       if (userAddress) {
-        return getUserLQTData(userAddress);
+        return getUserLQTData(userAddress, tezos);
       }
     },
     {

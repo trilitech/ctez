@@ -4,6 +4,7 @@ import {
   WalletContract,
   WalletOperation,
   WalletParamsWithKind,
+  TezosToolkit,
 } from '@taquito/taquito';
 import BigNumber from 'bignumber.js';
 import {
@@ -16,7 +17,6 @@ import {
   TokenToTokenParams,
 } from '../interfaces';
 import { CFMM_ADDRESS } from '../utils/globals';
-import { getTezosInstance } from './client';
 import { getCTezFa12Contract, getLQTContract } from './fa12';
 import { executeMethod, initContract } from './utils';
 
@@ -24,8 +24,8 @@ let cfmm: WalletContract;
 
 type FA12TokenType = 'ctez' | 'lqt';
 
-export const initCfmm = async (address: string): Promise<void> => {
-  cfmm = await initContract(address);
+export const initCfmm = async (address: string, tezos: TezosToolkit): Promise<void> => {
+  cfmm = await initContract(address, tezos);
 };
 
 export const getCfmmStorage = async (): Promise<CfmmStorage> => {
@@ -37,8 +37,8 @@ interface LQTStorage {
   tokens: Map<string, BigNumber>;
 }
 
-export const getLQTContractStorage = async (): Promise<LQTStorage> => {
-  const lqtContract = await getLQTContract();
+export const getLQTContractStorage = async (tezos: TezosToolkit): Promise<LQTStorage> => {
+  const lqtContract = await getLQTContract(tezos);
   const storage = await lqtContract.storage<LQTStorage>();
   return storage;
 };
@@ -72,9 +72,8 @@ export const getTokenAllowanceOps = async (
   return batchOps;
 };
 
-export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOperation> => {
-  const tezos = getTezosInstance();
-  const CTezFa12 = await getCTezFa12Contract();
+export const addLiquidity = async (args: AddLiquidityParams, tezos: TezosToolkit): Promise<WalletOperation> => {
+  const CTezFa12 = await getCTezFa12Contract(tezos);
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     CTezFa12,
     args.owner,
@@ -106,9 +105,9 @@ export const addLiquidity = async (args: AddLiquidityParams): Promise<WalletOper
 export const removeLiquidity = async (
   args: RemoveLiquidityParams,
   userAddress: string,
+  tezos: TezosToolkit,
 ): Promise<WalletOperation> => {
-  const tezos = getTezosInstance();
-  const LQTFa12 = await getLQTContract();
+  const LQTFa12 = await getLQTContract(tezos);
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     LQTFa12,
     userAddress,
@@ -153,9 +152,9 @@ export const cashToToken = async (args: CashToTokenParams): Promise<TransactionW
 export const tokenToCash = async (
   args: TokenToCashParams,
   userAddress: string,
+  tezos: TezosToolkit,
 ): Promise<WalletOperation> => {
-  const tezos = getTezosInstance();
-  const CTezFa12 = await getCTezFa12Contract();
+  const CTezFa12 = await getCTezFa12Contract(tezos);
   const batchOps: WalletParamsWithKind[] = await getTokenAllowanceOps(
     CTezFa12,
     userAddress,

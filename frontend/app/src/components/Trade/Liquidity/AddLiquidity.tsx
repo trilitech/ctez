@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { number, object } from 'yup';
 import { addMinutes } from 'date-fns/fp';
 import { useFormik } from 'formik';
-import { useBeaconWallet } from '../../../wallet/hooks';
+import { useTezosWallet } from '../../../wallet/hooks';
 import { useCfmmStorage, useUserBalance } from '../../../api/queries';
 
 import { AddLiquidityParams } from '../../../interfaces';
@@ -19,7 +19,7 @@ import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
 
 const AddLiquidity: React.FC = () => {
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const [minLQT, setMinLQT] = useState(0);
   const { data: cfmmStorage } = useCfmmStorage();
   const { data: balance } = useUserBalance(userAddress);
@@ -90,7 +90,7 @@ const AddLiquidity: React.FC = () => {
           maxTokensDeposited: formData.ctezAmount,
           minLqtMinted: minLQT,
         };
-        const result = await addLiquidity(data);
+        const result = await addLiquidity(data, tezos);
         handleProcessing(result);
       } catch (error) {
         logger.error(error);

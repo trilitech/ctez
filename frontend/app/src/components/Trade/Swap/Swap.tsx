@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import { addMinutes } from 'date-fns/fp';
 import * as Yup from 'yup';
-import { useBeaconWallet } from '../../../wallet/hooks';
+import { useTezosWallet } from '../../../wallet/hooks';
 import { useCfmmStorage, useCtezBaseStats, useUserBalance } from '../../../api/queries';
 import {
   BUTTON_TXT,
@@ -34,7 +34,7 @@ import { useThemeColors, useTxLoader } from '../../../hooks/utilHooks';
 import { formatNumberStandard, inputFormatNumberStandard } from '../../../utils/numbers';
 
 const Swap: React.FC = () => {
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const [minBuyValue, setMinBuyValue] = useState(0);
   const [formType, setFormType] = useState<TFormType>(FORM_TYPE.TEZ_CTEZ);
   const { data: cfmmStorage } = useCfmmStorage();
@@ -122,6 +122,7 @@ const Swap: React.FC = () => {
                   tokensSold: formData.amount,
                 },
                 userAddress,
+                tezos,
               );
         handleProcessing(result);
       } catch (error) {

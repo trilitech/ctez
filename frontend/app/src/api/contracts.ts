@@ -1,6 +1,7 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { sub, format, differenceInDays } from 'date-fns';
+import { TezosToolkit } from '@taquito/taquito';
 import { getCfmmStorage, getLQTContractStorage } from '../contracts/cfmm';
 import { getCtezStorage } from '../contracts/ctez';
 import { BaseStats, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
@@ -87,9 +88,9 @@ export const getUserTezCtezData = async (userAddress: string): Promise<OvenBalan
   }
 };
 
-export const getUserLQTData = async (userAddress: string): Promise<UserLQTData> => {
+export const getUserLQTData = async (userAddress: string, tezos: TezosToolkit): Promise<UserLQTData> => {
   const cfmmStorage = await getCfmmStorage();
-  const lqtTokenStorage = await getLQTContractStorage();
+  const lqtTokenStorage = await getLQTContractStorage(tezos);
   const userLqtBalance: BigNumber =
     (await lqtTokenStorage.tokens.get(userAddress)) ?? new BigNumber(0);
   return {

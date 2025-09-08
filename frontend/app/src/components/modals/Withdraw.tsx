@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { validateAddress } from '@taquito/utils';
 import { number, object, string } from 'yup';
 import { useFormik } from 'formik';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { IWithdrawForm } from '../../constants/oven-operations';
 import { cTezError, withdraw } from '../../contracts/ctez';
 import Button from '../button';
@@ -41,7 +41,7 @@ interface IWithdrawProps {
 
 const Withdraw: React.FC<IWithdrawProps> = ({ isOpen, onClose, oven }) => {
   const { t } = useTranslation(['common']);
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress } = useTezosWallet();
   const toast = useToast();
   const [cardbg, text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'tooltipbg',

@@ -21,7 +21,7 @@ import { AllOvenDatum, OvenStorage } from '../../interfaces';
 import RadioCard from '../radio';
 import DepositorsInput from '../input';
 import { trimAddress } from '../../utils/addressUtils';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { addRemoveDepositorList, cTezError, enableDisableAnyDepositor } from '../../contracts/ctez';
 import { logger } from '../../utils/logger';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
@@ -41,7 +41,7 @@ interface IDepositorItem {
 }
 
 const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const toast = useToast();
   const { t } = useTranslation(['common']);
   const [text2] = useThemeColors(['text2']);
@@ -99,7 +99,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
   const handleAllowAnyone = async () => {
     if (props.oven.value.address && userAddress) {
       try {
-        const result = await enableDisableAnyDepositor(props.oven.value.address, true);
+        const result = await enableDisableAnyDepositor(props.oven.value.address, true, tezos);
         if (result) {
           toast({
             description: t('txSubmitted'),
@@ -132,6 +132,7 @@ const ChangeDepositor: React.FC<IChangeDepositorProps> = (props) => {
           props.ovenStorage,
           userWhiteList,
           userDenyList,
+          tezos,
         );
         handleProcessing(result);
       } catch (error) {

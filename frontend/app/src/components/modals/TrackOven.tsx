@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { object, string } from 'yup';
 import { isOven } from '../../contracts/ctez';
 import { useOvenData } from '../../api/queries';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { CTEZ_ADDRESS } from '../../utils/globals';
 import { addExternalOven, getExternalOvens } from '../../utils/ovenUtils';
 import Button from '../button';
@@ -35,7 +35,7 @@ interface IAddOvenForm {
 }
 
 const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const toast = useToast();
   const dispatch = useAppDispatch();
   const { t } = useTranslation(['common']);
@@ -65,7 +65,7 @@ const TrackOven: React.FC<ITrackOvenProps> = ({ isOpen, onClose }) => {
     { ovenAddress }: IAddOvenForm,
     formHelper: FormikHelpers<IAddOvenForm>,
   ) => {
-    const isValidAddress = await isOven(ovenAddress);
+    const isValidAddress = await isOven(ovenAddress, tezos);
     if (!isValidAddress) {
       toast({
         description: t('invalidOvenAddress'),

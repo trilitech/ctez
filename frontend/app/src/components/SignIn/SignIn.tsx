@@ -20,18 +20,19 @@ import {
 import { useCallback } from 'react';
 import Button from '../button';
 import { trimAddress } from '../../utils/addressUtils';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { useUserBalance, useUserLqtData } from '../../api/queries';
 import Identicon from '../avatar';
 import { formatNumber as formatNumberUtil, formatNumberStandard } from '../../utils/numbers';
 import { ReactComponent as copy } from '../../assets/images/sidebar/content_copy.svg';
+import { NETWORK } from '../../utils/globals';
 
 const SignIn: React.FC = () => {
   const {
-    wallet: { pkh: userAddress, network },
+    pkh: userAddress,
     connect,
     disconnect,
-  } = useBeaconWallet();
+  } = useTezosWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: balance } = useUserBalance(userAddress);
   const { data: userLqtData } = useUserLqtData(userAddress);
@@ -146,7 +147,7 @@ const SignIn: React.FC = () => {
                 )}
               </Tbody>
 
-              <TableCaption mt={0}>{network}</TableCaption>
+              <TableCaption mt={0}>{NETWORK}</TableCaption>
             </Table>
           </PopoverBody>
 

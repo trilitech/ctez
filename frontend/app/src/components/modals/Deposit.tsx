@@ -27,7 +27,7 @@ import Button from '../button';
 import { TezIcon } from '../icons';
 import { AllOvenDatum } from '../../interfaces';
 import { useThemeColors, useTxLoader } from '../../hooks/utilHooks';
-import { useBeaconWallet } from '../../wallet/hooks';
+import { useTezosWallet } from '../../wallet/hooks';
 import { useUserBalance } from '../../api/queries';
 import { formatNumber, formatNumberStandard, inputFormatNumberStandard } from '../../utils/numbers';
 
@@ -39,7 +39,7 @@ interface IDepositProps {
 
 const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
   const toast = useToast();
-  const { wallet: { pkh: userAddress } } = useBeaconWallet();
+  const { pkh: userAddress, tezos } = useTezosWallet();
   const handleProcessing = useTxLoader();
   const [text2, text1, inputbg, text4, maxColor] = useThemeColors([
     'text2',
@@ -78,7 +78,7 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
   const handleFormSubmit = async (data: IDepositForm) => {
     if (oven?.value.address) {
       try {
-        const result = await deposit(oven.value.address, Number(data.amount));
+        const result = await deposit(oven.value.address, Number(data.amount), tezos);
         handleProcessing(result);
       } catch (error) {
         logger.error(error);
