@@ -105,7 +105,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     setBannerOpen(false);
   };
 
-  const flexBackground = isFrontpage() ? undefined : headerBackground;
+  const flexBackground = isFrontpage() ? undefined : (headerBackground as string);
 
   return (
     <Box width="100%">
