@@ -42,9 +42,6 @@ const SettingsDialog: React.FC<ISettingsDialogProps> = ({ isOpen, onClose }) => 
   useEffect(() => {
     setRpcUrl(getRpcUrlForUser(wallet.pkh));
   }, [wallet.pkh]);
-  
-  
-  // const [text2] = useThemeColors(['text2']);
 
   const handleSave = async () => {
     // Clean the RPC URL by removing any leading @ symbol and trimming whitespace
