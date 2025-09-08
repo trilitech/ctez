@@ -4,13 +4,13 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { ChakraProvider } from '@chakra-ui/react';
 import { WalletProvider } from './wallet/walletContext';
 import { WalletInterface } from './interfaces';
-import { initTezos, setWalletProvider } from './contracts/client';
-import { APP_NAME, NETWORK, RPC_URL, RPC_PORT, CTEZ_ADDRESS } from './utils/globals';
+import { setWalletProvider } from './contracts/client';
+import { APP_NAME, NETWORK, CTEZ_ADDRESS } from './utils/globals';
 import { getBeaconInstance, isWalletConnected } from './wallet';
 import { AppRouter } from './router';
 import { initCTez } from './contracts/ctez';
 import { logger } from './utils/logger';
-import { getNodePort, getNodeURL } from './utils/settingUtils';
+import { initializeRpcUrl } from './utils/rpcManager';
 import ModalContainer from './components/modals/ModalContainer';
 import theme from './theme/theme';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -28,25 +28,37 @@ const App: React.FC = () => {
       const walletData = await getBeaconInstance(APP_NAME, true, NETWORK);
       walletData?.wallet && setWalletProvider(walletData.wallet);
       walletData && setWallet(walletData);
+      return walletData; 
     }
+    return null;
   };
-
-  const nodeUrl = wallet.pkh ? getNodeURL(wallet.pkh) : RPC_URL;
-  const nodePort = wallet.pkh ? getNodePort(wallet.pkh) : RPC_PORT;
 
   useEffect(() => {
     const setup = async () => {
       try {
-        initTezos(nodeUrl ?? RPC_URL, nodePort ?? RPC_PORT);
-        await checkWalletConnection();
-        CTEZ_ADDRESS && (await initCTez(CTEZ_ADDRESS));
-        CFMM_ADDRESS && (await initCfmm(CFMM_ADDRESS));
+        const walletData = await checkWalletConnection();
+        const walletAddress = walletData?.pkh || wallet.pkh;
+        const nodeUrl = initializeRpcUrl(walletAddress);
+        
+        if (nodeUrl && (nodeUrl.startsWith('http://') || nodeUrl.startsWith('https://'))) {
+          
+          if (CTEZ_ADDRESS) {
+            await initCTez(CTEZ_ADDRESS);
+          }
+          
+          if (CFMM_ADDRESS) {
+            await initCfmm(CFMM_ADDRESS);
+          }
+        } else {
+          logger.warn('Invalid RPC URL, skipping contract initialization:', nodeUrl);
+        }
       } catch (error: any) {
-        logger.error(error);
+        logger.error('Failed to initialize contracts:', error);
       }
     };
+    
     setup();
-  }, [wallet.pkh, nodeUrl, nodePort]);
+  }, [wallet.pkh]);
 
   return (
     <Suspense fallback="Loading...">

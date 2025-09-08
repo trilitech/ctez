@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios';
 import { useQueries, useQuery } from 'react-query';
 import { UseQueryResult } from 'react-query/types/react/types';
+import { getCurrentRpcUrl } from '../utils/rpcManager';
 import {
   getActualCtezStorage,
   getAllOvens,
@@ -48,8 +49,9 @@ export const useCtezBaseStats = (userAddress?: string) => {
 };
 
 export const useUserBalance = (userAddress?: string) => {
+  const rpcUrl = getCurrentRpcUrl();
   return useQuery<UserBalance | undefined, AxiosError, UserBalance | undefined>(
-    [`user-balance-${userAddress}`],
+    [`user-balance-${userAddress}-${rpcUrl}`],
     () => {
       if (userAddress) {
         return getUserBalance(userAddress);
@@ -181,8 +183,9 @@ export const useOvenDelegate = (ovenAddress?: string) => {
 };
 
 export const useUserLqtData = (userAddress?: string) => {
+  const rpcUrl = getCurrentRpcUrl();
   return useQuery<UserLQTData | undefined, AxiosError, UserLQTData | undefined>(
-    ['userLqtData', userAddress],
+    ['userLqtData', userAddress, rpcUrl],
     async () => {
       if (userAddress) {
         return getUserLQTData(userAddress);

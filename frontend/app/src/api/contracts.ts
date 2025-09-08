@@ -4,9 +4,10 @@ import { sub, format } from 'date-fns';
 import { getActualCtezStorage, getUserHalfDexLqtBalance } from '../contracts/ctez';
 import { getCtezFa12TotalSupply } from '../contracts/fa12';
 import { BaseStats, CTezStorage, CTezTzktStorage, OvenBalance, UserLQTData } from '../interfaces';
-import { CTEZ_CONTRACT_BIGMAP, RPC_URL } from '../utils/globals';
+import { getCurrentRpcUrl, isRpcInitialized } from '../utils/rpcManager';
 import { getOvenCtezOutstandingAndFeeIndex, getUpdatedDexFeeIndex } from '../utils/ovenUtils';
 import { getCTezTzktStorage, getLastBlockOfTheDay, getUserOvensAPI } from './tzkt';
+import { CTEZ_CONTRACT_BIGMAP } from '../utils/globals';
 
 export const getPrevCTezStorage = async (
   days = 7,
@@ -19,7 +20,11 @@ export const getPrevCTezStorage = async (
   return storage;
 };
 export const getCurrentBlock = async () => {
-  const response = await axios.get(`${RPC_URL}/chains/main/blocks/head`);
+  if (!isRpcInitialized()) {
+    throw new Error('RPC not initialized. Please wait for initialization to complete.');
+  }
+  const rpcUrl = getCurrentRpcUrl();
+  const response = await axios.get(`${rpcUrl}/chains/main/blocks/head`);
 
   return response.data.header.level;
 };
