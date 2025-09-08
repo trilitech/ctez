@@ -105,6 +105,8 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     setBannerOpen(false);
   };
 
+  const flexBackground = isFrontpage() ? undefined : headerBackground;
+
   return (
     <Box width="100%">
       {isBannerOpen && (
@@ -142,7 +144,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
       <Flex
         padding="16px"
         alignItems="center"
-        background={isFrontpage() ? undefined : headerBackground}
+        background={flexBackground}
       >
         <Button
           border="1px solid rgba(0, 0, 0, 0.07)"
