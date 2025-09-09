@@ -16,14 +16,14 @@ const App: React.FC = () => {
     <Suspense fallback="Loading...">
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <TezosContextProvider>
-            <ChakraProvider theme={theme}>
+          <ChakraProvider theme={theme}>
+            <TezosContextProvider>
               <ErrorBoundary>
                 <AppRouter />
                 <ModalContainer />
               </ErrorBoundary>
-            </ChakraProvider>
-          </TezosContextProvider>
+            </TezosContextProvider>
+          </ChakraProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </Suspense>

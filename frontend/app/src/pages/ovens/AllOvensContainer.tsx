@@ -1,13 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Paginator, Container, Previous, usePaginator, Next, PageGroup } from 'chakra-paginator';
 import { ButtonProps } from '@chakra-ui/button';
 import SkeletonLayout from '../../components/skeleton';
 import OvenCard from '../../components/OvenCard/OvenCard';
-import { useSortedOvensList } from '../../hooks/utilHooks';
+import { useSortedOvensList, useThemeColors } from '../../hooks/utilHooks';
 import { useAllOvenData } from '../../api/queries';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
 import { setClear, setSearchValue } from '../../redux/slices/OvenSlice';
 import OvenSummary from '../../components/OvenSummary';
+
+const nextPreviousStyle: React.CSSProperties = {
+  background: 'var(--chakra-colors-whiteAlpha-200)',
+};
 
 const AllOvensContainer: React.FC = () => {
   const { data, isLoading } = useAllOvenData();
@@ -15,18 +19,29 @@ const AllOvensContainer: React.FC = () => {
   const sortedOvens = useSortedOvensList(data);
   const [currentPageOvens, setCurrentPageOvens] = useState(sortedOvens);
   const searchText = useAppSelector((state) => state.oven.searchValue);
+  const [cardBgHover, activeCardBg, activeCardBgHover] = useThemeColors([
+    'cardBg2Hover',
+    'activeCardBg2',
+    'activeCardBg2Hover',
+  ]);
 
-  const baseStyles: ButtonProps = {
+  const baseStyles: ButtonProps = useMemo(() => ({
     w: 7,
     fontSize: 'sm',
-  };
-  const activeStyles: ButtonProps = {
+    bg: 'transparent',
+    _hover: {
+      bg: cardBgHover,
+    }
+  }), [cardBgHover]);
+
+  const activeStyles: ButtonProps = useMemo(() => ({
     ...baseStyles,
     _hover: {
-      bg: 'light.text4',
+      bg: activeCardBgHover,
     },
-    bg: 'light.text4',
-  };
+    bg: activeCardBg,
+  }), [baseStyles, activeCardBgHover, activeCardBg]);
+  
   const outerLimit = 2;
   const innerLimit = 2;
   const { pagesQuantity, offset, currentPage, setCurrentPage, isDisabled, pageSize } = usePaginator(
@@ -63,29 +78,6 @@ const AllOvensContainer: React.FC = () => {
     }
   }, [searchText]);
 
-  const modals = useMemo(() => {
-    return (
-      <>
-        <Paginator
-          isDisabled={isDisabled}
-          innerLimit={innerLimit}
-          currentPage={currentPage}
-          outerLimit={outerLimit}
-          pagesQuantity={pagesQuantity}
-          activeStyles={activeStyles}
-          normalStyles={baseStyles}
-          onPageChange={handlePageChange}
-        >
-          <Container align="center" justify="space-between" w="full" p={4}>
-            <Previous>Previous</Previous>
-            <PageGroup isInline align="center" />
-            <Next>Next</Next>
-          </Container>
-        </Paginator>
-      </>
-    );
-  }, [data]);
-
   return (
     <>
       <OvenSummary ovens={data || []} />
@@ -94,7 +86,22 @@ const AllOvensContainer: React.FC = () => {
       ) : (
         currentPageOvens?.map((oven) => <OvenCard key={oven.id} oven={oven} type="AllOvens" />)
       )}
-      {modals}
+      <Paginator
+        isDisabled={isDisabled}
+        innerLimit={innerLimit}
+        currentPage={currentPage}
+        outerLimit={outerLimit}
+        pagesQuantity={pagesQuantity}
+        activeStyles={activeStyles}
+        normalStyles={baseStyles}
+        onPageChange={handlePageChange}
+      >
+        <Container align="center" justify="space-between" w="full" p={4}>
+          <Previous style={nextPreviousStyle}>Previous</Previous>
+          <PageGroup isInline align="center" />
+          <Next style={nextPreviousStyle}>Next</Next>
+        </Container>
+      </Paginator>
     </>
   );
 };

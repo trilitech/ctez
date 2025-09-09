@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState, createContext, ReactNode, useContext } from 'react';
+import { useColorMode } from '@chakra-ui/react';
 import { BeaconWallet } from '@taquito/beacon-wallet';
 import { TezosToolkit, MichelCodecPacker, WalletContract } from '@taquito/taquito';
-import { BeaconEvent } from '@airgap/beacon-sdk';
+import { BeaconEvent, ColorMode } from '@airgap/beacon-sdk';
 import { APP_NAME, NETWORK, RPC_URL, CTEZ_ADDRESS, CFMM_ADDRESS } from '../utils/globals';
 import { initContract } from '../contracts/utils';
 import { logger } from '../utils/logger';
@@ -20,6 +21,7 @@ export interface TezosContextType {
 export const TezosContext = createContext<TezosContextType | null>(null);
 
 export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { colorMode } = useColorMode();
   const [pkh, setPkh] = useState<string | undefined>();
   const [wallet, setWallet] = useState<BeaconWallet | null>(null);
   const [ctezContract, setCtezContract] = useState<WalletContract | null>(null);
@@ -38,6 +40,16 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       network: { type: NETWORK },
     });
 
+    if (colorMode) {
+      try {
+        await newWallet.client.setColorMode(
+          colorMode === 'dark' ? ColorMode.DARK : ColorMode.LIGHT
+        );
+      } catch (error) {
+        logger.warn('Failed to set Beacon color mode:', error);
+      }
+    }
+
     newWallet.client.subscribeToEvent(BeaconEvent.ACTIVE_ACCOUNT_SET, (account) => {
       setPkh(account?.address);
     });
@@ -45,7 +57,7 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     setWallet(newWallet);
     tezos.setProvider({ wallet: newWallet });
     return newWallet;
-  }, [wallet, tezos]);
+  }, [wallet, tezos, colorMode]);
 
   const connect = useCallback(async () => {
     try {
@@ -93,6 +105,22 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     initializeWallet();
   }, [getOrCreateBeaconWallet, tezos]);
+
+  useEffect(() => {
+    const updateBeaconTheme = async () => {
+      if (wallet && colorMode) {
+        try {
+          await wallet.client.setColorMode(
+            colorMode === 'dark' ? ColorMode.DARK : ColorMode.LIGHT
+          );
+        } catch (error) {
+          logger.warn('Failed to update Beacon color mode:', error);
+        }
+      }
+    };
+
+    updateBeaconTheme();
+  }, [colorMode, wallet]);
 
   const contextValue: TezosContextType = {
     pkh,
