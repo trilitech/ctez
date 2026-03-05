@@ -112,7 +112,6 @@ const FaqPage: React.FC = () => {
           spacing={4}
           backgroundColor={background}
           borderRadius={16}
-          P={8}
         >
           {faq1}
           {!largerScreen && faq2}
@@ -124,7 +123,6 @@ const FaqPage: React.FC = () => {
             spacing={4}
             backgroundColor={background}
             borderRadius={16}
-            P={8}
           >
             {faq2}
           </Stack>

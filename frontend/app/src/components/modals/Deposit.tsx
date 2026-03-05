@@ -82,7 +82,7 @@ const Deposit: React.FC<IDepositProps> = ({ isOpen, onClose, oven }) => {
         handleProcessing(result);
       } catch (error) {
         logger.error(error);
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = cTezError[error?.data?.[1]?.with?.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

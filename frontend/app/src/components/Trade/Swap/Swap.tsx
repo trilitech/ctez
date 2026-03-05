@@ -128,7 +128,7 @@ const Swap: React.FC = () => {
         handleProcessing(result);
       } catch (error) {
         logger.warn(error);
-        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = cfmmError[error?.data?.[1]?.with?.int as number] || t('txFailed');
         toast({
           status: 'error',
           description: errorText,

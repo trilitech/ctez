@@ -1,6 +1,13 @@
 import { extendTheme } from '@chakra-ui/react';
 
 const theme = extendTheme({
+  styles: {
+    global: {
+      'svg': {
+        verticalAlign: 'middle',
+      },
+    },
+  },
   colors: {
     light: {
       text1: '#323B4B',

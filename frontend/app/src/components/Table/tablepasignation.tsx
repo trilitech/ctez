@@ -46,7 +46,7 @@ const TablePagination: React.FC<ITablePaginationProps> = (props) => {
       }}
     >
       <Box>
-      <Typography component="span"  sx={{ color:'#6F6E84' }}>
+      <Typography as="span" sx={{ color:'#6F6E84' }}>
         Rows per page:
       </Typography>
       <select  value={pageNumber} className='rowperpage' onChange={e => handleOnChangePageSize(e.target.value)}>
@@ -54,7 +54,7 @@ const TablePagination: React.FC<ITablePaginationProps> = (props) => {
         <option value="20">20</option>
       </select>
       </Box>
-      <Typography component="span" >
+      <Typography as="span">
         {page + 1} of {Math.ceil(count)}
       </Typography>
       <Box>

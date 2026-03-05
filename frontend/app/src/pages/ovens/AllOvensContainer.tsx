@@ -86,6 +86,7 @@ const AllOvensContainer: React.FC = () => {
       ) : (
         currentPageOvens?.map((oven) => <OvenCard key={oven.id} oven={oven} type="AllOvens" />)
       )}
+      {/* @ts-ignore chakra-paginator types incompatible with React 18 */}
       <Paginator
         isDisabled={isDisabled}
         innerLimit={innerLimit}

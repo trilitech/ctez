@@ -116,7 +116,7 @@ const Mint: React.FC<IMintProps> = ({ isOpen, onClose, oven }) => {
         onClose();
       } catch (error) {
         logger.warn(error);
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = cTezError[error?.data?.[1]?.with?.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

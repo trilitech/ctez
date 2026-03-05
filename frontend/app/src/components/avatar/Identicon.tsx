@@ -33,7 +33,7 @@ const Identicon: React.FC<IdenticonProps> = ({
   return (
     <Avatar
       variant={variant}
-      alt={alt}
+      name={alt}
       src={data}
       onClick={onClick}
       size={avatarSize}

@@ -42,13 +42,16 @@ export const create = async (
   amount = 0,
 ): Promise<TransactionWalletOperation> => {
   const newOvenId = lastOvenId + 1;
-  const operation = await executeMethod(
-    ctezContract,
-    'create',
-    [newOvenId, bakerAddress, op, allowedDepositors],
-    undefined,
-    amount,
-  );
+  const depositorsParam = op === Depositor.any
+    ? { any: ['Unit'] }
+    : { whitelist: allowedDepositors ?? [] };
+  const operation = await (ctezContract as any).methodsObject
+    .create({
+      id: newOvenId,
+      delegate: bakerAddress,
+      depositors: depositorsParam,
+    })
+    .send({ amount: amount > 0 ? amount : undefined });
   saveLastOven(userAddress, ctezContract.address, newOvenId);
   return operation;
 };
@@ -70,7 +73,7 @@ const prepareOvenAllowAddressCall = (
 ): WalletParamsWithKind => {
   return {
     kind: OpKind.TRANSACTION,
-    ...ovenContract.methods.allow_account(allow, address).toTransferParams(),
+    ...(ovenContract as any).methodsObject.allow_account({ 0: allow, 1: address }).toTransferParams(),
   };
 };
 
@@ -80,7 +83,7 @@ const prepareOvenAllowAnyCall = (
 ): WalletParamsWithKind => {
   return {
     kind: OpKind.TRANSACTION,
-    ...ovenContract.methods.allow_any(allow).toTransferParams(),
+    ...(ovenContract as any).methodsObject.allow_any(allow).toTransferParams(),
   };
 };
 interface RecvData {
@@ -171,7 +174,9 @@ export const withdraw = async (
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(ctezContract, 'withdraw', [ovenId, amount * 1e6, to]);
+  const operation = await (ctezContract as any).methodsObject
+    .withdraw({ id: ovenId, amount: amount * 1e6, to })
+    .send();
   return operation;
 };
 
@@ -182,7 +187,9 @@ export const liquidate = async (
   amount: number,
   to: string,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(ctezContract, 'liquidate', [ovenId, overOwner, amount * 1e6, to]);
+  const operation = await (ctezContract as any).methodsObject
+    .liquidate({ handle: { id: ovenId, owner: overOwner }, quantity: amount * 1e6, to })
+    .send();
   return operation;
 };
 
@@ -191,7 +198,9 @@ export const mintOrBurn = async (
   ovenId: number,
   quantity: number,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(ctezContract, 'mint_or_burn', [ovenId, quantity * 1e6]);
+  const operation = await (ctezContract as any).methodsObject
+    .mint_or_burn({ id: ovenId, quantity: quantity * 1e6 })
+    .send();
   return operation;
 };
 

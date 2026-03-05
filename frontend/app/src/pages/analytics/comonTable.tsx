@@ -83,6 +83,7 @@ const TableCommon: React.FC<CommonTable> = ({column,data=[]}) => {
       const modals = useMemo(() => {
         return (
           <>
+            {/* @ts-ignore chakra-paginator types incompatible with React 18 */}
             <Paginator
               isDisabled={isDisabled}
               innerLimit={largerScreen?innerLimit:1}
@@ -93,7 +94,7 @@ const TableCommon: React.FC<CommonTable> = ({column,data=[]}) => {
               normalStyles={baseStyles}
               onPageChange={handlePageChange}
             >
-              <Container align="center" display='flex' justifyContent='center' flexDirection={largerScreen?'row':'column'} gridGap={5} w="full" pt={4}>
+              <Container alignItems="center" display='flex' justifyContent='center' flexDirection={largerScreen?'row':'column'} gridGap={5} w="full" pt={4}>
               {largerScreen&&<Previous className="pagignationIcon">
                    <Icon
                    color="light.tradebg"

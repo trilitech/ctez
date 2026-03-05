@@ -9,6 +9,7 @@ import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
+    {/* @ts-ignore react-redux v7 types incompatible with React 18 */}
     <Provider store={store}>
       <App />
     </Provider>

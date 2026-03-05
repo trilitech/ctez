@@ -5,6 +5,7 @@ import { MdContentCopy } from 'react-icons/md';
 import { useThemeColors } from '../../hooks/utilHooks';
 
 export interface Props {
+  children?: React.ReactNode;
   address: string;
   placement?: 'left' | 'right';
   spaced?: boolean;

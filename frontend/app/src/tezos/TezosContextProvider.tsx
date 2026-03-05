@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState, createContext, ReactNode, useContext } from 'react';
 import { useColorMode } from '@chakra-ui/react';
-import { BeaconWallet } from '@taquito/beacon-wallet';
+import { BeaconWallet, BeaconEvent } from '@taquito/beacon-wallet';
 import { TezosToolkit, MichelCodecPacker, WalletContract } from '@taquito/taquito';
-import { BeaconEvent, ColorMode } from '@airgap/beacon-sdk';
 import { APP_NAME, NETWORK, RPC_URL, CTEZ_ADDRESS, CFMM_ADDRESS } from '../utils/globals';
 import { initContract } from '../contracts/utils';
 import { logger } from '../utils/logger';
@@ -37,13 +36,13 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const newWallet = new BeaconWallet({
       name: APP_NAME,
-      network: { type: NETWORK },
+      network: { type: NETWORK as any },
     });
 
     if (colorMode) {
       try {
         await newWallet.client.setColorMode(
-          colorMode === 'dark' ? ColorMode.DARK : ColorMode.LIGHT
+          (colorMode === 'dark' ? 'dark' : 'light') as any
         );
       } catch (error) {
         logger.warn('Failed to set Beacon color mode:', error);
@@ -111,7 +110,7 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (wallet && colorMode) {
         try {
           await wallet.client.setColorMode(
-            colorMode === 'dark' ? ColorMode.DARK : ColorMode.LIGHT
+            (colorMode === 'dark' ? 'dark' : 'light') as any
           );
         } catch (error) {
           logger.warn('Failed to update Beacon color mode:', error);
