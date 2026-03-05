@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { TransactionWalletOperation, WalletOperation } from '@taquito/taquito';
 import { Flex, Spinner, useColorMode, useToast } from '@chakra-ui/react';
+import { useQueryClient } from 'react-query';
 import { GroupBase, OptionsOrGroups } from 'react-select/dist/declarations/src';
 import { getOvenMaxCtez } from '../utils/ovenUtils';
 import { useAppDispatch, useAppSelector } from '../redux/store';
@@ -236,6 +237,7 @@ const useTxLoader = (): ((
   });
   const toastId = useMemo(() => (Math.random() + 1).toString(36).substring(2), []);
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
   return useCallback(
     (result: WalletOperation | TransactionWalletOperation) => {
@@ -265,6 +267,7 @@ const useTxLoader = (): ((
                 description: 'Transaction Confirmed',
                 duration: 5_000,
               });
+              queryClient.invalidateQueries();
 
               return true;
             }
@@ -291,7 +294,7 @@ const useTxLoader = (): ((
 
       return new Promise(() => false);
     },
-    [dispatch, toast, toastId],
+    [dispatch, queryClient, toast, toastId],
   );
 };
 

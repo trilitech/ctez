@@ -20,6 +20,7 @@ export const AppRouter: React.FC = () => {
   }
 
   return (
+    // @ts-ignore react-router-dom v5 types incompatible with React 18
     <Router>
       <Flex height="100vh">
         <Flex width="100%">
@@ -34,8 +35,10 @@ export const AppRouter: React.FC = () => {
 
             <Box overflow="auto">
               <Suspense fallback="Loading..">
+                {/* @ts-ignore react-router-dom v5 types incompatible with React 18 */}
                 <Switch>
                   {routes.map((route) => (
+                    // @ts-ignore react-router-dom v5 types incompatible with React 18
                     <Route
                       key={typeof route.path === 'string' ? route.path : route.path[0]}
                       path={route.path}

@@ -74,6 +74,7 @@ const SignIn: React.FC = () => {
         onClose={onClose}
         offset={[0, -40]}
       >
+        {/* @ts-ignore Chakra v1 PopoverTrigger types incompatible with React 18 */}
         <PopoverTrigger>
           <ChakraButton w={0} minW={0} p={0} />
         </PopoverTrigger>

@@ -15,6 +15,8 @@ module.exports = {
         "buffer": require.resolve("buffer"),
         "process": require.resolve("process"),
         "process/browser": require.resolve("process/browser.js"),
+        "vm": require.resolve("vm-browserify"),
+        "fs": false,
       };
       
       // Provide process and Buffer globals

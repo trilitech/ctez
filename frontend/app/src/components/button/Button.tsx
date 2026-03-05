@@ -34,7 +34,6 @@ const Button: React.FC<IButtonProps> = (props) => {
   if (props.variant === 'outline') {
     return (
       <Box
-        type={props.type}
         className={props.className}
         bgGradient={colorMode === 'light' ? 'linear(to-r, #0F62FF, #6B5BD2)' : 'transparent'}
         _hover={{
@@ -48,7 +47,7 @@ const Button: React.FC<IButtonProps> = (props) => {
       >
         <Box
           as={ChakraButton}
-          {...(props as unknown)}
+          {...(props as any)}
           backgroundColor={background}
           w="100%"
           h="100%"
@@ -75,7 +74,7 @@ const Button: React.FC<IButtonProps> = (props) => {
   return (
     <Box
       as={ChakraButton}
-      {...(props as unknown)}
+      {...(props as any)}
       type={props.type}
       className={props.className}
       py={2}

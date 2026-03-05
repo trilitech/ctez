@@ -18,7 +18,7 @@ import {
 } from '../interfaces';
 import { CFMM_ADDRESS } from '../utils/globals';
 import { getCTezFa12Contract, getLQTContract } from './fa12';
-import { executeMethod } from './utils';
+
 
 type FA12TokenType = 'ctez' | 'lqt';
 
@@ -55,12 +55,12 @@ export const getTokenAllowanceOps = async (
     if (currentAllowance > 0) {
       batchOps.push({
         kind: OpKind.TRANSACTION,
-        ...tokenContract.methods.approve(CFMM_ADDRESS, 0).toTransferParams(),
+        ...(tokenContract as any).methodsObject.approve({ spender: CFMM_ADDRESS, value: 0 }).toTransferParams(),
       });
     }
     batchOps.push({
       kind: OpKind.TRANSACTION,
-      ...tokenContract.methods.approve(CFMM_ADDRESS, maxTokensDeposited).toTransferParams(),
+      ...(tokenContract as any).methodsObject.approve({ spender: CFMM_ADDRESS, value: maxTokensDeposited }).toTransferParams(),
     });
   }
   return batchOps;
@@ -77,19 +77,19 @@ export const addLiquidity = async (cfmmContract: WalletContract, args: AddLiquid
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmmContract.methods
-        .addLiquidity(
-          args.owner,
-          args.minLqtMinted,
-          args.maxTokensDeposited * 1e6,
-          args.deadline.toISOString(),
-        )
+      ...(cfmmContract as any).methodsObject
+        .addLiquidity({
+          owner: args.owner,
+          minLqtMinted: args.minLqtMinted,
+          maxTokensDeposited: args.maxTokensDeposited * 1e6,
+          deadline: args.deadline.toISOString(),
+        })
         .toTransferParams(),
       amount: args.amount,
     },
     {
       kind: OpKind.TRANSACTION,
-      ...CTezFa12.methods.approve(CFMM_ADDRESS, 0).toTransferParams(),
+      ...(CTezFa12 as any).methodsObject.approve({ spender: CFMM_ADDRESS, value: 0 }).toTransferParams(),
     },
   ]);
   const hash = await batch.send();
@@ -113,19 +113,19 @@ export const removeLiquidity = async (
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmmContract.methods
-        .removeLiquidity(
-          args.to,
-          args.lqtBurned,
-          args.minCashWithdrawn * 1e6,
-          args.minTokensWithdrawn * 1e6,
-          args.deadline.toISOString(),
-        )
+      ...(cfmmContract as any).methodsObject
+        .removeLiquidity({
+          to: args.to,
+          lqtBurned: args.lqtBurned,
+          minCashWithdrawn: args.minCashWithdrawn * 1e6,
+          minTokensWithdrawn: args.minTokensWithdrawn * 1e6,
+          deadline: args.deadline.toISOString(),
+        })
         .toTransferParams(),
     },
     {
       kind: OpKind.TRANSACTION,
-      ...LQTFa12.methods.approve(CFMM_ADDRESS, 0).toTransferParams(),
+      ...(LQTFa12 as any).methodsObject.approve({ spender: CFMM_ADDRESS, value: 0 }).toTransferParams(),
     },
   ]);
   const hash = await batch.send();
@@ -133,15 +133,14 @@ export const removeLiquidity = async (
 };
 
 export const cashToToken = async (cfmmContract: WalletContract, args: CashToTokenParams): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(
-    cfmmContract,
-    'cashToToken',
-    [args.to, Math.floor(args.minTokensBought * 1e6), args.deadline.toISOString()],
-    undefined,
-    args.amount * 1e6,
-    true,
-  );
-  return operation;
+  const op = await (cfmmContract as any).methodsObject
+    .cashToToken({
+      to: args.to,
+      minTokensBought: Math.floor(args.minTokensBought * 1e6),
+      deadline: args.deadline.toISOString(),
+    })
+    .send({ amount: args.amount * 1e6, mutez: true });
+  return op;
 };
 
 export const tokenToCash = async (
@@ -161,18 +160,18 @@ export const tokenToCash = async (
     ...batchOps,
     {
       kind: OpKind.TRANSACTION,
-      ...cfmmContract.methods
-        .tokenToCash(
-          args.to,
-          args.tokensSold * 1e6,
-          Math.floor(args.minCashBought * 1e6),
-          args.deadline.toISOString(),
-        )
+      ...(cfmmContract as any).methodsObject
+        .tokenToCash({
+          to: args.to,
+          tokensSold: args.tokensSold * 1e6,
+          minCashBought: Math.floor(args.minCashBought * 1e6),
+          deadline: args.deadline.toISOString(),
+        })
         .toTransferParams(),
     },
     {
       kind: OpKind.TRANSACTION,
-      ...CTezFa12.methods.approve(CFMM_ADDRESS, 0).toTransferParams(),
+      ...(CTezFa12 as any).methodsObject.approve({ spender: CFMM_ADDRESS, value: 0 }).toTransferParams(),
     },
   ]);
   const batchOperation = await batch.send();
@@ -183,14 +182,16 @@ export const tokenToToken = async (
   cfmmContract: WalletContract,
   args: TokenToTokenParams,
 ): Promise<TransactionWalletOperation> => {
-  const operation = await executeMethod(cfmmContract, 'tokenToToken', [
-    args.outputCfmmContract,
-    args.minTokensBought * 1e6,
-    args.to,
-    args.tokensSold * 1e6,
-    args.deadline.toISOString(),
-  ]);
-  return operation;
+  const op = await (cfmmContract as any).methodsObject
+    .tokenToToken({
+      outputCfmmContract: args.outputCfmmContract,
+      minTokensBought: args.minTokensBought * 1e6,
+      to: args.to,
+      tokensSold: args.tokensSold * 1e6,
+      deadline: args.deadline.toISOString(),
+    })
+    .send();
+  return op;
 };
 
 /**

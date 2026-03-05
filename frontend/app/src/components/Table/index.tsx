@@ -102,10 +102,9 @@ const Table = <D extends any>({ columns, data,shortby }: { columns: Column<any>[
                     borderColor:'rgba(255, 255, 255, 0.15)',
                     display:{xs:(Object.prototype.hasOwnProperty.call(column, "xsShow"))?'table-cell':'none',sm:'table-cell'}}}>
                     <div className="flex flex-row align-items-center" >
-                      <span className="mx-1" style={{display:'flex'}} >{column.render('Header')}
+                      <span className="mx-1" style={{display:'flex'}} ><>{column.render('Header')}
                       {shortByGroup.id===column.id?shortByGroup.desc?<MdKeyboardArrowDown/>:<MdKeyboardArrowUp/>:<MdKeyboardArrowUp opacity={0} />}
-                      
-                      </span>
+                      </></span>
                     </div>
                   </Td>
                 ))}
@@ -123,7 +122,7 @@ const Table = <D extends any>({ columns, data,shortby }: { columns: Column<any>[
                     return (
                       // eslint-disable-next-line react/jsx-key
                       <Td isNumeric {...cell.getCellProps()} sx={{borderColor:'rgba(255, 255, 255, 0.15)',display:{xs:(Object.prototype.hasOwnProperty.call(cell.column, "xsShow"))?'table-cell':'none',sm:'table-cell'}}}>
-                        <span className="mx-1" style={{width:'100px'}}>{cell.render('Cell')}</span>
+                        <span className="mx-1" style={{width:'100px'}}>{cell.render('Cell') as any}</span>
                       </Td>
                     );
                   })}

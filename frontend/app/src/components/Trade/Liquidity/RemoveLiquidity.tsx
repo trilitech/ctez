@@ -92,7 +92,7 @@ const RemoveLiquidity: React.FC = () => {
         const result = await removeLiquidity(cfmmContract, data, userAddress, tezos);
         handleProcessing(result);
       } catch (error) {
-        const errorText = cfmmError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = cfmmError[error?.data?.[1]?.with?.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',
@@ -129,7 +129,7 @@ const RemoveLiquidity: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} id="remove-liquidity-form">
-      <Stack colorScheme="gray" spacing={2}>
+      <Stack spacing={2}>
         <FormControl id="to-input-amount" mb={2}>
           <FormLabel color={text2} fontSize="xs">
             LQT to burn

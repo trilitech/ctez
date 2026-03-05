@@ -69,7 +69,7 @@ const LiquidateOven: React.FC<ILiquidateProps> = ({ isOpen, onClose, oven }) => 
         );
         handleProcessing(result);
       } catch (error) {
-        const errorText = cTezError[error.data[1].with.int as number] || t('txFailed');
+        const errorText = cTezError[error?.data?.[1]?.with?.int as number] || t('txFailed');
         toast({
           description: errorText,
           status: 'error',

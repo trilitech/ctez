@@ -1,8 +1,12 @@
-import { Box, Checkbox, Flex, useRadio } from '@chakra-ui/react';
-import { UseRadioProps } from '@chakra-ui/radio/dist/types/use-radio';
+import React from 'react';
+import { Box, Checkbox, Flex, useRadio, UseRadioProps } from '@chakra-ui/react';
 import { useThemeColors } from '../../hooks/utilHooks';
 
-const RadioCard: React.FC<UseRadioProps> = (props) => {
+interface RadioCardProps extends UseRadioProps {
+  children?: React.ReactNode;
+}
+
+const RadioCard: React.FC<RadioCardProps> = (props) => {
   const { getInputProps, getCheckboxProps } = useRadio(props);
 
   const input = getInputProps();

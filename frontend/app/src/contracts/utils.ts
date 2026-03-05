@@ -14,7 +14,13 @@ export const executeMethod = async (
   amount = 0,
   mutez = false,
 ): Promise<TransactionWalletOperation> => {
-  const op = await contract.methods[methodName](...args).send({
+  const param = args.length === 1
+    ? args[0]
+    : args.reduce<Record<number, unknown>>((acc, val, idx) => {
+        acc[idx] = val;
+        return acc;
+      }, {});
+  const op = await (contract as any).methodsObject[methodName](param).send({
     amount: amount > 0 ? amount : undefined,
     mutez,
   });

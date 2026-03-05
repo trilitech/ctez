@@ -13,12 +13,12 @@ const get = async <T, P>(endpoint: string, queryParams?: P, userAddress?: string
 };
 
 export const getDelegates = async (userAddress?: string): Promise<Baker[]> => {
-  const data: string[][] = await get(
-    'delegates?active=true&offset=0&limit=100&select.values=alias,address&sort.desc=stakingBalance',
+  const data: { alias: string | null; address: string }[] = await get(
+    'delegates?active=true&offset=0&limit=100&select=alias,address&sort.desc=stakedBalance',
     undefined,
     userAddress,
   );
-  return data.map(([name, address]) => ({ name, address }));
+  return data.map(({ alias, address }) => ({ name: alias ?? '', address }));
 };
 
 export const getLastBlockOfTheDay = async (date: string, userAddress?: string): Promise<Block> => {
