@@ -74,7 +74,8 @@ export const TezosContextProvider: React.FC<{ children: ReactNode }> = ({ childr
   const disconnect = useCallback(async () => {
     try {
       if (wallet) {
-        await wallet.client.disconnect();
+        await wallet.client.clearActiveAccount();
+        setPkh(undefined);
       }
     } catch (err) {
       logger.error('Wallet disconnection error:', err);
