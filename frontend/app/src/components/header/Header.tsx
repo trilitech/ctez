@@ -93,7 +93,7 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
     const pathName = location.pathname;
     setHeader(pathName);
   }, [location]);
-  const [isBannerOpen, setBannerOpen] = useState(false);
+  const [isBannerOpen, setBannerOpen] = useState(true);
   const closeBanner = () => {
     setBannerOpen(false);
   };
@@ -104,24 +104,14 @@ const Header: React.FC<IHeaderProps> = ({ handleToggled, toggled }) => {
         <Box width="100%" alignItems="center" className="banner" backgroundColor={bannerbg}>
           <Box className="bannermiddle">
             <span className="banner-text" color={bannertext}>
-              {mobileScreen
-                ? 'Plenty V3 is live!'
-                : 'Plenty V3 is live!'}{' '}
+              Ctez is sunsetting, please close your ovens.{' '}
               <a
                 style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                href="https://app.plenty.network/pools/v3"
-                target="_blank"
-                rel="noreferrer"
+                href="/myovens"
               >
                 <span className="trynow" color={trynow}>
-                  Try now
-                </span>{' '}
-{/* {!mobileScreen && (
-                  <span className="newBadge" color="#ffffff">
-                    New
-                  </span>
-                )}
-                {colorMode === 'light' ? <Arrow /> : <ArrowDark />} */}
+                  My Ovens
+                </span>
               </a>
             </span>
           </Box>
